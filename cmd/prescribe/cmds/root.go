@@ -1,12 +1,12 @@
-package cmd
+package cmds
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/go-go-golems/prescribe/cmd/file"
-	"github.com/go-go-golems/prescribe/cmd/filter"
-	"github.com/go-go-golems/prescribe/cmd/session"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/file"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/filter"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/session"
 	"github.com/spf13/cobra"
 )
 

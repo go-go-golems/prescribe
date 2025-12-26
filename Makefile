@@ -55,5 +55,5 @@ bump-glazed:
 
 prescribe_BINARY=$(shell which prescribe)
 install:
-	go build -o ./dist/prescribe . && \
+	go build -o ./dist/prescribe ./cmd/prescribe && \
 		cp ./dist/prescribe $(prescribe_BINARY)
