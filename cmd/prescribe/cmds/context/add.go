@@ -1,39 +1,36 @@
-package file
+package context
 
 import (
 	"fmt"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var (
 	contextNote string
 )
 
-var AddContextCmd = &cobra.Command{
-	Use:   "add-context [file-path]",
+var AddCmd = &cobra.Command{
+	Use:   "add [file-path]",
 	Short: "Add additional context to session",
-	Long:  `Add a file or note as additional context for PR description generation.`,
+	Long:  "Add a file or note as additional context for PR description generation.",
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
+		if contextNote == "" && len(args) == 0 {
+			return fmt.Errorf("either pass a file path argument or use --note")
 		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		if contextNote != "" && len(args) > 0 {
+			return fmt.Errorf("use either a file path argument or --note (not both)")
+		}
+
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
-		
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-		
+
+		helpers.LoadDefaultSessionIfExists(ctrl)
+
 		// Add context
 		if contextNote != "" {
 			// Add note
@@ -47,24 +44,23 @@ var AddContextCmd = &cobra.Command{
 			}
 			fmt.Printf("Added file '%s' to context\n", filePath)
 		}
-		
+
 		// Save session
 		savePath := ctrl.GetDefaultSessionPath()
 		if err := ctrl.SaveSession(savePath); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}
-		
+
 		fmt.Printf("Session saved\n")
-		
+
 		// Show token count
 		data := ctrl.GetData()
 		fmt.Printf("Total tokens: %d\n", data.GetTotalTokens())
-		
+
 		return nil
 	},
 }
 
 func init() {
-	AddContextCmd.Flags().StringVar(&contextNote, "note", "", "Add a note as context")
+	AddCmd.Flags().StringVar(&contextNote, "note", "", "Add a note as context")
 }
-

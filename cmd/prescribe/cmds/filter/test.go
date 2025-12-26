@@ -3,37 +3,33 @@ package filter
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/spf13/cobra"
 )
 
 var (
-	testFilterName        string
-	testExcludePatterns   []string
-	testIncludePatterns   []string
+	testFilterName      string
+	testExcludePatterns []string
+	testIncludePatterns []string
 )
 
 var TestFilterCmd = &cobra.Command{
-	Use:   "test-filter",
+	Use:   "test",
 	Short: "Test a filter pattern without applying it",
 	Long:  `Test how a filter would affect files without actually applying it to the session.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
-		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+		if testFilterName == "" {
+			testFilterName = "test"
 		}
 
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
+		if len(testExcludePatterns) == 0 && len(testIncludePatterns) == 0 {
+			return fmt.Errorf("at least one pattern is required (--exclude or --include)")
+		}
+
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
+		if err != nil {
+			return err
 		}
 
 		// Build filter rules
@@ -65,7 +61,7 @@ var TestFilterCmd = &cobra.Command{
 		// Display results
 		fmt.Printf("Filter Test: %s\n", testFilterName)
 		fmt.Println("==================")
-		
+
 		fmt.Printf("\nRules:\n")
 		for _, rule := range rules {
 			fmt.Printf("  %s: %s\n", rule.Type, rule.Pattern)
@@ -90,3 +86,8 @@ var TestFilterCmd = &cobra.Command{
 	},
 }
 
+func init() {
+	TestFilterCmd.Flags().StringVarP(&testFilterName, "name", "n", "test", "Filter name for display purposes")
+	TestFilterCmd.Flags().StringSliceVarP(&testExcludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
+	TestFilterCmd.Flags().StringSliceVarP(&testIncludePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
+}

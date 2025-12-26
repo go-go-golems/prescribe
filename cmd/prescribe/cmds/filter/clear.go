@@ -3,36 +3,22 @@ package filter
 import (
 	"fmt"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var ClearFiltersCmd = &cobra.Command{
-	Use:   "clear-filters",
+	Use:   "clear",
 	Short: "Remove all filters from the session",
 	Long:  `Remove all active filters, making all files visible.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
 
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-
-		// Load session
-		sessionPath := ctrl.GetDefaultSessionPath()
-		if err := ctrl.LoadSession(sessionPath); err != nil {
-			return fmt.Errorf("failed to load session: %w", err)
+		if err := helpers.LoadDefaultSession(ctrl); err != nil {
+			return err
 		}
 
 		// Get current filter count
@@ -46,7 +32,8 @@ var ClearFiltersCmd = &cobra.Command{
 		ctrl.ClearFilters()
 
 		// Save session
-		if err := ctrl.SaveSession(sessionPath); err != nil {
+		savePath := ctrl.GetDefaultSessionPath()
+		if err := ctrl.SaveSession(savePath); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}
 
@@ -59,4 +46,3 @@ var ClearFiltersCmd = &cobra.Command{
 		return nil
 	},
 }
-

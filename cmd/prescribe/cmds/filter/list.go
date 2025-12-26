@@ -3,37 +3,21 @@ package filter
 import (
 	"fmt"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var ListFiltersCmd = &cobra.Command{
-	Use:   "list-filters",
+	Use:   "list",
 	Short: "List all active filters",
 	Long:  `Display all active filters in the current session.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
 
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-
-		// Load session if exists
-		sessionPath := ctrl.GetDefaultSessionPath()
-		if err := ctrl.LoadSession(sessionPath); err == nil {
-			// Session loaded
-		}
+		helpers.LoadDefaultSessionIfExists(ctrl)
 
 		// Get filters
 		filters := ctrl.GetFilters()
@@ -67,4 +51,3 @@ var ListFiltersCmd = &cobra.Command{
 		return nil
 	},
 }
-

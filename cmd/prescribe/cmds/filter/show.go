@@ -3,37 +3,21 @@ package filter
 import (
 	"fmt"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var ShowFilteredCmd = &cobra.Command{
-	Use:   "show-filtered",
+	Use:   "show",
 	Short: "Show files that are filtered out",
 	Long:  `Display all files that are being filtered out by active filters.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
 
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-
-		// Load session if exists
-		sessionPath := ctrl.GetDefaultSessionPath()
-		if err := ctrl.LoadSession(sessionPath); err == nil {
-			// Session loaded
-		}
+		helpers.LoadDefaultSessionIfExists(ctrl)
 
 		// Get filtered files
 		filtered := ctrl.GetFilteredFiles()
@@ -53,10 +37,10 @@ var ShowFilteredCmd = &cobra.Command{
 
 		fmt.Printf("Filtered Files:\n")
 		for _, file := range filtered {
-			fmt.Printf("  ✗ %s (+%d -%d, %dt)\n", 
-				file.Path, 
-				file.Additions, 
-				file.Deletions, 
+			fmt.Printf("  ✗ %s (+%d -%d, %dt)\n",
+				file.Path,
+				file.Additions,
+				file.Deletions,
 				file.Tokens)
 		}
 
@@ -75,4 +59,3 @@ var ShowFilteredCmd = &cobra.Command{
 		return nil
 	},
 }
-

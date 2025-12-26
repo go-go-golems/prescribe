@@ -3,36 +3,25 @@ package file
 import (
 	"fmt"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var ToggleFileCmd = &cobra.Command{
-	Use:   "toggle-file <path>",
+	Use:   "toggle <path>",
 	Short: "Toggle file inclusion in session",
 	Long:  `Toggle whether a file is included in the PR description context.`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
 		filePath := args[0]
-		
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
-		
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-		
+
+		helpers.LoadDefaultSessionIfExists(ctrl)
+
 		// Find file and toggle
 		data := ctrl.GetData()
 		found := false
@@ -42,7 +31,7 @@ var ToggleFileCmd = &cobra.Command{
 					return fmt.Errorf("failed to toggle file: %w", err)
 				}
 				found = true
-				
+
 				// Show new state
 				newState := "excluded"
 				if data.ChangedFiles[i].Included {
@@ -52,20 +41,19 @@ var ToggleFileCmd = &cobra.Command{
 				break
 			}
 		}
-		
+
 		if !found {
 			return fmt.Errorf("file not found: %s", filePath)
 		}
-		
+
 		// Save session
 		savePath := ctrl.GetDefaultSessionPath()
 		if err := ctrl.SaveSession(savePath); err != nil {
 			return fmt.Errorf("failed to save session: %w", err)
 		}
-		
+
 		fmt.Printf("Session saved\n")
-		
+
 		return nil
 	},
 }
-

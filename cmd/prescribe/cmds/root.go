@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/file"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/filter"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/session"
@@ -43,23 +44,11 @@ func init() {
 }
 
 func registerCommands() {
-	// Filter commands
-	rootCmd.AddCommand(filter.AddFilterCmd)
-	rootCmd.AddCommand(filter.ListFiltersCmd)
-	rootCmd.AddCommand(filter.RemoveFilterCmd)
-	rootCmd.AddCommand(filter.ClearFiltersCmd)
-	rootCmd.AddCommand(filter.TestFilterCmd)
-	rootCmd.AddCommand(filter.ShowFilteredCmd)
-
-	// Session commands
-	rootCmd.AddCommand(session.InitCmd)
-	rootCmd.AddCommand(session.SaveCmd)
-	rootCmd.AddCommand(session.LoadCmd)
-	rootCmd.AddCommand(session.ShowCmd)
-
-	// File commands
-	rootCmd.AddCommand(file.ToggleFileCmd)
-	rootCmd.AddCommand(file.AddContextCmd)
+	// Command groups
+	rootCmd.AddCommand(filter.FilterCmd)
+	rootCmd.AddCommand(session.SessionCmd)
+	rootCmd.AddCommand(file.FileCmd)
+	rootCmd.AddCommand(context.ContextCmd)
 
 	// Root-level commands (generate, tui)
 	rootCmd.AddCommand(generateCmd)

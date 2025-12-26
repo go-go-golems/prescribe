@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var (
-	outputFile   string
-	promptText   string
-	presetID     string
-	loadSession  string
+	outputFile  string
+	promptText  string
+	presetID    string
+	loadSession string
 )
 
 var generateCmd = &cobra.Command{
@@ -20,24 +20,11 @@ var generateCmd = &cobra.Command{
 	Short: "Generate PR description",
 	Long:  `Generate a PR description using AI based on the current session.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
-		
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-		
+
 		// Load session if specified
 		if loadSession != "" {
 			if err := ctrl.LoadSession(loadSession); err != nil {
@@ -45,7 +32,7 @@ var generateCmd = &cobra.Command{
 			}
 			fmt.Fprintf(os.Stderr, "Loaded session from: %s\n", loadSession)
 		}
-		
+
 		// Override prompt if specified
 		if promptText != "" {
 			ctrl.SetPrompt(promptText, nil)
@@ -54,14 +41,14 @@ var generateCmd = &cobra.Command{
 				return fmt.Errorf("failed to load preset: %w", err)
 			}
 		}
-		
+
 		// Generate description
 		fmt.Fprintf(os.Stderr, "Generating PR description...\n")
 		description, err := ctrl.GenerateDescription()
 		if err != nil {
 			return fmt.Errorf("failed to generate description: %w", err)
 		}
-		
+
 		// Output description
 		if outputFile != "" {
 			if err := os.WriteFile(outputFile, []byte(description), 0644); err != nil {
@@ -71,7 +58,7 @@ var generateCmd = &cobra.Command{
 		} else {
 			fmt.Println(description)
 		}
-		
+
 		return nil
 	},
 }

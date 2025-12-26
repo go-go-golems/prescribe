@@ -3,9 +3,9 @@ package session
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/go-go-golems/prescribe/internal/session"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
@@ -18,31 +18,15 @@ var ShowCmd = &cobra.Command{
 	Short: "Show current session state",
 	Long:  `Display the current PR builder session state.`,
 	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		// Get flags from parent command
-		repoPath, _ := cmdCmd.Flags().GetString("repo")
-		targetBranch, _ := cmdCmd.Flags().GetString("target")
-		if repoPath == "" {
-			repoPath = "."
-		}
-		// Create controller
-		ctrl, err := controller.NewController(repoPath)
+		ctrl, err := helpers.NewInitializedController(cmdCmd)
 		if err != nil {
-			return fmt.Errorf("failed to create controller: %w", err)
+			return err
 		}
-		
-		// Initialize
-		if err := ctrl.Initialize(targetBranch); err != nil {
-			return fmt.Errorf("failed to initialize: %w", err)
-		}
-		
-		// Load session if exists
-		sessionPath := ctrl.GetDefaultSessionPath()
-		if err := ctrl.LoadSession(sessionPath); err == nil {
-			// Session loaded successfully
-		}
-		
+
+		helpers.LoadDefaultSessionIfExists(ctrl)
+
 		data := ctrl.GetData()
-		
+
 		if showYAML {
 			// Show as YAML
 			sess := session.NewSession(data)
@@ -55,12 +39,12 @@ var ShowCmd = &cobra.Command{
 			// Show human-readable format
 			fmt.Printf("PR Builder Session\n")
 			fmt.Printf("==================\n\n")
-			
+
 			fmt.Printf("Branches:\n")
 			fmt.Printf("  Source: %s\n", data.SourceBranch)
 			fmt.Printf("  Target: %s\n", data.TargetBranch)
 			fmt.Printf("\n")
-			
+
 			fmt.Printf("Files: %d total\n", len(data.ChangedFiles))
 			visibleFiles := data.GetVisibleFiles()
 			includedCount := 0
@@ -73,7 +57,7 @@ var ShowCmd = &cobra.Command{
 			fmt.Printf("  Included: %d\n", includedCount)
 			fmt.Printf("  Filtered: %d\n", len(data.GetFilteredFiles()))
 			fmt.Printf("\n")
-			
+
 			if len(data.ActiveFilters) > 0 {
 				fmt.Printf("Active Filters:\n")
 				for _, filter := range data.ActiveFilters {
@@ -84,7 +68,7 @@ var ShowCmd = &cobra.Command{
 				}
 				fmt.Printf("\n")
 			}
-			
+
 			if len(data.AdditionalContext) > 0 {
 				fmt.Printf("Additional Context:\n")
 				for _, ctx := range data.AdditionalContext {
@@ -100,7 +84,7 @@ var ShowCmd = &cobra.Command{
 				}
 				fmt.Printf("\n")
 			}
-			
+
 			fmt.Printf("Prompt:\n")
 			if data.CurrentPreset != nil {
 				fmt.Printf("  Preset: %s (%s)\n", data.CurrentPreset.Name, data.CurrentPreset.ID)
@@ -112,11 +96,14 @@ var ShowCmd = &cobra.Command{
 				fmt.Printf("  Template: %s\n", preview)
 			}
 			fmt.Printf("\n")
-			
+
 			fmt.Printf("Token Count: %d\n", data.GetTotalTokens())
 		}
-		
+
 		return nil
 	},
 }
 
+func init() {
+	ShowCmd.Flags().BoolVarP(&showYAML, "yaml", "y", false, "Show session as YAML")
+}
