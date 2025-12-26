@@ -70,3 +70,12 @@ Reorganized command structure: moved main.go to cmd/prescribe/main.go, organized
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Root command moved to cmds package
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/main.go — New entry point
 
+
+## 2025-12-26
+
+Added thorough architecture reference doc: explains PRData model, Controller orchestration, git/session/api subsystems, CLI verb flows, and Bubbletea TUI state machine (with diagrams and pseudocode).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/001-INITIAL-IMPORT--initial-import-transform-prescribe-into-go-go-golems-application/reference/02-prescribe-architecture-deep-dive-data-model-control-flow-cli-tui-persistence.md — Architecture deep dive
+
