@@ -1,10 +1,10 @@
-package cmd
+package session
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var (
@@ -12,11 +12,17 @@ var (
 	autoSave    bool
 )
 
-var initCmd = &cobra.Command{
+var InitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new PR builder session",
 	Long:  `Initialize a new PR builder session from the current git state.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -53,8 +59,3 @@ var initCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(initCmd)
-	initCmd.Flags().StringVarP(&sessionPath, "output", "o", "", "Session file path (default: .pr-builder/session.yaml)")
-	initCmd.Flags().BoolVarP(&autoSave, "save", "s", false, "Automatically save session after init")
-}

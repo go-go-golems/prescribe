@@ -4,19 +4,17 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-go-golems/prescribe/cmd/file"
+	"github.com/go-go-golems/prescribe/cmd/filter"
+	"github.com/go-go-golems/prescribe/cmd/session"
 	"github.com/spf13/cobra"
-)
-
-var (
-	repoPath     string
-	targetBranch string
 )
 
 // rootCmd represents the base command
 var rootCmd = &cobra.Command{
-	Use:   "pr-builder",
+	Use:   "prescribe",
 	Short: "A TUI for building GitHub PR descriptions",
-	Long: `PR Builder is a CLI/TUI application for generating pull request descriptions using LLMs.
+	Long: `Prescribe is a CLI/TUI application for generating pull request descriptions using LLMs.
 	
 It allows you to:
 - View and filter PR diffs
@@ -37,6 +35,33 @@ func Execute() {
 
 func init() {
 	// Global flags
-	rootCmd.PersistentFlags().StringVarP(&repoPath, "repo", "r", ".", "Path to git repository")
-	rootCmd.PersistentFlags().StringVarP(&targetBranch, "target", "t", "", "Target branch (default: main or master)")
+	rootCmd.PersistentFlags().StringP("repo", "r", ".", "Path to git repository")
+	rootCmd.PersistentFlags().StringP("target", "t", "", "Target branch (default: main or master)")
+
+	// Register subdirectory commands
+	registerCommands()
+}
+
+func registerCommands() {
+	// Filter commands
+	rootCmd.AddCommand(filter.AddFilterCmd)
+	rootCmd.AddCommand(filter.ListFiltersCmd)
+	rootCmd.AddCommand(filter.RemoveFilterCmd)
+	rootCmd.AddCommand(filter.ClearFiltersCmd)
+	rootCmd.AddCommand(filter.TestFilterCmd)
+	rootCmd.AddCommand(filter.ShowFilteredCmd)
+
+	// Session commands
+	rootCmd.AddCommand(session.InitCmd)
+	rootCmd.AddCommand(session.SaveCmd)
+	rootCmd.AddCommand(session.LoadCmd)
+	rootCmd.AddCommand(session.ShowCmd)
+
+	// File commands
+	rootCmd.AddCommand(file.ToggleFileCmd)
+	rootCmd.AddCommand(file.AddContextCmd)
+
+	// Root-level commands (generate, tui)
+	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(tuiCmd)
 }

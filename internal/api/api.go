@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/user/pr-builder/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
 // Service provides API operations for generating PR descriptions

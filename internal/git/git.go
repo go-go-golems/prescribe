@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/pr-builder/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
 // Service provides git operations

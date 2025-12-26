@@ -6,8 +6,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/user/pr-builder/internal/controller"
-	"github.com/user/pr-builder/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
 // Screen represents different TUI screens

@@ -1,11 +1,11 @@
-package cmd
+package session
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
-	"github.com/user/pr-builder/internal/session"
+	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/session"
 	"gopkg.in/yaml.v3"
 )
 
@@ -13,11 +13,17 @@ var (
 	showYAML bool
 )
 
-var showCmd = &cobra.Command{
+var ShowCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Show current session state",
 	Long:  `Display the current PR builder session state.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -114,7 +120,3 @@ var showCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(showCmd)
-	showCmd.Flags().BoolVarP(&showYAML, "yaml", "y", false, "Output as YAML")
-}

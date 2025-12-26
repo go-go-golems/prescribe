@@ -1,11 +1,11 @@
-package cmd
+package filter
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
-	"github.com/user/pr-builder/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
 var (
@@ -14,15 +14,17 @@ var (
 	testIncludePatterns   []string
 )
 
-var testFilterCmd = &cobra.Command{
+var TestFilterCmd = &cobra.Command{
 	Use:   "test-filter",
 	Short: "Test a filter pattern without applying it",
 	Long:  `Test how a filter would affect files without actually applying it to the session.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(testExcludePatterns) == 0 && len(testIncludePatterns) == 0 {
-			return fmt.Errorf("at least one pattern is required (--exclude or --include)")
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
 		}
-
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -88,9 +90,3 @@ var testFilterCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(testFilterCmd)
-	testFilterCmd.Flags().StringVarP(&testFilterName, "name", "n", "Test Filter", "Filter name")
-	testFilterCmd.Flags().StringSliceVarP(&testExcludePatterns, "exclude", "e", []string{}, "Exclude patterns")
-	testFilterCmd.Flags().StringSliceVarP(&testIncludePatterns, "include", "i", []string{}, "Include patterns")
-}

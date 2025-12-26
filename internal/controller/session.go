@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"github.com/user/pr-builder/internal/session"
+	"github.com/go-go-golems/prescribe/internal/session"
 )
 
 // SaveSession saves the current state to a session file

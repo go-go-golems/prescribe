@@ -1,6 +1,6 @@
 package main
 
-import "github.com/user/pr-builder/cmd"
+import "github.com/go-go-golems/prescribe/cmd"
 
 func main() {
 	cmd.Execute()

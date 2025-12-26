@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 // Model is the main Bubbletea model

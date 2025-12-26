@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/user/pr-builder/internal/api"
-	"github.com/user/pr-builder/internal/domain"
-	"github.com/user/pr-builder/internal/git"
+	"github.com/go-go-golems/prescribe/internal/api"
+	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/git"
 	"gopkg.in/yaml.v3"
 )
 

@@ -1,11 +1,11 @@
-package cmd
+package filter
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
-	"github.com/user/pr-builder/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
 var (
@@ -15,17 +15,24 @@ var (
 	includePatterns   []string
 )
 
-var addFilterCmd = &cobra.Command{
+var AddFilterCmd = &cobra.Command{
 	Use:   "add-filter",
 	Short: "Add a filter to the session",
 	Long:  `Add a file filter to the current session.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
 		if filterName == "" {
 			return fmt.Errorf("filter name is required (--name)")
 		}
 		
 		if len(excludePatterns) == 0 && len(includePatterns) == 0 {
 			return fmt.Errorf("at least one pattern is required (--exclude or --include)")
+		}
+		
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
 		}
 		
 		// Create controller
@@ -82,10 +89,10 @@ var addFilterCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addFilterCmd)
-	addFilterCmd.Flags().StringVarP(&filterName, "name", "n", "", "Filter name (required)")
-	addFilterCmd.Flags().StringVarP(&filterDescription, "description", "d", "", "Filter description")
-	addFilterCmd.Flags().StringSliceVarP(&excludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
-	addFilterCmd.Flags().StringSliceVarP(&includePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
-	addFilterCmd.MarkFlagRequired("name")
+	AddFilterCmd.Flags().StringVarP(&filterName, "name", "n", "", "Filter name (required)")
+	AddFilterCmd.Flags().StringVarP(&filterDescription, "description", "d", "", "Filter description")
+	AddFilterCmd.Flags().StringSliceVarP(&excludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
+	AddFilterCmd.Flags().StringSliceVarP(&includePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
+	AddFilterCmd.MarkFlagRequired("name")
 }
+

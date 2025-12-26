@@ -1,18 +1,24 @@
-package cmd
+package session
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var saveCmd = &cobra.Command{
+var SaveCmd = &cobra.Command{
 	Use:   "save [path]",
 	Short: "Save current session to YAML file",
 	Long:  `Save the current PR builder session to a YAML file.`,
 	Args:  cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -40,6 +46,3 @@ var saveCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(saveCmd)
-}

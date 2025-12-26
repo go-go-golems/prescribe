@@ -5,15 +5,22 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
-	"github.com/user/pr-builder/internal/tui"
+	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/tui"
 )
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
 	Short: "Launch interactive TUI",
 	Long:  `Launch the interactive Terminal User Interface for building PR descriptions.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
+		
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -39,6 +46,3 @@ var tuiCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(tuiCmd)
-}

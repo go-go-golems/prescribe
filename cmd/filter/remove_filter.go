@@ -1,19 +1,25 @@
-package cmd
+package filter
 
 import (
 	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var removeFilterCmd = &cobra.Command{
+var RemoveFilterCmd = &cobra.Command{
 	Use:   "remove-filter <index|name>",
 	Short: "Remove a filter from the session",
 	Long:  `Remove a filter by index or name.`,
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -83,6 +89,3 @@ var removeFilterCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(removeFilterCmd)
-}

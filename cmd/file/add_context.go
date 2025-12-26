@@ -1,30 +1,28 @@
-package cmd
+package file
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var (
 	contextNote string
 )
 
-var addContextCmd = &cobra.Command{
+var AddContextCmd = &cobra.Command{
 	Use:   "add-context [file-path]",
 	Short: "Add additional context to session",
 	Long:  `Add a file or note as additional context for PR description generation.`,
 	Args:  cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 && contextNote == "" {
-			return fmt.Errorf("either file path or --note is required")
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
 		}
-		
-		if len(args) > 0 && contextNote != "" {
-			return fmt.Errorf("cannot specify both file path and --note")
-		}
-		
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -67,6 +65,6 @@ var addContextCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addContextCmd)
-	addContextCmd.Flags().StringVarP(&contextNote, "note", "n", "", "Add a text note as context")
+	AddContextCmd.Flags().StringVar(&contextNote, "note", "", "Add a note as context")
 }
+

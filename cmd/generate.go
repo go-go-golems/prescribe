@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
 var (
@@ -19,7 +19,14 @@ var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate PR description",
 	Long:  `Generate a PR description using AI based on the current session.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
+		
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -70,7 +77,6 @@ var generateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(generateCmd)
 	generateCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: stdout)")
 	generateCmd.Flags().StringVarP(&promptText, "prompt", "p", "", "Custom prompt text")
 	generateCmd.Flags().StringVar(&presetID, "preset", "", "Prompt preset ID")

@@ -1,18 +1,24 @@
-package cmd
+package session
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var loadCmd = &cobra.Command{
+var LoadCmd = &cobra.Command{
 	Use:   "load [path]",
 	Short: "Load session from YAML file",
 	Long:  `Load a PR builder session from a YAML file.`,
 	Args:  cobra.MaximumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -48,6 +54,3 @@ var loadCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(loadCmd)
-}

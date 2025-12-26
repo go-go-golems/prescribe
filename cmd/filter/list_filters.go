@@ -1,17 +1,23 @@
-package cmd
+package filter
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var listFiltersCmd = &cobra.Command{
+var ListFiltersCmd = &cobra.Command{
 	Use:   "list-filters",
 	Short: "List all active filters",
 	Long:  `Display all active filters in the current session.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -62,6 +68,3 @@ var listFiltersCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(listFiltersCmd)
-}

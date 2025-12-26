@@ -1,17 +1,23 @@
-package cmd
+package filter
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var showFilteredCmd = &cobra.Command{
+var ShowFilteredCmd = &cobra.Command{
 	Use:   "show-filtered",
 	Short: "Show files that are filtered out",
 	Long:  `Display all files that are being filtered out by active filters.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
 		if err != nil {
@@ -70,6 +76,3 @@ var showFilteredCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(showFilteredCmd)
-}

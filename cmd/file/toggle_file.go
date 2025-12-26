@@ -1,19 +1,26 @@
-package cmd
+package file
 
 import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/user/pr-builder/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/controller"
 )
 
-var toggleFileCmd = &cobra.Command{
+var ToggleFileCmd = &cobra.Command{
 	Use:   "toggle-file <path>",
 	Short: "Toggle file inclusion in session",
 	Long:  `Toggle whether a file is included in the PR description context.`,
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmdCmd *cobra.Command, args []string) error {
 		filePath := args[0]
+		
+		// Get flags from parent command
+		repoPath, _ := cmdCmd.Flags().GetString("repo")
+		targetBranch, _ := cmdCmd.Flags().GetString("target")
+		if repoPath == "" {
+			repoPath = "."
+		}
 		
 		// Create controller
 		ctrl, err := controller.NewController(repoPath)
@@ -62,6 +69,3 @@ var toggleFileCmd = &cobra.Command{
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(toggleFileCmd)
-}
