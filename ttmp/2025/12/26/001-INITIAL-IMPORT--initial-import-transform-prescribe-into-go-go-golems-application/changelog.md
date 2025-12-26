@@ -79,3 +79,14 @@ Added thorough architecture reference doc: explains PRData model, Controller orc
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/001-INITIAL-IMPORT--initial-import-transform-prescribe-into-go-go-golems-application/reference/02-prescribe-architecture-deep-dive-data-model-control-flow-cli-tui-persistence.md — Architecture deep dive
 
+
+## 2025-12-26
+
+CLI: regroup verbs into pinocchio-style command groups; extract initial parameter layers; add CLI analysis doc (commit 379790d)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/helpers/controller.go — Repo/target/controller init helper
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Registers command groups (filter/session/file/context)
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/001-INITIAL-IMPORT--initial-import-transform-prescribe-into-go-go-golems-application/analysis/03-cli-command-grouping-and-parameter-layers.md — CLI verbs + parameter layers analysis
+

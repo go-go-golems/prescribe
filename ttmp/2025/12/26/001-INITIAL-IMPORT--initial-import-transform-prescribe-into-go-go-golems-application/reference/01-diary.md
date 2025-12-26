@@ -300,3 +300,40 @@ This step moved the entry point to `cmd/prescribe/main.go` and nested all Cobra 
 ### What worked
 - `go run ./cmd/prescribe --help` works and shows the expected command set
 
+---
+
+## Step 7: Group CLI verbs into real command groups (pinocchio-style) + start extracting parameter layers
+
+This step corrected a broken Cobra layout and then continued the pinocchio alignment: instead of having “group folders” but flat root-level verbs (`add-filter`, `toggle-file`, …), we now introduce actual parent commands (`filter`, `session`, `file`, `context`). In parallel, we started extracting the repeated “repo/target → controller.Initialize()” setup into a reusable helper (the first “parameter layer”).
+
+**Commit (code):** `379790d` — "CLI: group commands and extract common parameter helpers"
+
+### What I did
+- Removed stale duplicate Cobra code in `cmd/prescribe/` that used `package prescribe` next to `package main` (Go forbids mixed packages in one folder).
+- Renamed command implementation files in `cmd/prescribe/cmds/filter/` to pinocchio-style filenames (`add.go`, `list.go`, etc.).
+- Added group commands:
+  - `cmd/prescribe/cmds/filter.FilterCmd`
+  - `cmd/prescribe/cmds/session.SessionCmd`
+  - `cmd/prescribe/cmds/file.FileCmd`
+  - `cmd/prescribe/cmds/context.ContextCmd`
+- Started extracting common parameters into a helper (“parameter layer”):
+  - `cmd/prescribe/cmds/helpers.NewInitializedController`
+  - session load helpers (`LoadDefaultSessionIfExists`, `LoadDefaultSession`)
+
+### Why
+- Root-level verbs like `add-filter` don’t scale and don’t match the pinocchio organization.
+- Repeated setup logic (repo/target flags, controller init, session load) was duplicated across many commands and was already drifting (some commands forgot to load sessions or bind flags).
+
+### What was tricky to build
+- Ensuring we don’t silently overwrite existing sessions: commands that mutate state should load an existing session before saving.
+- Avoiding accidental behavior changes: regrouping commands inevitably changes the CLI surface; we need to track compatibility expectations.
+
+### What warrants a second pair of eyes
+- Command UX: whether `context` deserves its own group vs living under `session` or `file`.
+- Session semantics: which commands should *require* an existing session vs “best-effort load if present”.
+
+### What should be done in the future
+- Write a dedicated CLI analysis doc (verbs + settings layers + compatibility notes) in the ticket `analysis/` folder.
+- Update any scripts/docs that expect the old flat command names.
+
+
