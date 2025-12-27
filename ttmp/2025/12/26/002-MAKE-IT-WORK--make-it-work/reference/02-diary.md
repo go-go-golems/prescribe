@@ -238,3 +238,8 @@ This step starts implementing Phase 1 of the refactor as described in the modula
 - Added `internal/tui/keys` with a centralized `KeyMap` (based on `bubbles/key`) and `ShortHelp`/`FullHelp` groupings.
 - Added `github.com/charmbracelet/bubbles` dependency (needed later for `bubbles/help.Model`).
 
+**Commit (code):** 422837be3baebcddc196ac9151b62aa8c1b6420d — "TUI: introduce Styles struct"
+
+### What I did (cont.)
+- Added `internal/tui/styles` with a `Styles` struct and `Default()` constructor to start migrating away from global style variables.
+
