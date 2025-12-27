@@ -11,12 +11,16 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: prescribe/internal/controller/filter_presets.go
-      Note: Filter preset YAML schema + controller load/save (code commit bc3149d)
-    - Path: prescribe/internal/controller/filter_presets_test.go
-      Note: Round-trip tests for preset save/load (code commit bc3149d)
-    - Path: prescribe/internal/domain/domain.go
-      Note: domain.FilterPreset type (code commit bc3149d)
+    - Path: prescribe/internal/controller/repo_defaults.go
+      Note: Load .pr-builder/config.yaml and apply defaults.filter_presets (code commit cc52899)
+    - Path: prescribe/internal/tui/app/boot.go
+      Note: Apply repo defaults when session.yaml missing (code commit cc52899)
+    - Path: prescribe/internal/tui/app/boot_test.go
+      Note: Boot behavior test for defaults (code commit cc52899)
+    - Path: prescribe/internal/tui/app/model.go
+      Note: Toast + UI resync handling for defaults/session load (code commit cc52899)
+    - Path: prescribe/internal/tui/events/events.go
+      Note: New events for default filters applied/failed (code commit cc52899)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T16:58:14.979386247-05:00
@@ -80,3 +84,37 @@ rules:
   - type: exclude
     pattern: "**/*spec*"
 ```
+
+## Step 2: Apply repo-default filter presets on TUI boot when session.yaml is missing
+
+This step wires “defaults for new sessions” into the TUI boot sequence: if the repo has no `.pr-builder/session.yaml`, we look for `.pr-builder/config.yaml` and apply any configured `defaults.filter_presets` into `ActiveFilters`. This keeps session state as the higher-precedence, explicit source of truth while enabling “first run” defaults.
+
+**Commit (code):** cc52899e19f42a044ec00000e55462b2c7a10a5c — "TUI: apply repo default filters when session missing"
+
+### What I did
+- Added controller support to read `<repo>/.pr-builder/config.yaml` and apply `defaults.filter_presets` via the filter preset loader.
+- Updated `bootCmd` to apply defaults on “missing session” instead of silently skipping.
+- Added new TUI events for “defaults applied” / “defaults failed” and toast + UI resync handling.
+- Added a unit test that exercises boot behavior end-to-end with a temp repo.
+
+### Why
+- “New session has no filters” was making repo defaults impossible unless a session file already existed. This makes defaults opt-in via repo config.
+
+### What worked
+- `go test ./...` passes and includes a regression test for boot-time default application.
+
+### What was tricky to build
+- Ensuring the UI resyncs file visibility when filters are applied at boot (same issue applies to session load).
+
+### What warrants a second pair of eyes
+- Precedence semantics: session load wins; defaults only apply on `os.ErrNotExist` for session.
+- Error semantics: a bad config/preset shows a warning toast but does not prevent the app from running.
+
+### What should be done in the future
+- Decide whether to auto-save a new session after applying defaults (to make the defaults “sticky” even if config changes).
+- Decide whether CLI commands should also apply defaults when session is missing (parity with TUI).
+
+### Code review instructions
+- Start in `internal/tui/app/boot.go` and `internal/controller/repo_defaults.go`.
+- Validate with:
+  - `cd prescribe && go test ./... -count=1`

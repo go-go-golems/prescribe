@@ -15,10 +15,10 @@
 - [x] Decide preset ID strategy (filename vs slug) and keep it stable
 
 - [ ] **Implement “default filters for new sessions in current repo”**
-  - [ ] Define per-repo config file (proposed): `<repo>/.pr-builder/config.yaml`
-  - [ ] Add `defaults.filter_presets: [ ... ]` list (IDs or filenames)
-  - [ ] On TUI boot (`internal/tui/app/boot.go`):
-    - [ ] If session missing, load repo defaults and apply them
+- [x] Define per-repo config file (proposed): `<repo>/.pr-builder/config.yaml`
+- [x] Add `defaults.filter_presets: [ ... ]` list (IDs or filenames)
+- [x] On TUI boot (`internal/tui/app/boot.go`):
+- [x] If session missing, load repo defaults and apply them
     - [ ] Decide whether to auto-save a new session after applying defaults
   - [ ] CLI parity: decide whether CLI commands should also apply defaults when session is missing
 
@@ -36,6 +36,6 @@
 
 - [ ] **Tests + docs**
 - [x] Unit tests: YAML round-trip for presets (load/save)
-  - [ ] Unit tests: boot behavior (missing session + defaults applied)
+- [x] Unit tests: boot behavior (missing session + defaults applied)
   - [ ] Update docs: explain preset locations and default behavior
 
