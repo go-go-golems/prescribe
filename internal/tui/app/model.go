@@ -1,9 +1,13 @@
 package app
 
 import (
+	"time"
+
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
+	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
 )
@@ -37,11 +41,55 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	// Phase 2 will grow this Update into the real mode machine.
-	// For now, keep this a compiling placeholder.
+	var cmds []tea.Cmd
 	var cmd tea.Cmd
+
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		m.status.SetSize(m.width)
+		m.status.SetShowFullHelp(m.showFullHelp)
+
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keymap.Quit):
+			return m, tea.Quit
+
+		case key.Matches(msg, m.keymap.Help):
+			m.showFullHelp = !m.showFullHelp
+			m.status.SetShowFullHelp(m.showFullHelp)
+		}
+
+	case events.SessionLoadedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     "Session loaded",
+			Level:    events.ToastSuccess,
+			Duration: 2 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	case events.SessionLoadFailedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     "Failed to load session: " + msg.Err.Error(),
+			Level:    events.ToastWarning,
+			Duration: 5 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	case events.SessionLoadSkippedMsg:
+		// No toast for missing session by default; keep quiet.
+	}
+
+	// Let status model consume messages too (toast expiry, etc.).
 	m.status, cmd = m.status.Update(msg)
-	return m, cmd
+	if cmd != nil {
+		cmds = append(cmds, cmd)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
