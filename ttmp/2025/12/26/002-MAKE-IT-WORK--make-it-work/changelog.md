@@ -151,3 +151,12 @@ Added playbook: how to record Bubbletea TUIs with tmux (reliable start sizing, w
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/02-recording-bubbletea-with-tmux.md — New playbook
 
+
+## 2025-12-27
+
+Docs: add analysis of Filters screen border/layout regression (tmux capture reproduction, root-cause hypotheses, and validation checklist)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/03-tui-filters-page-border-layout-debugging-tmux-captures.md — New analysis doc
+
