@@ -627,6 +627,8 @@ This step investigates and fixes a nasty UI regression: in tmux captures the app
 - 3f164a0996f9d06471ab0939817cc55f97ae66f4 — "TUI: prevent scroll by trimming trailing newline"
 - a4bc17fe57945639214eae48f37e6c0496556d9d — "TUI: add 1-col slack to keep right border visible"
 - 9619ea39200ad53c1b9a63e0e3ab13bce2decf82 — "TUI: keep frame within tmux width (no Base padding)"
+- 83ffcbf2882d13a594894a83d6ee485ebbf98b9a — "TUI: size BorderBox to terminal (account border size)"
+- fdb45f1e6e858b9e4fddfc30ce16f4ce9fe6220a — "TUI: add 1-row slack to keep top border visible"
 
 ### What I did
 - Used the ticket tmux harness (`scripts/tui-tmux.sh`) to reproduce the issue and capture frames to text files.
@@ -644,6 +646,7 @@ This step investigates and fixes a nasty UI regression: in tmux captures the app
 
 ### What worked
 - Re-running the tmux harness after each compiling commit made it easy to validate changes.
+- After rebuilding the binary and re-running with `TMUX_COLS=120`, tmux captures contain `╭`, `╮`, and `╯` again (top/right/bottom borders visible).
 
 ### What didn't work
 - Initially, the tmux capture method (`capture-pane -p` vs `-a -p`) was confusing: alt-screen captures were empty in some runs, while normal captures showed content but looked “cropped”. This turned out to be an interaction of Bubbletea alt-screen drawing and overflow.
