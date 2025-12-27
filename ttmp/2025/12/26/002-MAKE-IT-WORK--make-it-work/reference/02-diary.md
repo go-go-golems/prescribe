@@ -272,3 +272,11 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
 ### What worked
 - `go test ./...` passes after introducing the package.
 
+**Commit (code):** 04d0ccfe37ac7fc0414e03988b0eefab8bf48a4a — "TUI: app boot cmd for default session load"
+
+### What I did (cont.)
+- Implemented boot-time default session load command (`bootCmd`) in `internal/tui/app`:
+  - ignores missing session file (`errors.Is(err, os.ErrNotExist)`)
+  - emits typed messages (`events.SessionLoadedMsg`, `events.SessionLoadSkippedMsg`, `events.SessionLoadFailedMsg`)
+- Wired `app.Model.Init()` to run `bootCmd(m.ctrl)` (behavior will be surfaced via toasts once app Update handles these messages).
+
