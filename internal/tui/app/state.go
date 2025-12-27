@@ -36,6 +36,7 @@ type Model struct {
 
 	// selection
 	selectedIndex int
+	filterIndex   int
 
 	// terminal + layout
 	width  int

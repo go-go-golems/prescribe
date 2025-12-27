@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
@@ -69,6 +70,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
 			m.mode = ModeFilters
+			m.filterIndex = 0
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Up):
 			if m.selectedIndex > 0 {
@@ -128,6 +130,68 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Generate):
 			m.mode = ModeGenerating
 			cmds = append(cmds, generateCmd(m.ctrl))
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Up):
+			if m.filterIndex > 0 {
+				m.filterIndex--
+			}
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Down):
+			filters := m.ctrl.GetFilters()
+			if len(filters) > 0 && m.filterIndex < len(filters)-1 {
+				m.filterIndex++
+			}
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.DeleteFilter):
+			filters := m.ctrl.GetFilters()
+			if len(filters) > 0 && m.filterIndex >= 0 && m.filterIndex < len(filters) {
+				_ = m.ctrl.RemoveFilter(m.filterIndex)
+				cmds = append(cmds, saveSessionCmd(m.ctrl))
+				// Clamp after deletion.
+				if m.filterIndex >= len(m.ctrl.GetFilters()) {
+					m.filterIndex = max(0, len(m.ctrl.GetFilters())-1)
+				}
+			}
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.ClearFilters):
+			m.ctrl.ClearFilters()
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+			m.filterIndex = 0
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset1):
+			m.ctrl.AddFilter(domain.Filter{
+				Name:        "Exclude Tests",
+				Description: "Exclude test files",
+				Rules: []domain.FilterRule{
+					{Type: domain.FilterTypeExclude, Pattern: "**/*test*"},
+					{Type: domain.FilterTypeExclude, Pattern: "**/*spec*"},
+				},
+			})
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset2):
+			m.ctrl.AddFilter(domain.Filter{
+				Name:        "Exclude Docs",
+				Description: "Exclude documentation files",
+				Rules: []domain.FilterRule{
+					{Type: domain.FilterTypeExclude, Pattern: "**/*.md"},
+					{Type: domain.FilterTypeExclude, Pattern: "**/docs/**"},
+				},
+			})
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset3):
+			m.ctrl.AddFilter(domain.Filter{
+				Name:        "Only Source",
+				Description: "Include only source code files",
+				Rules: []domain.FilterRule{
+					{Type: domain.FilterTypeInclude, Pattern: "**/*.go"},
+					{Type: domain.FilterTypeInclude, Pattern: "**/*.ts"},
+					{Type: domain.FilterTypeInclude, Pattern: "**/*.js"},
+					{Type: domain.FilterTypeInclude, Pattern: "**/*.py"},
+				},
+			})
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
 		}
 
 	case events.SessionLoadedMsg:

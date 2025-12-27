@@ -84,14 +84,65 @@ func (m Model) renderMain() string {
 }
 
 func (m Model) renderFilters() string {
+	data := m.ctrl.GetData()
+	filters := m.ctrl.GetFilters()
+
 	var b strings.Builder
 
-	title := m.styles.Title.Render("FILTERS (WIP)")
+	title := m.styles.Title.Render("FILTER MANAGEMENT")
 	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 
-	b.WriteString(m.styles.MutedText.Render("Filter pane will be extracted in Phase 5. Press Esc to go back."))
+	stats := fmt.Sprintf("Active Filters: %d | Filtered Files: %d", len(filters), len(data.GetFilteredFiles()))
+	b.WriteString(m.styles.Base.Render(stats))
 	b.WriteString("\n\n")
+
+	b.WriteString(m.styles.Header.Render("ACTIVE FILTERS"))
+	b.WriteString("\n")
+	b.WriteString(strings.Repeat("─", max(0, m.width-6)))
+	b.WriteString("\n")
+
+	if len(filters) == 0 {
+		b.WriteString(m.styles.MutedText.Render("No active filters"))
+		b.WriteString("\n")
+	} else {
+		idx := m.filterIndex
+		if idx < 0 {
+			idx = 0
+		}
+		if idx >= len(filters) {
+			idx = len(filters) - 1
+		}
+
+		for i, f := range filters {
+			line := fmt.Sprintf("[%d] %s", i, f.Name)
+			if f.Description != "" {
+				line += " - " + f.Description
+			}
+			if i == idx {
+				b.WriteString(m.styles.SelectedItem.Render("▶ " + line))
+			} else {
+				b.WriteString(m.styles.UnselectedItem.Render(line))
+			}
+			b.WriteString("\n")
+
+			if i == idx {
+				for _, r := range f.Rules {
+					b.WriteString(m.styles.MutedText.Render(fmt.Sprintf("    %s: %s", r.Type, r.Pattern)))
+					b.WriteString("\n")
+				}
+			}
+		}
+	}
+
+	b.WriteString("\n")
+	b.WriteString(m.styles.Header.Render("QUICK ADD PRESETS"))
+	b.WriteString("\n")
+	b.WriteString(strings.Repeat("─", max(0, m.width-6)))
+	b.WriteString("\n")
+	b.WriteString(m.styles.Base.Render("[1] Exclude Tests  [2] Exclude Docs  [3] Only Source"))
+	b.WriteString("\n\n")
+
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
 
