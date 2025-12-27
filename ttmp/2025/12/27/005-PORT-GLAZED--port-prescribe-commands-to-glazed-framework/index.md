@@ -64,12 +64,15 @@ RelatedFiles:
       Note: RepositoryLayer + GetRepositorySettings helper (commit cb59b50)
     - Path: prescribe/pkg/layers/session.go
       Note: SessionLayer + GetSessionSettings helper (commit cb59b50)
+    - Path: prescribe/ttmp/2025/12/27/005-PORT-GLAZED--port-prescribe-commands-to-glazed-framework/playbook/01-playbook-port-existing-cobra-verbs-to-glazed-no-back-compat.md
+      Note: Onboarding playbook for porting commands
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

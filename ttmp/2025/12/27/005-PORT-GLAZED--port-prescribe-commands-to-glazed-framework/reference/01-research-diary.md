@@ -926,3 +926,25 @@ It also means we stop carrying “classic-only” flags like `session show --yam
 - Validate:
   - `cd prescribe && go run ./cmd/prescribe filter list --output json`
   - `cd prescribe && go run ./cmd/prescribe session show --output yaml`
+
+## Step 17: Create onboarding playbook for porting Cobra verbs to Glazed
+
+This step creates a single “how to port commands” playbook meant for a new developer joining the project with no prior Glazed context. It captures the repo-specific conventions we learned during the ticket: explicit command initialization (no `init()`), how to think about BareCommand vs GlazeCommand, how to wire schema layers, and common pitfalls like re-adding root persistent flags.
+
+The goal is to make future ports consistent and fast, and to reduce the need to reverse-engineer patterns from previous commits.
+
+### What I did
+- Added a playbook document:
+  - `playbook/01-playbook-port-existing-cobra-verbs-to-glazed-no-back-compat.md`
+- Included:
+  - environment assumptions + smoke test commands
+  - copy/paste porting recipe (schema → implementation → InitXxxCmd → group Init → tests → commits)
+  - pitfalls / gotchas (init ordering, root flags, broken pipe during head)
+- Related key implementation files directly to the playbook with `docmgr doc relate`.
+
+### Why
+- We want the next developer to be productive immediately without reading the entire ticket diary or Glazed docs.
+- Codifying patterns also prevents drift (especially important now that we explicitly do not preserve backwards compatibility).
+
+### What warrants a second pair of eyes
+- Ensure the playbook aligns with the current “no back-compat” direction and doesn’t suggest dual-mode patterns.

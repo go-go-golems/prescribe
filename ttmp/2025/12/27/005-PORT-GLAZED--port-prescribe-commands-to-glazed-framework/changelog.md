@@ -146,3 +146,12 @@ Step 10: Drop dual-mode/back-compat glue; ported query commands now always use G
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/show.go — Removed classic + yaml flag
 
+
+## 2025-12-27
+
+Docs: Add onboarding playbook for porting Cobra verbs to Glazed (no back-compat)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/005-PORT-GLAZED--port-prescribe-commands-to-glazed-framework/playbook/01-playbook-port-existing-cobra-verbs-to-glazed-no-back-compat.md — New playbook
+
