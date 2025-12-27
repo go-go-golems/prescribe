@@ -41,9 +41,9 @@
 - [x] [Phase 4 / file list component] Root: support toggling view between visible vs filtered list (`showFiltered` flag)
 - [x] [Phase 5 / filter pane component] Create `internal/tui/components/filterpane` (list filters + rule preview)
 - [x] [Phase 5 / filter pane component] Implement filterpane key handling (delete, clear, presets) emitting `events.*Filter*Requested`
-- [ ] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
-- [ ] [Phase 5 / filter pane component] Root: handle filter events with `ctrl.RemoveFilter`, `ctrl.ClearFilters`, `ctrl.AddFilter` + save + toast
-- [ ] [Phase 5 / filter pane component] Add UX: show filter impact (visible/filtered counts) on filter screen
+- [x] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
+- [x] [Phase 5 / filter pane component] Root: handle filter events with `ctrl.RemoveFilter`, `ctrl.ClearFilters`, `ctrl.AddFilter` + save + toast
+- [x] [Phase 5 / filter pane component] Add UX: show filter impact (visible/filtered counts) on filter screen
 - [x] [Phase 6 / result component] Create `internal/tui/components/result` using `viewport.Model`
 - [x] [Phase 6 / result component] Implement scrolling + dynamic resize + key handling (esc back, q quit)
 - [x] [Phase 6 / result component] Root: wire successful generation to set viewport content and enter Result mode
