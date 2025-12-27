@@ -55,19 +55,12 @@ func (m Model) Init() tea.Cmd {
 	return bootCmd(m.ctrl)
 }
 
-func (m Model) frameWH() (w, h int) {
-	// styles.BorderBox has:
-	// - border left/right (2)
-	// - padding left/right (4)
-	// - border top/bottom (2)
-	// - padding top/bottom (2)
-	// Total frame overhead: 6 cols, 4 rows.
-	return 6, 4
-}
-
 func (m Model) contentWH() (w, h int) {
-	frameW, frameH := m.frameWH()
-	return max(0, m.width-frameW), max(0, m.height-frameH)
+	frameW, frameH := m.styles.BorderBox.GetFrameSize()
+
+	// Keep a 1-row slack to prevent terminal scrolling if any view accidentally
+	// over-produces lines (this preserves the top border reliably in tmux captures).
+	return max(0, m.width-frameW), max(0, m.height-frameH-1)
 }
 
 func (m *Model) footerHeight() int {
