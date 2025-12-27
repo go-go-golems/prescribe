@@ -5,11 +5,13 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
+	"github.com/go-go-golems/prescribe/internal/tui/layout"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
 )
 
@@ -51,6 +53,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.status.SetSize(m.width)
 		m.status.SetShowFullHelp(m.showFullHelp)
+		m.layout = layout.Compute(m.width, m.height, 0, lipgloss.Height(m.status.View()))
 
 	case tea.KeyMsg:
 		switch {
@@ -60,6 +63,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Help):
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
+			m.layout = layout.Compute(m.width, m.height, 0, lipgloss.Height(m.status.View()))
 
 		case key.Matches(msg, m.keymap.Back):
 			// Global "back" semantics.
