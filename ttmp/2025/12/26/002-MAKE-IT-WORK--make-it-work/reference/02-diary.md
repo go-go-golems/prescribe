@@ -312,3 +312,13 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - `g` enters Generating mode and runs `Controller.GenerateDescription()` via `tea.Cmd`
   - result screen shows generated markdown (or error) and supports `Esc` back
 
+**Commit (code):** b5c6f3b9e7f8076600e348cb46db8174d2b8172e — "TUI: app filter management (ModeFilters)"
+
+### What I did (cont.)
+- Replaced the stub Filters screen with functional filter management (parity with the old TUI):
+  - navigate filter list (j/k)
+  - delete selected filter (d/x)
+  - clear all filters (c)
+  - add presets (1/2/3)
+  - auto-save after mutations via `tea.Cmd` (`SessionSavedMsg` / `SessionSaveFailedMsg`)
+
