@@ -20,12 +20,12 @@
 - [x] [Phase 2 / app root] Create `internal/tui/app` skeleton files: state/deps/model/view/commands/boot
 - [x] [Phase 2 / app root] Implement `Deps` (time + clipboard) and a real default implementation
 - [x] [Phase 2 / app root] Implement boot-time session load cmd: ignore missing file; toast on other errors
-- [ ] [Phase 2 / app root] Implement Mode state machine (Main/Filters/Generating/Result) matching current EnhancedModel
-- [ ] [Phase 2 / app root] Wire `cmd/prescribe/cmds/tui.go` to launch new app model (replacing `NewEnhancedModel`)
-- [ ] [Phase 2 / app root] Preserve existing key contract (q, j/k, arrows, space, f, v, g, esc) end-to-end
-- [ ] [Phase 2 / app root] Move session save to a `tea.Cmd` + surface save failures via toast
-- [ ] [Phase 2 / app root] Move generation to a `tea.Cmd` + explicit Generating mode + error toast/result
-- [ ] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
+- [x] [Phase 2 / app root] Implement Mode state machine (Main/Filters/Generating/Result) matching current EnhancedModel
+- [x] [Phase 2 / app root] Wire `cmd/prescribe/cmds/tui.go` to launch new app model (replacing `NewEnhancedModel`)
+- [x] [Phase 2 / app root] Preserve existing key contract (q, j/k, arrows, space, f, v, g, esc) end-to-end
+- [x] [Phase 2 / app root] Move session save to a `tea.Cmd` + surface save failures via toast
+- [x] [Phase 2 / app root] Move generation to a `tea.Cmd` + explicit Generating mode + error toast/result
+- [x] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
 - [ ] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
 - [ ] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
 - [ ] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper

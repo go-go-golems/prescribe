@@ -113,3 +113,13 @@ Phase 2 started: added internal/tui/app root skeleton, boot-time session load cm
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/default_deps.go — Deps implementation
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/model.go — App root model
 
+
+## 2025-12-26
+
+Phase 2 progress: implemented app root main/filters/generating/result modes with key handling, autosave + generate via tea.Cmd, session-load/save toasts, and switched  to the new app root.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/tui.go — Now launches app root
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app — model + views
+
