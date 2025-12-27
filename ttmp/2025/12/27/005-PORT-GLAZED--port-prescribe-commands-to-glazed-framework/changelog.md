@@ -186,3 +186,13 @@ Step 13: Port `session init` to a Glazed BareCommand (commit b28b057)
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/init.go — Glazed BareCommand + `session-init` section for `--save/--path`
 
+
+## 2025-12-27
+
+Step 14: Port `file toggle` to a Glazed BareCommand (commit 8909c02)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/file/toggle.go — Glazed BareCommand with required positional `<path>`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/file/file.go — Explicit init wiring for toggle
+

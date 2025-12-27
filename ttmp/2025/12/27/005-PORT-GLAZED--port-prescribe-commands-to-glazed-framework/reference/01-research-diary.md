@@ -1083,3 +1083,43 @@ We kept the existing CLI flags (`--save` and `--path/-p`) for now to avoid unnec
 - Start in `cmd/prescribe/cmds/session/init.go`.
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe session init --help`
+
+## Step 21: Port `file toggle` to a Glazed BareCommand (positional `<path>`)
+
+This step ports `prescribe file toggle` from plain Cobra to a Glazed-built `BareCommand`. Like the other “session mutators”, it remains classic text output, but it now uses ParsedLayers for consistent parsing and controller initialization.
+
+We kept the positional `<path>` argument (required) and implemented it via a `schema.DefaultSlug` section with `schema.WithArguments(...)`, which means usage/help and Cobra arg validation remain correct without custom `cobra.Args` logic.
+
+**Commit (code):** 8909c028a1f4ce2a034895acd4db2be111fffa14 — "prescribe: port file toggle to glazed"
+
+### What I did
+- Converted `cmd/prescribe/cmds/file/toggle.go` to a Glazed `cmds.BareCommand` built with `cli.BuildCobraCommand(...)`.
+- Implemented the required positional `<path>` argument as a default section argument:
+  - `schema.NewSection(schema.DefaultSlug, ..., schema.WithArguments(fields.New("path", ...)))`
+- Updated `cmd/prescribe/cmds/file/file.go` to explicitly initialize the command via `InitToggleFileCmd()` (consistent with the explicit init pattern used in `filter` and `session`).
+
+### Why
+- Remove another Cobra-only parsing island; standardize all ported commands on ParsedLayers and the controller-from-layers helper.
+- Keep initialization deterministic and avoid future init-order surprises.
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed.
+- `prescribe file toggle --help` shows:
+  - `prescribe file toggle <path> [flags]`
+
+### What was tricky to build
+- Ensuring the “new state” printed after toggling reflects the updated controller data (we re-read `ctrl.GetData()` after toggling).
+
+### What warrants a second pair of eyes
+- Confirm the path matching logic is acceptable (exact match against `data.ChangedFiles[i].Path`).
+- Confirm error messages remain user-friendly when the path is not found.
+
+### What should be done in the future
+- Consider supporting a more forgiving path match (or listing candidates) if users often pass slightly different relative paths.
+
+### Code review instructions
+- Start in:
+  - `cmd/prescribe/cmds/file/toggle.go`
+  - `cmd/prescribe/cmds/file/file.go`
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe file toggle --help`
