@@ -3,10 +3,10 @@
 ## TODO
 
 - [ ] Adapt `prescribe` TUI to general Bubbletea + bobatea style (message flow, component composition, keymaps, help)
-- [ ] Add “help bubble” for transient status (e.g. “Copied”, “Saved”, “N files selected”) with display time
+- [x] Add “help bubble” for transient status (e.g. “Copied”, “Saved”, “N files selected”) with display time
 - [ ] Properly handle resize events (`tea.WindowSizeMsg`) across all TUI components/layouts
-- [ ] Add select-all / unselect-all interactions for file list
-- [ ] Export current context to clipboard (diff/prompt/context output)
+- [x] Add select-all / unselect-all interactions for file list
+- [x] Export current context to clipboard (diff/prompt/context output)
 - [x] Write/maintain go-go-golems Bubbletea developer guide (based on bobatea patterns)
 
 - [x] [Phase 1 / scaffolding] Create `internal/tui/events` package with shared typed messages (intent/result/toast/boot)
@@ -28,11 +28,11 @@
 - [x] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
 - [ ] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
 - [ ] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
-- [ ] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper
-- [ ] [Phase 3 / controller APIs] Add `Controller.SetAllVisibleIncluded(included)` helper for select-all/unselect-all
-- [ ] [Phase 3 / controller APIs] Add `Controller.BuildGenerateDescriptionRequest()` (single source of truth for generation inputs)
-- [ ] [Phase 3 / controller APIs] Update `Controller.GenerateDescription()` to call `BuildGenerateDescriptionRequest()`
-- [ ] [Phase 3 / controller APIs] Add unit tests for new controller helpers (path lookup, bulk include, empty visible)
+- [x] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper
+- [x] [Phase 3 / controller APIs] Add `Controller.SetAllVisibleIncluded(included)` helper for select-all/unselect-all
+- [x] [Phase 3 / controller APIs] Add `Controller.BuildGenerateDescriptionRequest()` (single source of truth for generation inputs)
+- [x] [Phase 3 / controller APIs] Update `Controller.GenerateDescription()` to call `BuildGenerateDescriptionRequest()`
+- [x] [Phase 3 / controller APIs] Add unit tests for new controller helpers (path lookup, bulk include, empty visible)
 - [ ] [Phase 4 / file list component] Create `internal/tui/components/filelist` using `bubbles/list`
 - [ ] [Phase 4 / file list component] Define file list item struct (stable ID = file path) + list delegate rendering
 - [ ] [Phase 4 / file list component] Implement filelist key handling (up/down, space toggle) emitting `events.ToggleFileIncludedRequested`
@@ -48,9 +48,9 @@
 - [ ] [Phase 6 / result component] Implement scrolling + dynamic resize + key handling (esc back, q quit)
 - [ ] [Phase 6 / result component] Root: wire successful generation to set viewport content and enter Result mode
 - [ ] [Phase 7 / ticket features] Implement toast messages for: session loaded/failed, saved/failed, generated/failed, copied/failed
-- [ ] [Phase 7 / ticket features] Implement clipboard export: `internal/tui/export/BuildGenerationContextText(req)`
-- [ ] [Phase 7 / ticket features] Wire `CopyContextRequested` to build text via `BuildGenerateDescriptionRequest()` and copy via `Deps`
-- [ ] [Phase 7 / ticket features] Add toast showing bytes copied for clipboard export
+- [x] [Phase 7 / ticket features] Implement clipboard export: `internal/tui/export/BuildGenerationContextText(req)`
+- [x] [Phase 7 / ticket features] Wire `CopyContextRequested` to build text via `BuildGenerateDescriptionRequest()` and copy via `Deps`
+- [x] [Phase 7 / ticket features] Add toast showing bytes copied for clipboard export
 - [ ] [Phase 8 / cleanup] Remove/retire legacy `internal/tui/model.go` if unused (keep history, no behavior regressions)
 - [ ] [Phase 8 / cleanup] Consolidate remaining lipgloss globals into `styles.Styles` and pass through app/components
 - [ ] [Phase 8 / cleanup] Decide/document fate of `internal/model` vs `internal/domain` duplication (plan removal or justification)
