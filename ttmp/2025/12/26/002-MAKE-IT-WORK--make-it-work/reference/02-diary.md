@@ -280,3 +280,11 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - emits typed messages (`events.SessionLoadedMsg`, `events.SessionLoadSkippedMsg`, `events.SessionLoadFailedMsg`)
 - Wired `app.Model.Init()` to run `bootCmd(m.ctrl)` (behavior will be surfaced via toasts once app Update handles these messages).
 
+**Commit (code):** fbfbb13424dc132c736a4fd15ff1fb252ee794e7 — "TUI: app handles resize/help + session load toast"
+
+### What I did (cont.)
+- Grew `app.Model.Update` to handle:
+  - `tea.WindowSizeMsg` (track width/height and pass width to status/help)
+  - global quit/help keys via centralized keymap (`q`/`ctrl+c`, `?`)
+  - session load result messages by emitting a toast (success/warning)
+
