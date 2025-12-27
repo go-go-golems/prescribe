@@ -45,7 +45,7 @@ func (c *Controller) ApplyDefaultFilterPresetsFromRepoConfig() (int, error) {
 
 	applied := 0
 	for _, presetID := range cfg.Defaults.FilterPresets {
-		preset, err := c.findFilterPresetByID(presetID)
+		preset, err := c.LoadFilterPresetByID(presetID)
 		if err != nil {
 			return applied, err
 		}
@@ -61,7 +61,9 @@ func (c *Controller) ApplyDefaultFilterPresetsFromRepoConfig() (int, error) {
 	return applied, nil
 }
 
-func (c *Controller) findFilterPresetByID(presetID string) (domain.FilterPreset, error) {
+// LoadFilterPresetByID resolves a filter preset ID (typically a filename like "exclude_tests.yaml")
+// by searching project presets first, then global presets.
+func (c *Controller) LoadFilterPresetByID(presetID string) (domain.FilterPreset, error) {
 	projectPresets, err := c.LoadProjectFilterPresets()
 	if err == nil {
 		for _, p := range projectPresets {

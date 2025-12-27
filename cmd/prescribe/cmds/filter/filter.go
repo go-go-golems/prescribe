@@ -22,6 +22,10 @@ func Init() error {
 			initErr = err
 			return
 		}
+		if err := InitPresetCmd(); err != nil {
+			initErr = err
+			return
+		}
 		if err := InitRemoveFilterCmd(); err != nil {
 			initErr = err
 			return
@@ -45,6 +49,7 @@ func Init() error {
 
 		FilterCmd.AddCommand(
 			AddFilterCmd,
+			PresetCmd,
 			ListFiltersCmd,
 			RemoveFilterCmd,
 			ClearFiltersCmd,
