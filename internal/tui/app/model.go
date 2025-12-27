@@ -58,9 +58,32 @@ func (m Model) Init() tea.Cmd {
 func (m Model) contentWH() (w, h int) {
 	frameW, frameH := m.styles.BorderBox.GetFrameSize()
 
-	// Keep a 1-col/1-row slack to prevent terminal clipping/scrolling if any view
-	// accidentally over-produces width/height (this preserves borders reliably in tmux captures).
-	return max(0, m.width-frameW-1), max(0, m.height-frameH-1)
+	// Content size is the terminal size minus the border+padding frame.
+	// This is the size we should pass to child components and PlaceHorizontal() calls.
+	return max(0, m.width-frameW), max(0, m.height-frameH)
+}
+
+func (m Model) boxWH() (w, h int) {
+	// BorderBox.Width/Height apply to the content block *before* the border is drawn.
+	// So to make the overall rendered box fit the terminal:
+	//   boxW = terminalW - borderW
+	//   boxH = terminalH - borderH
+	b, top, right, bottom, left := m.styles.BorderBox.GetBorder()
+	borderW := 0
+	borderH := 0
+	if left {
+		borderW += b.GetLeftSize()
+	}
+	if right {
+		borderW += b.GetRightSize()
+	}
+	if top {
+		borderH += b.GetTopSize()
+	}
+	if bottom {
+		borderH += b.GetBottomSize()
+	}
+	return max(0, m.width-borderW), max(0, m.height-borderH)
 }
 
 func (m *Model) footerHeight() int {
