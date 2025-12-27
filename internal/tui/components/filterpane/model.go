@@ -50,7 +50,7 @@ func New(km keys.KeyMap, st styles.Styles) Model {
 	l.SetShowHelp(false)
 	l.SetShowPagination(false)
 
-	return Model{list: l, keymap: km, styles: st}
+	return Model{list: l, keymap: km, styles: st}.recomputeLayout()
 }
 
 func (m Model) View() string {
@@ -63,14 +63,24 @@ func (m Model) View() string {
 		b.WriteString("\n")
 	}
 
-	// Rule preview (bounded-ish)
-	if f, ok := m.SelectedFilter(); ok {
-		b.WriteString("\n")
-		b.WriteString(m.styles.Header.Render("RULES"))
-		b.WriteString("\n")
-		for _, r := range f.Rules {
-			b.WriteString(m.styles.MutedText.Render(fmt.Sprintf("  %s: %s", r.Type, r.Pattern)))
+	// Rule preview (bounded to component height; list height is reduced accordingly)
+	if m.previewHeight() > 0 {
+		f, ok := m.SelectedFilter()
+		if ok {
 			b.WriteString("\n")
+			b.WriteString(m.styles.Header.Render("RULES"))
+			b.WriteString("\n")
+
+			rulesShown := min(len(f.Rules), m.maxRulesToShow())
+			for i := 0; i < rulesShown; i++ {
+				r := f.Rules[i]
+				b.WriteString(m.styles.MutedText.Render(fmt.Sprintf("  %s: %s", r.Type, r.Pattern)))
+				b.WriteString("\n")
+			}
+			if rulesShown < len(f.Rules) {
+				b.WriteString(m.styles.MutedText.Render("  …"))
+				b.WriteString("\n")
+			}
 		}
 	}
 
@@ -83,10 +93,10 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keymap.Up):
 			m.list.CursorUp()
-			return m, nil
+			return m.recomputeLayout(), nil
 		case key.Matches(msg, m.keymap.Down):
 			m.list.CursorDown()
-			return m, nil
+			return m.recomputeLayout(), nil
 		case key.Matches(msg, m.keymap.DeleteFilter):
 			if len(m.list.Items()) == 0 {
 				return m, nil
@@ -106,7 +116,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
-	return m, cmd
+	return m.recomputeLayout(), cmd
 }
 
 func (m *Model) SetSize(w, h int) {
@@ -118,7 +128,7 @@ func (m *Model) SetSize(w, h int) {
 	}
 	m.width = w
 	m.height = h
-	m.list.SetSize(w, h)
+	*m = m.recomputeLayout()
 }
 
 func (m *Model) SetFilters(filters []domain.Filter) {
@@ -127,6 +137,7 @@ func (m *Model) SetFilters(filters []domain.Filter) {
 		items = append(items, item{filter: f})
 	}
 	m.list.SetItems(items)
+	*m = m.recomputeLayout()
 }
 
 func (m Model) SelectedFilter() (domain.Filter, bool) {
@@ -145,6 +156,59 @@ func (m *Model) SetSelectedIndex(i int) {
 		i = len(m.list.Items()) - 1
 	}
 	m.list.Select(i)
+	*m = m.recomputeLayout()
 }
 
 func (m Model) SelectedIndex() int { return m.list.Index() }
+
+func (m Model) recomputeLayout() Model {
+	listH := max(0, m.height-m.previewHeight())
+	m.list.SetSize(m.width, listH)
+	return m
+}
+
+func (m Model) previewHeight() int {
+	if m.height <= 0 {
+		return 0
+	}
+	f, ok := m.SelectedFilter()
+	if !ok || len(f.Rules) == 0 {
+		return 0
+	}
+
+	// 1 blank + 1 header + rules (bounded) + optional "…"
+	rulesShown := min(len(f.Rules), m.maxRulesToShow())
+	h := 1 + 1 + rulesShown
+	if rulesShown < len(f.Rules) {
+		h++
+	}
+	if h > m.height {
+		return m.height
+	}
+	return h
+}
+
+func (m Model) maxRulesToShow() int {
+	// Keep at least a few rows for the list itself.
+	const minListH = 3
+	available := m.height - minListH - 2 // 2 = blank + header
+	if available < 0 {
+		return 0
+	}
+	// Leave room for the ellipsis line if needed.
+	return available
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
