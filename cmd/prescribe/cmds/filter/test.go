@@ -1,10 +1,20 @@
 package filter
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	"github.com/go-go-golems/glazed/pkg/middlewares"
+	"github.com/go-go-golems/glazed/pkg/types"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -14,81 +24,239 @@ var (
 	testIncludePatterns []string
 )
 
-var TestFilterCmd = &cobra.Command{
-	Use:   "test",
-	Short: "Test a filter pattern without applying it",
-	Long:  `Test how a filter would affect files without actually applying it to the session.`,
-	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		if testFilterName == "" {
-			testFilterName = "test"
-		}
-
-		if len(testExcludePatterns) == 0 && len(testIncludePatterns) == 0 {
-			return fmt.Errorf("at least one pattern is required (--exclude or --include)")
-		}
-
-		ctrl, err := helpers.NewInitializedController(cmdCmd)
-		if err != nil {
-			return err
-		}
-
-		// Build filter rules
-		rules := make([]domain.FilterRule, 0)
-		for i, pattern := range testExcludePatterns {
-			rules = append(rules, domain.FilterRule{
-				Type:    domain.FilterTypeExclude,
-				Pattern: pattern,
-				Order:   i,
-			})
-		}
-		for i, pattern := range testIncludePatterns {
-			rules = append(rules, domain.FilterRule{
-				Type:    domain.FilterTypeInclude,
-				Pattern: pattern,
-				Order:   len(testExcludePatterns) + i,
-			})
-		}
-
-		// Create test filter
-		filter := domain.Filter{
-			Name:  testFilterName,
-			Rules: rules,
-		}
-
-		// Test filter
-		matched, unmatched := ctrl.TestFilter(filter)
-
-		// Display results
-		fmt.Printf("Filter Test: %s\n", testFilterName)
-		fmt.Println("==================")
-
-		fmt.Printf("\nRules:\n")
-		for _, rule := range rules {
-			fmt.Printf("  %s: %s\n", rule.Type, rule.Pattern)
-		}
-
-		fmt.Printf("\nMatched Files (%d):\n", len(matched))
-		for _, path := range matched {
-			fmt.Printf("  ✓ %s\n", path)
-		}
-
-		fmt.Printf("\nFiltered Files (%d):\n", len(unmatched))
-		for _, path := range unmatched {
-			fmt.Printf("  ✗ %s\n", path)
-		}
-
-		fmt.Printf("\nSummary:\n")
-		fmt.Printf("  Total files: %d\n", len(matched)+len(unmatched))
-		fmt.Printf("  Would be visible: %d\n", len(matched))
-		fmt.Printf("  Would be filtered: %d\n", len(unmatched))
-
-		return nil
-	},
+func InitTestFilterCmd() error {
+	cmd, err := buildTestFilterCmd()
+	if err != nil {
+		return err
+	}
+	TestFilterCmd = cmd
+	return nil
 }
 
-func InitTestFilterCmd() error {
-	TestFilterCmd.Flags().StringVarP(&testFilterName, "name", "n", "test", "Filter name for display purposes")
-	TestFilterCmd.Flags().StringSliceVarP(&testExcludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
-	TestFilterCmd.Flags().StringSliceVarP(&testIncludePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
+var TestFilterCmd *cobra.Command
+
+const filterTestSlug = "filter-test"
+
+type FilterTestSettings struct {
+	Name    string   `glazed.parameter:"name"`
+	Exclude []string `glazed.parameter:"exclude"`
+	Include []string `glazed.parameter:"include"`
+}
+
+type FilterTestCommand struct {
+	*cmds.CommandDescription
+}
+
+var _ cmds.GlazeCommand = &FilterTestCommand{}
+
+func NewFilterTestCommand() (*FilterTestCommand, error) {
+	repoLayer, err := prescribe_layers.NewRepositoryLayer()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create repository layer")
+	}
+	repoLayerExisting, err := prescribe_layers.WrapAsExistingCobraFlagsLayer(repoLayer)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wrap repository layer as existing flags layer")
+	}
+
+	testLayer, err := schema.NewSection(
+		filterTestSlug,
+		"Filter Test",
+		schema.WithFields(
+			fields.New(
+				"name",
+				fields.TypeString,
+				fields.WithDefault("test"),
+				fields.WithHelp("Filter name for display purposes"),
+				fields.WithShortFlag("n"),
+			),
+			fields.New(
+				"exclude",
+				fields.TypeStringList,
+				fields.WithDefault([]string{}),
+				fields.WithHelp("Exclude patterns (can specify multiple)"),
+				fields.WithShortFlag("e"),
+			),
+			fields.New(
+				"include",
+				fields.TypeStringList,
+				fields.WithDefault([]string{}),
+				fields.WithHelp("Include patterns (can specify multiple)"),
+				fields.WithShortFlag("i"),
+			),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	cmdDesc := cmds.NewCommandDescription(
+		"test",
+		cmds.WithShort("Test a filter pattern without applying it"),
+		cmds.WithLong("Test how a filter would affect files without actually applying it to the session."),
+		cmds.WithLayersList(
+			repoLayerExisting,
+			testLayer,
+		),
+	)
+
+	return &FilterTestCommand{CommandDescription: cmdDesc}, nil
+}
+
+func (c *FilterTestCommand) RunIntoGlazeProcessor(
+	ctx context.Context,
+	parsedLayers *glazed_layers.ParsedLayers,
+	gp middlewares.Processor,
+) error {
+	settings := &FilterTestSettings{}
+	if err := parsedLayers.InitializeStruct(filterTestSlug, settings); err != nil {
+		return errors.Wrap(err, "failed to initialize filter test settings")
+	}
+
+	if len(settings.Exclude) == 0 && len(settings.Include) == 0 {
+		return errors.New("at least one pattern is required (--exclude or --include)")
+	}
+
+	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
+	if err != nil {
+		return err
+	}
+
+	rules := buildRules(settings.Exclude, settings.Include)
+	filter := domain.Filter{
+		Name:  settings.Name,
+		Rules: rules,
+	}
+
+	matched, unmatched := ctrl.TestFilter(filter)
+
+	total := len(matched) + len(unmatched)
+	for _, path := range matched {
+		row := types.NewRow(
+			types.MRP("filter_name", settings.Name),
+			types.MRP("file_path", path),
+			types.MRP("matched", true),
+			types.MRP("total_files", total),
+			types.MRP("matched_files", len(matched)),
+			types.MRP("filtered_files", len(unmatched)),
+		)
+		if err := gp.AddRow(ctx, row); err != nil {
+			return err
+		}
+	}
+
+	for _, path := range unmatched {
+		row := types.NewRow(
+			types.MRP("filter_name", settings.Name),
+			types.MRP("file_path", path),
+			types.MRP("matched", false),
+			types.MRP("total_files", total),
+			types.MRP("matched_files", len(matched)),
+			types.MRP("filtered_files", len(unmatched)),
+		)
+		if err := gp.AddRow(ctx, row); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func runFilterTestClassic(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
+	_ = ctx
+
+	settings := &FilterTestSettings{}
+	if err := parsedLayers.InitializeStruct(filterTestSlug, settings); err != nil {
+		return errors.Wrap(err, "failed to initialize filter test settings")
+	}
+
+	if settings.Name == "" {
+		settings.Name = "test"
+	}
+	if len(settings.Exclude) == 0 && len(settings.Include) == 0 {
+		return errors.New("at least one pattern is required (--exclude or --include)")
+	}
+
+	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
+	if err != nil {
+		return err
+	}
+
+	// Build filter rules
+	rules := buildRules(settings.Exclude, settings.Include)
+
+	// Create test filter
+	filter := domain.Filter{
+		Name:  settings.Name,
+		Rules: rules,
+	}
+
+	// Test filter
+	matched, unmatched := ctrl.TestFilter(filter)
+
+	// Display results
+	fmt.Printf("Filter Test: %s\n", settings.Name)
+	fmt.Println("==================")
+
+	fmt.Printf("\nRules:\n")
+	for _, rule := range rules {
+		fmt.Printf("  %s: %s\n", rule.Type, rule.Pattern)
+	}
+
+	fmt.Printf("\nMatched Files (%d):\n", len(matched))
+	for _, path := range matched {
+		fmt.Printf("  ✓ %s\n", path)
+	}
+
+	fmt.Printf("\nFiltered Files (%d):\n", len(unmatched))
+	for _, path := range unmatched {
+		fmt.Printf("  ✗ %s\n", path)
+	}
+
+	fmt.Printf("\nSummary:\n")
+	fmt.Printf("  Total files: %d\n", len(matched)+len(unmatched))
+	fmt.Printf("  Would be visible: %d\n", len(matched))
+	fmt.Printf("  Would be filtered: %d\n", len(unmatched))
+
+	return nil
+}
+
+func buildRules(exclude []string, include []string) []domain.FilterRule {
+	rules := make([]domain.FilterRule, 0)
+	for i, pattern := range exclude {
+		rules = append(rules, domain.FilterRule{
+			Type:    domain.FilterTypeExclude,
+			Pattern: pattern,
+			Order:   i,
+		})
+	}
+	for i, pattern := range include {
+		rules = append(rules, domain.FilterRule{
+			Type:    domain.FilterTypeInclude,
+			Pattern: pattern,
+			Order:   len(exclude) + i,
+		})
+	}
+	return rules
+}
+
+func buildTestFilterCmd() (*cobra.Command, error) {
+	glazedCmd, err := NewFilterTestCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	cobraCmd, err := cli.BuildCobraCommandFromCommandAndFunc(
+		glazedCmd,
+		runFilterTestClassic,
+		cli.WithDualMode(true),
+		cli.WithParserConfig(cli.CobraParserConfig{
+			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return cobraCmd, nil
 }
