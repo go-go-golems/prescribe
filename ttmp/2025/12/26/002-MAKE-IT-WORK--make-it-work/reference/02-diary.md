@@ -431,3 +431,35 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
 
 ### What should be done in the future
 - Wire `a`/`A` in `internal/tui/app` to call `SetAllVisibleIncluded()` + auto-save + toast.
+
+---
+
+## Step 10: Clipboard export of generation context (WIP)
+
+This step wires the “copy context” workflow end-to-end: build the canonical generation request, format it into a human-readable text blob, and copy it to the system clipboard with toast feedback. The key goal is to make it trivial to paste the exact context into another tool (or into an LLM UI) without re-running generation.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- N/A (in progress)
+
+### Why
+- “Copy context” is a key UX primitive for this tool: it enables fast iteration and easy handoff without requiring the built-in mock generator.
+
+### What worked
+- N/A (in progress)
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- N/A (in progress)
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Making sure the exported text matches the exact inputs used by `Controller.GenerateDescription()` (same included files, same prompt, same additional context).
+
+### What should be done in the future
+- N/A (in progress)
