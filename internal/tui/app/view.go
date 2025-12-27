@@ -73,7 +73,7 @@ func (m Model) renderMain() string {
 
 	return strings.TrimRight(
 		m.styles.BorderBox.
-			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Width(max(0, m.layout.Width)).Height(max(0, m.layout.Height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -125,7 +125,7 @@ func (m Model) renderFilters() string {
 
 	return strings.TrimRight(
 		m.styles.BorderBox.
-			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Width(max(0, m.layout.Width)).Height(max(0, m.layout.Height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -141,7 +141,7 @@ func (m Model) renderGenerating() string {
 	b.WriteString(m.status.View())
 	return strings.TrimRight(
 		m.styles.BorderBox.
-			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Width(max(0, m.layout.Width)).Height(max(0, m.layout.Height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -166,7 +166,7 @@ func (m Model) renderResult() string {
 
 	return strings.TrimRight(
 		m.styles.BorderBox.
-			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Width(max(0, m.layout.Width)).Height(max(0, m.layout.Height)).
 			Render(b.String()),
 		"\n",
 	)
