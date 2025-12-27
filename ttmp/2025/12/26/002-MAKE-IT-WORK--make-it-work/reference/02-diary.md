@@ -383,3 +383,36 @@ This step was a small but surprisingly tricky debugging detour: we tried to gene
 - Add a `wait-until <regex>` helper to the harness (instead of fixed sleeps) for “wait until result screen shows `# Pull Request:`”.
 - Add a separate “capture only” command that writes to a stable filename (optional), and keep the default as timestamped.
 
+
+---
+
+## Step 9: Phase 3 controller helpers + wire select-all/unselect-all (WIP)
+
+This step starts Phase 3 of the refactor: move the remaining “index-based” mutations out of the TUI and into controller helper APIs keyed by stable IDs (file paths). The immediate payoff is enabling select-all/unselect-all in a way that is correct under filters and doesn’t require the UI to scan `ChangedFiles` manually.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- Loaded the ticket task list and verified the current `internal/tui/app` state (Phase 2 app root is active; keymap already has `a`/`A` bindings but app Update does not handle them yet).
+- Verified `go test ./...` is green before starting Phase 3 work.
+
+### Why
+- The current app root still does a brittle path→index scan in the UI to toggle inclusion. Phase 3 makes the Controller the single place that knows how to mutate files by stable path IDs.
+
+### What worked
+- N/A (in progress)
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- The scaffolding is already in place for these features: `keys.KeyMap` includes select-all/unselect-all and `events` already defines `SetAllVisibleIncludedRequested`.
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Ensuring “visible” semantics (post-filters) are consistent across: select-all/unselect-all, generation input, and the token count.
+
+### What should be done in the future
+- After landing controller helpers + wiring, consider updating generation to use the same “build request” helper (single source of truth for “what is included”).
