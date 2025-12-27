@@ -26,7 +26,7 @@
 - [x] [Phase 2 / app root] Move session save to a `tea.Cmd` + surface save failures via toast
 - [x] [Phase 2 / app root] Move generation to a `tea.Cmd` + explicit Generating mode + error toast/result
 - [x] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
-- [ ] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
+- [x] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
 - [ ] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
 - [x] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper
 - [x] [Phase 3 / controller APIs] Add `Controller.SetAllVisibleIncluded(included)` helper for select-all/unselect-all
@@ -44,10 +44,10 @@
 - [ ] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
 - [ ] [Phase 5 / filter pane component] Root: handle filter events with `ctrl.RemoveFilter`, `ctrl.ClearFilters`, `ctrl.AddFilter` + save + toast
 - [ ] [Phase 5 / filter pane component] Add UX: show filter impact (visible/filtered counts) on filter screen
-- [ ] [Phase 6 / result component] Create `internal/tui/components/result` using `viewport.Model`
-- [ ] [Phase 6 / result component] Implement scrolling + dynamic resize + key handling (esc back, q quit)
-- [ ] [Phase 6 / result component] Root: wire successful generation to set viewport content and enter Result mode
-- [ ] [Phase 7 / ticket features] Implement toast messages for: session loaded/failed, saved/failed, generated/failed, copied/failed
+- [x] [Phase 6 / result component] Create `internal/tui/components/result` using `viewport.Model`
+- [x] [Phase 6 / result component] Implement scrolling + dynamic resize + key handling (esc back, q quit)
+- [x] [Phase 6 / result component] Root: wire successful generation to set viewport content and enter Result mode
+- [x] [Phase 7 / ticket features] Implement toast messages for: session loaded/failed, saved/failed, generated/failed, copied/failed
 - [x] [Phase 7 / ticket features] Implement clipboard export: `internal/tui/export/BuildGenerationContextText(req)`
 - [x] [Phase 7 / ticket features] Wire `CopyContextRequested` to build text via `BuildGenerateDescriptionRequest()` and copy via `Deps`
 - [x] [Phase 7 / ticket features] Add toast showing bytes copied for clipboard export
