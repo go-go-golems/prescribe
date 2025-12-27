@@ -545,16 +545,20 @@ This step begins Phase 4 by extracting the Main screen file list into a dedicate
 
 This step removes the legacy Bubbletea root models (`internal/tui/model.go` and `internal/tui/model_enhanced.go`) now that the CLI entrypoint launches the new app root (`internal/tui/app`). Keeping both around creates confusion during refactors and invites accidental regressions via stale codepaths.
 
-**Commit (code):** N/A — in progress
+**Commit (code):** ea28ff710fbd7d21d0bac9299488ca9bf6d22a84 — "TUI: remove legacy root models"
 
 ### What I did
-- N/A (in progress)
+- Verified `cmd/prescribe/cmds/tui.go` launches `internal/tui/app` (not `internal/tui.NewEnhancedModel`).
+- Deleted dead code:
+  - `internal/tui/model.go`
+  - `internal/tui/model_enhanced.go`
+  - `internal/tui/styles.go` (legacy global style vars only used by the deleted models)
 
 ### Why
 - `prescribe tui` now launches `internal/tui/app`, so the old models are dead code. Deleting them reduces cognitive load and avoids accidentally debugging the wrong codepath.
 
 ### What was tricky to build
-- N/A (in progress)
+- Ensuring no other packages imported `github.com/go-go-golems/prescribe/internal/tui` directly before deleting the package’s last `.go` files.
 
 ### What warrants a second pair of eyes
-- Confirm no other command or package imports `github.com/go-go-golems/prescribe/internal/tui` directly (it will disappear once these files are removed).
+- Sanity check `go test ./...` still passes and `prescribe tui` starts (the CLI entrypoint now only has one root model option).
