@@ -20,6 +20,14 @@ func bootCmd(ctrl *controller.Controller) tea.Cmd {
 		path := ctrl.GetDefaultSessionPath()
 		if err := ctrl.LoadSession(path); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
+				// New session: apply repo defaults (if configured).
+				n, err2 := ctrl.ApplyDefaultFilterPresetsFromRepoConfig()
+				if err2 != nil {
+					return events.DefaultFiltersApplyFailedMsg{Err: err2}
+				}
+				if n > 0 {
+					return events.DefaultFiltersAppliedMsg{Count: n}
+				}
 				return events.SessionLoadSkippedMsg{Path: path}
 			}
 			return events.SessionLoadFailedMsg{Path: path, Err: err}
@@ -27,5 +35,3 @@ func bootCmd(ctrl *controller.Controller) tea.Cmd {
 		return events.SessionLoadedMsg{Path: path}
 	}
 }
-
-

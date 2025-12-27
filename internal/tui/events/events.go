@@ -21,6 +21,16 @@ type SessionLoadFailedMsg struct {
 	Err  error
 }
 
+// DefaultFiltersAppliedMsg indicates repo-default filter presets were applied because session.yaml was missing.
+type DefaultFiltersAppliedMsg struct {
+	Count int
+}
+
+// DefaultFiltersApplyFailedMsg indicates repo-default filter preset application failed.
+type DefaultFiltersApplyFailedMsg struct {
+	Err error
+}
+
 // SessionSavedMsg indicates the current session was persisted successfully.
 type SessionSavedMsg struct{ Path string }
 
@@ -88,5 +98,3 @@ type ShowToastMsg struct {
 // ToastExpiredMsg clears a toast if the ID matches the current toast.
 // This prevents an older timer from clearing a newer toast.
 type ToastExpiredMsg struct{ ID int64 }
-
-
