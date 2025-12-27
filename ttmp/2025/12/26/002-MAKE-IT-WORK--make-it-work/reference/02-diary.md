@@ -506,3 +506,35 @@ This step introduces a proper Result screen component using `bubbles/viewport` s
 
 ### What should be done in the future
 - Apply the same pattern to Phase 4/5 components: file list + filter pane should be true child models with explicit `SetSize()`.
+
+---
+
+## Step 12: Phase 4 file list component (WIP)
+
+This step begins Phase 4 by extracting the Main screen file list into a dedicated component model based on `bubbles/list`. The core goal is to move selection/navigation/toggle intents into a child model, and let the app root only orchestrate controller mutations and persistence.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- N/A (in progress)
+
+### Why
+- The root model currently owns selection indices and manual list rendering, which makes later features (select-all, better list UX, resize correctness) harder to evolve safely.
+
+### What worked
+- N/A (in progress)
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- N/A (in progress)
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Ensuring the component emits stable-ID messages (`Path`) and the root remains the single side-effect boundary (save/toast/controller).
+
+### What should be done in the future
+- Once the file list is componentized, repeat the same process for the filter screen (Phase 5 filter pane component).
