@@ -11,16 +11,16 @@ import (
 
 // FileChange represents a changed file in the PR
 type FileChange struct {
-	Path      string
-	Included  bool
-	Additions int
-	Deletions int
-	Tokens    int
-	Type      FileType
-	Version   FileVersion
-	Diff      string
+	Path       string
+	Included   bool
+	Additions  int
+	Deletions  int
+	Tokens     int
+	Type       FileType
+	Version    FileVersion
+	Diff       string
 	FullBefore string
-	FullAfter string
+	FullAfter  string
 }
 
 type FileType string
@@ -57,6 +57,16 @@ type Filter struct {
 	Name        string
 	Description string
 	Rules       []FilterRule
+}
+
+// FilterPreset represents a saved, named filter definition.
+// ID is typically the backing filename (e.g. "exclude-tests.yaml") to keep IDs stable.
+type FilterPreset struct {
+	ID          string
+	Name        string
+	Description string
+	Rules       []FilterRule
+	Location    PresetLocation
 }
 
 // ContextItem represents additional context (file or note)
@@ -96,18 +106,18 @@ type PRData struct {
 	// Git information
 	SourceBranch string
 	TargetBranch string
-	
+
 	// Files
-	ChangedFiles []FileChange
+	ChangedFiles      []FileChange
 	AdditionalContext []ContextItem
-	
+
 	// Filters
 	ActiveFilters []Filter
-	
+
 	// Prompt
 	CurrentPrompt string
 	CurrentPreset *PromptPreset
-	
+
 	// Generated description
 	GeneratedDescription string
 }
@@ -115,10 +125,10 @@ type PRData struct {
 // NewPRData creates a new PR data instance
 func NewPRData() *PRData {
 	return &PRData{
-		ChangedFiles: make([]FileChange, 0),
+		ChangedFiles:      make([]FileChange, 0),
 		AdditionalContext: make([]ContextItem, 0),
-		ActiveFilters: make([]Filter, 0),
-		CurrentPrompt: GetDefaultPrompt(),
+		ActiveFilters:     make([]Filter, 0),
+		CurrentPrompt:     GetDefaultPrompt(),
 	}
 }
 
@@ -132,7 +142,7 @@ func (d *PRData) GetVisibleFiles() []FileChange {
 	if len(d.ActiveFilters) == 0 {
 		return d.ChangedFiles
 	}
-	
+
 	visible := make([]FileChange, 0)
 	for _, file := range d.ChangedFiles {
 		if d.passesFilters(file.Path) {
@@ -147,7 +157,7 @@ func (d *PRData) GetFilteredFiles() []FileChange {
 	if len(d.ActiveFilters) == 0 {
 		return []FileChange{}
 	}
-	
+
 	filtered := make([]FileChange, 0)
 	for _, file := range d.ChangedFiles {
 		if !d.passesFilters(file.Path) {
@@ -163,12 +173,12 @@ func (d *PRData) passesFilters(path string) bool {
 	if len(d.ActiveFilters) == 0 {
 		return true
 	}
-	
+
 	// Apply each filter's rules
 	for _, filter := range d.ActiveFilters {
 		for _, rule := range filter.Rules {
 			matches := matchesPattern(path, rule.Pattern)
-			
+
 			if rule.Type == FilterTypeExclude && matches {
 				return false
 			}
@@ -177,7 +187,7 @@ func (d *PRData) passesFilters(path string) bool {
 			}
 		}
 	}
-	
+
 	return true
 }
 
@@ -196,19 +206,19 @@ func matchesPattern(path, pattern string) bool {
 // GetTotalTokens calculates total tokens for all included content
 func (d *PRData) GetTotalTokens() int {
 	total := 0
-	
+
 	// Count visible files
 	for _, file := range d.GetVisibleFiles() {
 		if file.Included {
 			total += file.Tokens
 		}
 	}
-	
+
 	// Count additional context
 	for _, ctx := range d.AdditionalContext {
 		total += ctx.Tokens
 	}
-	
+
 	return total
 }
 
@@ -226,11 +236,11 @@ func (d *PRData) ReplaceWithFullFile(index int, version FileVersion) error {
 	if index < 0 || index >= len(d.ChangedFiles) {
 		return fmt.Errorf("invalid file index: %d", index)
 	}
-	
+
 	file := &d.ChangedFiles[index]
 	file.Type = FileTypeFull
 	file.Version = version
-	
+
 	// Recalculate tokens based on version
 	switch version {
 	case FileVersionBefore:
@@ -240,7 +250,7 @@ func (d *PRData) ReplaceWithFullFile(index int, version FileVersion) error {
 	case FileVersionBoth:
 		file.Tokens = tokens.Count(file.FullBefore) + tokens.Count(file.FullAfter)
 	}
-	
+
 	return nil
 }
 
@@ -249,12 +259,12 @@ func (d *PRData) RestoreToDiff(index int) error {
 	if index < 0 || index >= len(d.ChangedFiles) {
 		return fmt.Errorf("invalid file index: %d", index)
 	}
-	
+
 	file := &d.ChangedFiles[index]
 	file.Type = FileTypeDiff
 	file.Version = ""
 	file.Tokens = tokens.Count(file.Diff)
-	
+
 	return nil
 }
 
