@@ -616,7 +616,17 @@ This step extracts the Filters screen into a dedicated component model. Like the
 
 This step investigates and fixes a nasty UI regression: in tmux captures the app appeared to “lose” the top and right borders, most noticeable on the filter pane. The important realization was that this wasn’t a cosmetic border rendering issue—it was **layout overflow** (height/width) causing the terminal buffer to scroll/clip, which makes borders look missing.
 
-**Commit (code):** (multiple) — in progress
+**Commit (code):**
+- fd69714e9816d3aeeab18f34c2ba711b85b40509 — "TUI: fix border/layout overflow (frame-aware sizing)"
+- d86ea732f7843cc623610218e62c5afc319c626b — "TUI: bound filterpane height to avoid scrolling"
+- ac4ad8e622093e8e4a267a3e40110eba42fa56e2 — "TUI: fix filter screen overflow (account presets/footer)"
+- cd4eb22dd83f8d6576b49ec3ab0a6be0ae89f804 — "TUI: fix border overflow (status width + toast-aware layout)"
+- 0eb5dcf694ac3de9f2231272d630a0da15755a2c — "TUI: render full borders (styles.BorderBox)"
+- 37eee14ac49ce9e4bc9110f68fc0407efeeff003 — "TUI: clamp frame size to terminal (max width/height)"
+- b18bcb35580cf9779b422e50091bd9ae61250e6c — "TUI: make layout frame-size aware (tmux-safe)"
+- 3f164a0996f9d06471ab0939817cc55f97ae66f4 — "TUI: prevent scroll by trimming trailing newline"
+- a4bc17fe57945639214eae48f37e6c0496556d9d — "TUI: add 1-col slack to keep right border visible"
+- 9619ea39200ad53c1b9a63e0e3ab13bce2decf82 — "TUI: keep frame within tmux width (no Base padding)"
 
 ### What I did
 - Used the ticket tmux harness (`scripts/tui-tmux.sh`) to reproduce the issue and capture frames to text files.
@@ -625,6 +635,7 @@ This step investigates and fixes a nasty UI regression: in tmux captures the app
   - compute layout sizes against the inner frame (not the raw terminal size)
   - account for fixed footer blocks (e.g. filter “quick presets”) and toast/help footer height
   - clamp frame rendering to prevent terminal scrolling
+  - updated the tmux harness usage: remember to rebuild `./dist/prescribe` because tmux runs the binary by default
 
 ### Why
 - Border “missing” symptoms are usually caused by:
