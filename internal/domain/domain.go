@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/go-go-golems/prescribe/internal/prompts"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 )
 
@@ -123,7 +124,7 @@ func NewPRData() *PRData {
 
 // GetDefaultPrompt returns the default prompt template
 func GetDefaultPrompt() string {
-	return "Generate a clear PR description with: summary of changes, motivation, key changes, testing notes, and breaking changes if any."
+	return prompts.DefaultPrompt()
 }
 
 // GetVisibleFiles returns files that pass the active filters
