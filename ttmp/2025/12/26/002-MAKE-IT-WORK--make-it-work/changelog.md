@@ -89,3 +89,16 @@ Expanded refactor work into a detailed phased task breakdown (scaffolding → ap
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md — Added detailed tasks
 
+
+## 2025-12-26
+
+Phase 1 scaffolding started: added shared events, layout helper + tests, centralized keymap, Styles struct, and status/toast component with ID-safe expiry.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/components/status/model.go — Status footer model
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/events/events.go — Shared typed messages
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/keys/keymap.go — Central keymap
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/layout/layout.go — Layout Compute()
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/styles/styles.go — Styles struct
+

@@ -9,14 +9,14 @@
 - [ ] Export current context to clipboard (diff/prompt/context output)
 - [x] Write/maintain go-go-golems Bubbletea developer guide (based on bobatea patterns)
 
-- [ ] [Phase 1 / scaffolding] Create `internal/tui/events` package with shared typed messages (intent/result/toast/boot)
-- [ ] [Phase 1 / scaffolding] Create `internal/tui/layout` with `Layout` struct + `Compute()` helper and invariants
-- [ ] [Phase 1 / scaffolding] Create `internal/tui/keys` with centralized keymap implementing `bubbles/help.KeyMap`
-- [ ] [Phase 1 / scaffolding] Create `internal/tui/styles` with `Styles` struct (stop adding new global lipgloss vars)
-- [ ] [Phase 1 / scaffolding] Create `internal/tui/components/status` (help + toast rendering)
-- [ ] [Phase 1 / scaffolding] Implement toast state machine: show toast + tick + expire (ID-safe)
-- [ ] [Phase 1 / scaffolding] Add minimal unit tests for toast expiry / ID safety (new package tests)
-- [ ] [Phase 1 / scaffolding] Add minimal unit tests for `layout.Compute()` edge cases (small terminal sizes)
+- [x] [Phase 1 / scaffolding] Create `internal/tui/events` package with shared typed messages (intent/result/toast/boot)
+- [x] [Phase 1 / scaffolding] Create `internal/tui/layout` with `Layout` struct + `Compute()` helper and invariants
+- [x] [Phase 1 / scaffolding] Create `internal/tui/keys` with centralized keymap implementing `bubbles/help.KeyMap`
+- [x] [Phase 1 / scaffolding] Create `internal/tui/styles` with `Styles` struct (stop adding new global lipgloss vars)
+- [x] [Phase 1 / scaffolding] Create `internal/tui/components/status` (help + toast rendering)
+- [x] [Phase 1 / scaffolding] Implement toast state machine: show toast + tick + expire (ID-safe)
+- [x] [Phase 1 / scaffolding] Add minimal unit tests for toast expiry / ID safety (new package tests)
+- [x] [Phase 1 / scaffolding] Add minimal unit tests for `layout.Compute()` edge cases (small terminal sizes)
 - [ ] [Phase 2 / app root] Create `internal/tui/app` skeleton files: state/deps/model/view/commands/boot
 - [ ] [Phase 2 / app root] Implement `Deps` (time + clipboard) and a real default implementation
 - [ ] [Phase 2 / app root] Implement boot-time session load cmd: ignore missing file; toast on other errors
