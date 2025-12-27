@@ -948,3 +948,51 @@ The goal is to make future ports consistent and fast, and to reduce the need to 
 
 ### What warrants a second pair of eyes
 - Ensure the playbook aligns with the current “no back-compat” direction and doesn’t suggest dual-mode patterns.
+
+## Step 18: Port `filter remove` and `filter clear` to Glazed BareCommands (positional args supported)
+
+This step finishes the `filter` command family migration by porting the remaining “session mutators” (`remove`, `clear`) from plain Cobra to Glazed-built `BareCommand`s. The primary goal was consistency: all filter subcommands now follow the same Glazed plumbing (ParsedLayers + controller init from layers + explicit Init wiring) instead of mixing parsing styles.
+
+The only potentially tricky aspect was `filter remove`’s positional argument (`<index|name>`). We verified Glazed positional argument support works here via a `schema.DefaultSlug` section using `schema.WithArguments(...)`, so we didn’t need to fall back to a flag.
+
+**Commit (code):** be520636d10f84c77fcfef7bc240f06889fa88d2 — "prescribe: port filter remove/clear to glazed"
+
+### What I did
+- Converted `cmd/prescribe/cmds/filter/remove.go` from a `*cobra.Command` to a Glazed `cmds.BareCommand` built with `cli.BuildCobraCommand(...)`.
+- Implemented the positional `<index-or-name>` argument using:
+  - `schema.NewSection(schema.DefaultSlug, ..., schema.WithArguments(fields.New(...)))`
+  - `parsedLayers.InitializeStruct(schema.DefaultSlug, &settings)`
+- Converted `cmd/prescribe/cmds/filter/clear.go` to a Glazed `cmds.BareCommand`.
+- Updated `cmd/prescribe/cmds/filter/filter.go` to explicitly initialize and register `remove` and `clear` via `InitRemoveFilterCmd()` / `InitClearFiltersCmd()`.
+
+### Why
+- Keep the CLI surface consistent: all filter subcommands now use the same Glazed parsing + controller initialization path.
+- Avoid init-order footguns: explicit init wiring ensures the command tree is deterministic and safe.
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed after the port.
+- Positional argument parsing for `filter remove` works as intended (no need to replace it with flags).
+
+### What was tricky to build
+- Ensuring `filter remove` kept its “index-or-name” selector behavior while moving from Cobra’s `Args` handling to Glazed argument decoding.
+- Avoiding `--repo/--target` flag redefinition: still handled via `WrapAsExistingCobraFlagsLayer(...)`.
+
+### What warrants a second pair of eyes
+- Confirm the positional arg contract is acceptable long-term (`filter remove <index|name>` with **0-based** index).
+- Validate error messages and UX remain clear when:
+  - no session exists,
+  - no filters exist,
+  - name is not found,
+  - index is out of range.
+
+### What should be done in the future
+- Add small integration tests around the command wiring + argument parsing (especially `filter remove`), so we don’t regress on positional args.
+
+### Code review instructions
+- Start in:
+  - `cmd/prescribe/cmds/filter/remove.go`
+  - `cmd/prescribe/cmds/filter/clear.go`
+  - `cmd/prescribe/cmds/filter/filter.go`
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe filter remove --help`
+  - `cd prescribe && go run ./cmd/prescribe filter clear --help`

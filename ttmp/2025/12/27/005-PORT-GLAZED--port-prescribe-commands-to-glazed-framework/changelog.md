@@ -155,3 +155,14 @@ Docs: Add onboarding playbook for porting Cobra verbs to Glazed (no back-compat)
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/005-PORT-GLAZED--port-prescribe-commands-to-glazed-framework/playbook/01-playbook-port-existing-cobra-verbs-to-glazed-no-back-compat.md — New playbook
 
+
+## 2025-12-27
+
+Step 11: Port `filter remove` and `filter clear` to Glazed BareCommands (commit be52063)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/remove.go — Glazed BareCommand with positional arg parsing via schema.DefaultSlug
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/clear.go — Glazed BareCommand for clearing filters and saving session
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/filter.go — Explicit init wiring for remove/clear
+
