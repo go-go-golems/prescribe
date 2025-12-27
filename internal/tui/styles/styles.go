@@ -17,13 +17,13 @@ type Styles struct {
 	Border    lipgloss.Color
 
 	// Base styles
-	Base   lipgloss.Style
+	Base      lipgloss.Style
 	BorderBox lipgloss.Style
-	Box    lipgloss.Style
+	Box       lipgloss.Style
 
 	// Text styles
-	Title   lipgloss.Style
-	Header  lipgloss.Style
+	Title       lipgloss.Style
+	Header      lipgloss.Style
 	SuccessText lipgloss.Style
 	WarningText lipgloss.Style
 	ErrorText   lipgloss.Style
@@ -64,12 +64,12 @@ func Default() Styles {
 		Padding(0, 1)
 
 	s.BorderBox = lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
+		Border(lipgloss.RoundedBorder(), true).
 		BorderForeground(s.Border).
 		Padding(1, 2)
 
 	s.Box = lipgloss.NewStyle().
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.NormalBorder(), true).
 		BorderForeground(s.Border).
 		Padding(0, 1)
 
@@ -96,5 +96,3 @@ func Default() Styles {
 
 	return s
 }
-
-
