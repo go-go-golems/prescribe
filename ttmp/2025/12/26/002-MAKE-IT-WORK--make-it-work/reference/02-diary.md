@@ -609,3 +609,39 @@ This step extracts the Filters screen into a dedicated component model. Like the
 
 ### What warrants a second pair of eyes
 - Confirm the root remains the only place that saves sessions and performs controller mutations (component must stay UI-only).
+
+---
+
+## Step 15: Border/layout bug hunt (tmux capture) + frame sizing fixes (WIP)
+
+This step investigates and fixes a nasty UI regression: in tmux captures the app appeared to “lose” the top and right borders, most noticeable on the filter pane. The important realization was that this wasn’t a cosmetic border rendering issue—it was **layout overflow** (height/width) causing the terminal buffer to scroll/clip, which makes borders look missing.
+
+**Commit (code):** (multiple) — in progress
+
+### What I did
+- Used the ticket tmux harness (`scripts/tui-tmux.sh`) to reproduce the issue and capture frames to text files.
+- Observed that captures showed only left border glyphs (`│`) and bottom-left (`╰`), but the title/top border often scrolled off in the capture.
+- Implemented a series of fixes to make sizing frame-aware and to reduce accidental overflow:
+  - compute layout sizes against the inner frame (not the raw terminal size)
+  - account for fixed footer blocks (e.g. filter “quick presets”) and toast/help footer height
+  - clamp frame rendering to prevent terminal scrolling
+
+### Why
+- Border “missing” symptoms are usually caused by:
+  - writing more lines than the terminal height (scrolls the buffer, top border disappears), and/or
+  - writing more columns than the terminal width (right border clipped off-screen).
+
+### What worked
+- Re-running the tmux harness after each compiling commit made it easy to validate changes.
+
+### What didn't work
+- Initially, the tmux capture method (`capture-pane -p` vs `-a -p`) was confusing: alt-screen captures were empty in some runs, while normal captures showed content but looked “cropped”. This turned out to be an interaction of Bubbletea alt-screen drawing and overflow.
+
+### What I learned
+- In lipgloss, `Style.Width()` / `Height()` apply **before** margins/borders, so setting `BorderBox.Width(m.width)` can easily overshoot the terminal width once borders/padding/margins are applied.
+
+### What was tricky to build
+- The filter screen has a fixed-height “Quick Add Presets” block plus the status footer; the body component must be sized against what is actually left, otherwise you silently overflow and “lose” the top border in captures.
+
+### What warrants a second pair of eyes
+- Confirm the width/height math in the root model is correct across all modes and that we never overflow the tmux pane size.
