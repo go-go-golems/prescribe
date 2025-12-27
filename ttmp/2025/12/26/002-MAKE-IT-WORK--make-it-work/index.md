@@ -11,6 +11,16 @@ DocType: index
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: prescribe/cmd/prescribe/cmds/tui.go
+      Note: CLI launches app root TUI
+    - Path: prescribe/internal/tui/app/boot.go
+      Note: Boot session load cmd
+    - Path: prescribe/internal/tui/app/default_deps.go
+      Note: Deps implementation (clipboard/time)
+    - Path: prescribe/internal/tui/app/model.go
+      Note: Phase 2 app root model (Update/Init)
+    - Path: prescribe/internal/tui/app/view.go
+      Note: Phase 2 app views (main/filters/generating/result)
     - Path: prescribe/internal/tui/components/status/model.go
       Note: Phase 1 scaffolding - status footer model
     - Path: prescribe/internal/tui/components/status/toast.go
@@ -35,6 +45,7 @@ LastUpdated: 2025-12-26T18:32:05.980662011-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
