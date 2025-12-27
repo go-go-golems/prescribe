@@ -119,7 +119,20 @@ func (m Model) renderFilters() string {
 	b.WriteString("\n")
 	b.WriteString(strings.Repeat("─", max(0, m.layout.Width)))
 	b.WriteString("\n")
-	b.WriteString(m.styles.Base.Render("[1] Exclude Tests  [2] Exclude Docs  [3] Only Source"))
+	if len(m.filterPresets) == 0 {
+		b.WriteString(m.styles.MutedText.Render("No presets found in .pr-builder/filters or ~/.pr-builder/filters"))
+	} else {
+		parts := make([]string, 0, 3)
+		for i := 0; i < 3 && i < len(m.filterPresets); i++ {
+			p := m.filterPresets[i]
+			label := p.Name
+			if label == "" {
+				label = p.ID
+			}
+			parts = append(parts, fmt.Sprintf("[%d] %s", i+1, label))
+		}
+		b.WriteString(m.styles.Base.Render(strings.Join(parts, "  ")))
+	}
 	b.WriteString("\n\n")
 
 	b.WriteString(m.status.View())

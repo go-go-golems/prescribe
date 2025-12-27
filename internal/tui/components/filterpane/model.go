@@ -105,12 +105,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			return m, func() tea.Msg { return events.RemoveFilterRequested{Index: idx} }
 		case key.Matches(msg, m.keymap.ClearFilters):
 			return m, func() tea.Msg { return events.ClearFiltersRequested{} }
-		case key.Matches(msg, m.keymap.Preset1):
-			return m, func() tea.Msg { return events.AddFilterPresetRequested{PresetID: "exclude-tests"} }
-		case key.Matches(msg, m.keymap.Preset2):
-			return m, func() tea.Msg { return events.AddFilterPresetRequested{PresetID: "exclude-docs"} }
-		case key.Matches(msg, m.keymap.Preset3):
-			return m, func() tea.Msg { return events.AddFilterPresetRequested{PresetID: "only-source"} }
 		}
 	}
 

@@ -57,9 +57,26 @@ type CloseFiltersRequested struct{}
 type RemoveFilterRequested struct{ Index int }
 type ClearFiltersRequested struct{}
 
-// AddFilterPresetRequested requests adding a predefined filter preset.
-// PresetID is app-defined (e.g. "exclude-tests", "exclude-docs", ...).
-type AddFilterPresetRequested struct{ PresetID string }
+// --- Filter preset discovery --------------------------------------------------
+
+// FilterPresetSummary is a lightweight representation of a discovered filter preset.
+// This is intentionally dependency-light (no imports from internal/domain).
+type FilterPresetSummary struct {
+	ID          string
+	Name        string
+	Description string
+	Location    string // "project" or "global"
+}
+
+// FilterPresetsLoadedMsg indicates filter presets were discovered from preset dirs.
+type FilterPresetsLoadedMsg struct {
+	Presets []FilterPresetSummary
+}
+
+// FilterPresetsLoadFailedMsg indicates preset discovery failed.
+type FilterPresetsLoadFailedMsg struct {
+	Err error
+}
 
 type GenerateRequested struct{}
 

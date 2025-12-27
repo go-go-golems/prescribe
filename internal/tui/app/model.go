@@ -52,7 +52,10 @@ func statusModel(km keys.KeyMap, st styles.Styles) (m status.Model) {
 }
 
 func (m Model) Init() tea.Cmd {
-	return bootCmd(m.ctrl)
+	return tea.Batch(
+		bootCmd(m.ctrl),
+		loadFilterPresetsCmd(m.ctrl),
+	)
 }
 
 func (m Model) contentWH() (w, h int) {
@@ -152,6 +155,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
 			m.mode = ModeFilters
 			m.recomputeLayout()
+
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset1):
+			m = m.applyQuickPresetByIndex(0)
+			m.syncFilelist()
+			m.syncFilterpane()
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset2):
+			m = m.applyQuickPresetByIndex(1)
+			m.syncFilelist()
+			m.syncFilterpane()
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset3):
+			m = m.applyQuickPresetByIndex(2)
+			m.syncFilelist()
+			m.syncFilterpane()
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleFilteredView):
 			m.showFiltered = !m.showFiltered
@@ -394,22 +413,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.syncFilterpane()
 		cmds = append(cmds, saveSessionCmd(m.ctrl))
 
-	case events.AddFilterPresetRequested:
-		filter, ok := filterPreset(msg.PresetID)
-		if !ok {
-			m.status, cmd = m.status.Update(events.ShowToastMsg{
-				Text:     "Unknown preset: " + msg.PresetID,
-				Level:    events.ToastError,
-				Duration: 5 * time.Second,
-			})
-			if cmd != nil {
-				cmds = append(cmds, cmd)
-			}
-			break
+	case events.FilterPresetsLoadedMsg:
+		m.filterPresets = msg.Presets
+	case events.FilterPresetsLoadFailedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     "Failed to load filter presets: " + msg.Err.Error(),
+			Level:    events.ToastWarning,
+			Duration: 5 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
 		}
-		m.ctrl.AddFilter(filter)
-		m.syncFilterpane()
-		cmds = append(cmds, saveSessionCmd(m.ctrl))
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
@@ -433,6 +447,40 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+func (m Model) applyQuickPresetByIndex(i int) Model {
+	if i < 0 || i >= len(m.filterPresets) {
+		m.status, _ = m.status.Update(events.ShowToastMsg{
+			Text:     "No preset bound to that key",
+			Level:    events.ToastInfo,
+			Duration: 2 * time.Second,
+		})
+		return m
+	}
+
+	p := m.filterPresets[i]
+	preset, err := m.ctrl.LoadFilterPresetByID(p.ID)
+	if err != nil {
+		m.status, _ = m.status.Update(events.ShowToastMsg{
+			Text:     "Failed to apply preset: " + err.Error(),
+			Level:    events.ToastError,
+			Duration: 5 * time.Second,
+		})
+		return m
+	}
+
+	m.ctrl.AddFilter(domain.Filter{
+		Name:        preset.Name,
+		Description: preset.Description,
+		Rules:       preset.Rules,
+	})
+	m.status, _ = m.status.Update(events.ShowToastMsg{
+		Text:     "Applied preset: " + preset.ID,
+		Level:    events.ToastSuccess,
+		Duration: 2 * time.Second,
+	})
+	return m
 }
 
 func saveSessionCmd(ctrl *controller.Controller) tea.Cmd {
@@ -524,38 +572,4 @@ func (m *Model) syncFilterpane() {
 	m.filterIndex = m.filterpane.SelectedIndex()
 }
 
-func filterPreset(id string) (domain.Filter, bool) {
-	switch id {
-	case "exclude-tests":
-		return domain.Filter{
-			Name:        "Exclude Tests",
-			Description: "Exclude test files",
-			Rules: []domain.FilterRule{
-				{Type: domain.FilterTypeExclude, Pattern: "**/*test*"},
-				{Type: domain.FilterTypeExclude, Pattern: "**/*spec*"},
-			},
-		}, true
-	case "exclude-docs":
-		return domain.Filter{
-			Name:        "Exclude Docs",
-			Description: "Exclude documentation files",
-			Rules: []domain.FilterRule{
-				{Type: domain.FilterTypeExclude, Pattern: "**/*.md"},
-				{Type: domain.FilterTypeExclude, Pattern: "**/docs/**"},
-			},
-		}, true
-	case "only-source":
-		return domain.Filter{
-			Name:        "Only Source",
-			Description: "Include only source code files",
-			Rules: []domain.FilterRule{
-				{Type: domain.FilterTypeInclude, Pattern: "**/*.go"},
-				{Type: domain.FilterTypeInclude, Pattern: "**/*.ts"},
-				{Type: domain.FilterTypeInclude, Pattern: "**/*.js"},
-				{Type: domain.FilterTypeInclude, Pattern: "**/*.py"},
-			},
-		}, true
-	default:
-		return domain.Filter{}, false
-	}
-}
+// (Quick presets are now loaded from preset dirs at runtime; see loadFilterPresetsCmd.)
