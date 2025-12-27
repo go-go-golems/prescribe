@@ -39,8 +39,8 @@
 - [x] [Phase 4 / file list component] Implement select-all/unselect-all keys in filelist emitting `events.SetAllVisibleIncludedRequested`
 - [x] [Phase 4 / file list component] Root: build list items from `ctrl.GetVisibleFiles()` and apply mutations via controller helpers
 - [x] [Phase 4 / file list component] Root: support toggling view between visible vs filtered list (`showFiltered` flag)
-- [ ] [Phase 5 / filter pane component] Create `internal/tui/components/filterpane` (list filters + rule preview)
-- [ ] [Phase 5 / filter pane component] Implement filterpane key handling (delete, clear, presets) emitting `events.*Filter*Requested`
+- [x] [Phase 5 / filter pane component] Create `internal/tui/components/filterpane` (list filters + rule preview)
+- [x] [Phase 5 / filter pane component] Implement filterpane key handling (delete, clear, presets) emitting `events.*Filter*Requested`
 - [ ] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
 - [ ] [Phase 5 / filter pane component] Root: handle filter events with `ctrl.RemoveFilter`, `ctrl.ClearFilters`, `ctrl.AddFilter` + save + toast
 - [ ] [Phase 5 / filter pane component] Add UX: show filter impact (visible/filtered counts) on filter screen
