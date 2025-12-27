@@ -90,3 +90,8 @@ CLI: regroup verbs into pinocchio-style command groups; extract initial paramete
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Registers command groups (filter/session/file/context)
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/001-INITIAL-IMPORT--initial-import-transform-prescribe-into-go-go-golems-application/analysis/03-cli-command-grouping-and-parameter-layers.md — CLI verbs + parameter layers analysis
 
+
+## 2025-12-26
+
+Close ticket: CLI regrouped into pinocchio-style command groups; extracted initial parameter layers; docs updated.
+

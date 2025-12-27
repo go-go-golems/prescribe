@@ -1,25 +1,24 @@
 ---
-Title: 'Initial Import: Transform prescribe into go-go-golems application'
-Ticket: 001-INITIAL-IMPORT
-Status: review
+Title: Make it work
+Ticket: 002-MAKE-IT-WORK
+Status: active
 Topics:
-    - migration
+    - tui
+    - bubbletea
+    - ux
     - refactoring
-    - ci-cd
-    - go-module
 DocType: index
 Intent: long-term
 Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-26T18:31:58.85502284-05:00
+LastUpdated: 2025-12-26T18:32:05.980662011-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
 
-
-# Initial Import: Transform prescribe into go-go-golems application
+# Make it work
 
 ## Overview
 
@@ -36,10 +35,10 @@ Current status: **active**
 
 ## Topics
 
-- migration
+- tui
+- bubbletea
+- ux
 - refactoring
-- ci-cd
-- go-module
 
 ## Tasks
 
