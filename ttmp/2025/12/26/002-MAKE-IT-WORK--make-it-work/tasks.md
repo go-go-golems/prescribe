@@ -27,7 +27,7 @@
 - [x] [Phase 2 / app root] Move generation to a `tea.Cmd` + explicit Generating mode + error toast/result
 - [x] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
 - [x] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
-- [ ] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
+- [x] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
 - [x] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper
 - [x] [Phase 3 / controller APIs] Add `Controller.SetAllVisibleIncluded(included)` helper for select-all/unselect-all
 - [x] [Phase 3 / controller APIs] Add `Controller.BuildGenerateDescriptionRequest()` (single source of truth for generation inputs)
