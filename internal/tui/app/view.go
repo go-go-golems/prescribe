@@ -172,8 +172,8 @@ func (m Model) renderResult() string {
 		b.WriteString(m.styles.ErrorText.Render("Error: " + m.err.Error()))
 		b.WriteString("\n\n")
 	} else {
-		b.WriteString(m.styles.Box.Render(m.generatedDesc))
-		b.WriteString("\n\n")
+		b.WriteString(m.result.View())
+		b.WriteString("\n")
 	}
 
 	b.WriteString(m.status.View())
@@ -188,5 +188,3 @@ func max(a, b int) int {
 	}
 	return b
 }
-
-

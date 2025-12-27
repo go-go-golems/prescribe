@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tui/components/result"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/export"
@@ -26,6 +27,7 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 	km := keys.Default()
 	st := styles.Default()
 	sm := statusModel(km, st)
+	rm := result.New()
 
 	return Model{
 		ctrl:   ctrl,
@@ -34,6 +36,7 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 		keymap: km,
 		styles: st,
 		status: sm,
+		result: rm,
 	}
 }
 
@@ -56,7 +59,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.status.SetSize(m.width)
 		m.status.SetShowFullHelp(m.showFullHelp)
-		m.layout = layout.Compute(m.width, m.height, 0, lipgloss.Height(m.status.View()))
+		m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
+		m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 
 	case tea.KeyMsg:
 		switch {
@@ -66,7 +70,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Help):
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
-			m.layout = layout.Compute(m.width, m.height, 0, lipgloss.Height(m.status.View()))
+			m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
+			m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 
 		case key.Matches(msg, m.keymap.Back):
 			// Global "back" semantics.
@@ -340,11 +345,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case events.DescriptionGeneratedMsg:
 		m.generatedDesc = msg.Text
+		m.result.SetContent(m.generatedDesc)
 		m.err = nil
 		m.mode = ModeResult
 
 	case events.DescriptionGenerationFailedMsg:
 		m.generatedDesc = ""
+		m.result.SetContent("")
 		m.err = msg.Err
 		m.mode = ModeResult
 
@@ -379,6 +386,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.status, cmd = m.status.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
+	}
+
+	// Let result model consume messages too (viewport scrolling / internal state),
+	// but only while in result mode to avoid stealing navigation keys.
+	if m.mode == ModeResult {
+		m.result, cmd = m.result.Update(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	return m, tea.Batch(cmds...)
@@ -419,6 +435,21 @@ func copyContextCmd(ctrl *controller.Controller, deps Deps) tea.Cmd {
 	}
 }
 
+var _ tea.Model = Model{}
+var _ tea.Model = (*Model)(nil)
+
 func (m Model) View() string {
 	return m.view()
+}
+
+func (m Model) headerHeight() int {
+	// Only the Result screen currently needs explicit "body vs header" layout separation.
+	// We keep this intentionally conservative until Phase 4/5 introduce real list components.
+	switch m.mode {
+	case ModeResult:
+		// renderResult writes: title line + "\n\n" (=> 3 lines total before the viewport)
+		return 3
+	default:
+		return 0
+	}
 }
