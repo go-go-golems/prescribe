@@ -2,7 +2,6 @@ package filter
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
@@ -162,65 +161,6 @@ func (c *FilterTestCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func runFilterTestClassic(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
-	_ = ctx
-
-	settings := &FilterTestSettings{}
-	if err := parsedLayers.InitializeStruct(filterTestSlug, settings); err != nil {
-		return errors.Wrap(err, "failed to initialize filter test settings")
-	}
-
-	if settings.Name == "" {
-		settings.Name = "test"
-	}
-	if len(settings.Exclude) == 0 && len(settings.Include) == 0 {
-		return errors.New("at least one pattern is required (--exclude or --include)")
-	}
-
-	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
-	if err != nil {
-		return err
-	}
-
-	// Build filter rules
-	rules := buildRules(settings.Exclude, settings.Include)
-
-	// Create test filter
-	filter := domain.Filter{
-		Name:  settings.Name,
-		Rules: rules,
-	}
-
-	// Test filter
-	matched, unmatched := ctrl.TestFilter(filter)
-
-	// Display results
-	fmt.Printf("Filter Test: %s\n", settings.Name)
-	fmt.Println("==================")
-
-	fmt.Printf("\nRules:\n")
-	for _, rule := range rules {
-		fmt.Printf("  %s: %s\n", rule.Type, rule.Pattern)
-	}
-
-	fmt.Printf("\nMatched Files (%d):\n", len(matched))
-	for _, path := range matched {
-		fmt.Printf("  ✓ %s\n", path)
-	}
-
-	fmt.Printf("\nFiltered Files (%d):\n", len(unmatched))
-	for _, path := range unmatched {
-		fmt.Printf("  ✗ %s\n", path)
-	}
-
-	fmt.Printf("\nSummary:\n")
-	fmt.Printf("  Total files: %d\n", len(matched)+len(unmatched))
-	fmt.Printf("  Would be visible: %d\n", len(matched))
-	fmt.Printf("  Would be filtered: %d\n", len(unmatched))
-
-	return nil
-}
-
 func buildRules(exclude []string, include []string) []domain.FilterRule {
 	rules := make([]domain.FilterRule, 0)
 	for i, pattern := range exclude {
@@ -246,10 +186,8 @@ func buildTestFilterCmd() (*cobra.Command, error) {
 		return nil, err
 	}
 
-	cobraCmd, err := cli.BuildCobraCommandFromCommandAndFunc(
+	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
-		runFilterTestClassic,
-		cli.WithDualMode(true),
 		cli.WithParserConfig(cli.CobraParserConfig{
 			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
 		}),

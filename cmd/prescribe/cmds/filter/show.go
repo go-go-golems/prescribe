@@ -2,7 +2,6 @@ package filter
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
@@ -80,66 +79,14 @@ func (c *FilterShowCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func runFilterShowClassic(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
-	_ = ctx
-
-	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
-	if err != nil {
-		return err
-	}
-
-	helpers.LoadDefaultSessionIfExists(ctrl)
-
-	// Get filtered files
-	filtered := ctrl.GetFilteredFiles()
-	visible := ctrl.GetVisibleFiles()
-	data := ctrl.GetData()
-
-	fmt.Printf("File Status\n")
-	fmt.Println("==================")
-	fmt.Printf("Total files: %d\n", len(data.ChangedFiles))
-	fmt.Printf("Visible files: %d\n", len(visible))
-	fmt.Printf("Filtered files: %d\n\n", len(filtered))
-
-	if len(filtered) == 0 {
-		fmt.Println("No files are being filtered out")
-		return nil
-	}
-
-	fmt.Printf("Filtered Files:\n")
-	for _, file := range filtered {
-		fmt.Printf("  ✗ %s (+%d -%d, %dt)\n",
-			file.Path,
-			file.Additions,
-			file.Deletions,
-			file.Tokens)
-	}
-
-	// Show which filters are active
-	filters := ctrl.GetFilters()
-	if len(filters) > 0 {
-		fmt.Printf("\nActive Filters:\n")
-		for i, filter := range filters {
-			fmt.Printf("  [%d] %s\n", i, filter.Name)
-			for _, rule := range filter.Rules {
-				fmt.Printf("      %s: %s\n", rule.Type, rule.Pattern)
-			}
-		}
-	}
-
-	return nil
-}
-
 func InitShowFilteredCmd() error {
 	glazedCmd, err := NewFilterShowCommand()
 	if err != nil {
 		return err
 	}
 
-	cobraCmd, err := cli.BuildCobraCommandFromCommandAndFunc(
+	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
-		runFilterShowClassic,
-		cli.WithDualMode(true),
 		cli.WithParserConfig(cli.CobraParserConfig{
 			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
 		}),
