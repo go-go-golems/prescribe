@@ -166,3 +166,14 @@ Step 11: Port `filter remove` and `filter clear` to Glazed BareCommands (commit 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/clear.go — Glazed BareCommand for clearing filters and saving session
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/filter.go — Explicit init wiring for remove/clear
 
+
+## 2025-12-27
+
+Step 12: Port `session load` and `session save` to Glazed BareCommands (commit a2e2bca)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/load.go — Glazed BareCommand with optional positional `[path]`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/save.go — Glazed BareCommand with optional positional `[path]`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/session.go — Explicit init wiring for load/save
+
