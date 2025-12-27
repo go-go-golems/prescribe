@@ -9,13 +9,16 @@ Topics:
 DocType: reference
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/scripts/tui-tmux.sh
+      Note: Generates tmux pane captures used as screenshots
 ExternalSources: []
-Summary: "Text captures of the TUI rendered screens, captured via tmux harness."
-LastUpdated: 2025-12-27T00:00:00.000000000-05:00
-WhatFor: "Quick visual regression checks while refactoring the TUI"
-WhenToUse: "After UI changes; run tmux smoke scenario and compare frames"
+Summary: Text captures of the TUI rendered screens, captured via tmux harness.
+LastUpdated: 2025-12-27T00:00:00-05:00
+WhatFor: Quick visual regression checks while refactoring the TUI
+WhenToUse: After UI changes; run tmux smoke scenario and compare frames
 ---
+
 
 # TUI screenshots (tmux capture) — smoke scenario
 

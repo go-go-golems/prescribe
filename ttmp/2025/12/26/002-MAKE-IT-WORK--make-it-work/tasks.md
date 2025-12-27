@@ -56,3 +56,4 @@
 - [ ] [Phase 8 / cleanup] Decide/document fate of `internal/model` vs `internal/domain` duplication (plan removal or justification)
 - [ ] [Testing] Update `prescribe/test-scripts/*.sh` from old flat verbs to hierarchical verbs (session/filter/file/context)
 - [ ] [Testing] Add a short manual TUI validation checklist to the ticket playbook (keys, resize, generate, back)
+- [x] [Testing/TUI] Add tmux-based harness scripts under ticket scripts/ to run scenarios and capture panes automatically

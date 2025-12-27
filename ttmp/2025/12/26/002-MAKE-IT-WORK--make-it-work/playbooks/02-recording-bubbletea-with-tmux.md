@@ -10,18 +10,13 @@ Topics:
 DocType: playbook
 Intent: long-term
 Owners: []
-RelatedFiles:
-    - Path: prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/03-tui-screenshots-smoke-scenario.md
-      Note: Example of embedding captures into docs
-    - Path: prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/scripts/tui-tmux.sh
-      Note: Concrete tmux harness used as example
+RelatedFiles: []
 ExternalSources: []
-Summary: How to run, drive, and capture Bubbletea TUIs using tmux in a repeatable way (including alt-screen pitfalls).
-LastUpdated: 2025-12-27T00:00:00-05:00
-WhatFor: Repeatable, scriptable TUI recording and debugging without manual keypresses/capture-pane copy/paste.
-WhenToUse: Any time you need to validate or record a Bubbletea UI flow (screenshots as text, regression frames, debugging).
+Summary: "How to run, drive, and capture Bubbletea TUIs using tmux in a repeatable way (including alt-screen pitfalls)."
+LastUpdated: 2025-12-27T00:00:00.000000000-05:00
+WhatFor: "Repeatable, scriptable TUI recording and debugging without manual keypresses/capture-pane copy/paste."
+WhenToUse: "Any time you need to validate or record a Bubbletea UI flow (screenshots as text, regression frames, debugging)."
 ---
-
 
 # Recording Bubbletea apps with tmux (playbook)
 
