@@ -123,3 +123,31 @@ Phase 2 progress: implemented app root main/filters/generating/result modes with
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/tui.go — Now launches app root
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app — model + views
 
+
+## 2025-12-26
+
+Added tmux harness script for automated TUI scenario runs + pane capture (ticket scripts/).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/scripts/tui-tmux.sh — Automated tmux TUI harness
+
+
+## 2025-12-26
+
+Added ticket doc with tmux-captured TUI screenshots (smoke scenario) and documented tmux capture bug hunt in diary.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Step 8 tmux capture investigation
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/03-tui-screenshots-smoke-scenario.md — TUI screenshot doc
+
+
+## 2025-12-26
+
+Added playbook: how to record Bubbletea TUIs with tmux (reliable start sizing, waits, alt-screen capture fallback, and wait-for-text patterns).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/02-recording-bubbletea-with-tmux.md — New playbook
+
