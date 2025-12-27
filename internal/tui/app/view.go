@@ -71,7 +71,13 @@ func (m Model) renderMain() string {
 	b.WriteString("\n")
 	b.WriteString(m.status.View())
 
-	return strings.TrimRight(m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String()), "\n")
+	return strings.TrimRight(
+		m.styles.BorderBox.
+			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
+			Render(b.String()),
+		"\n",
+	)
 }
 
 func (m Model) renderFilters() string {
@@ -118,7 +124,13 @@ func (m Model) renderFilters() string {
 
 	b.WriteString(m.status.View())
 
-	return strings.TrimRight(m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String()), "\n")
+	return strings.TrimRight(
+		m.styles.BorderBox.
+			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
+			Render(b.String()),
+		"\n",
+	)
 }
 
 func (m Model) renderGenerating() string {
@@ -129,7 +141,13 @@ func (m Model) renderGenerating() string {
 	b.WriteString(m.styles.Base.Render("Generating PR description..."))
 	b.WriteString("\n\n")
 	b.WriteString(m.status.View())
-	return strings.TrimRight(m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String()), "\n")
+	return strings.TrimRight(
+		m.styles.BorderBox.
+			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
+			Render(b.String()),
+		"\n",
+	)
 }
 
 func (m Model) renderResult() string {
@@ -149,7 +167,13 @@ func (m Model) renderResult() string {
 
 	b.WriteString(m.status.View())
 
-	return strings.TrimRight(m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String()), "\n")
+	return strings.TrimRight(
+		m.styles.BorderBox.
+			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
+			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
+			Render(b.String()),
+		"\n",
+	)
 }
 
 func max(a, b int) int {
