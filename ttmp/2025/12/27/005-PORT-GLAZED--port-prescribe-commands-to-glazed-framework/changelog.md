@@ -236,3 +236,8 @@ Step 18: Update smoke scripts + docs to match new Glazed CLI surface (commit fe6
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-filters.sh — Updated to new grouped commands
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/README.md — Updated examples for Glazed CLI and flag names
 
+
+## 2025-12-27
+
+Close ticket: all commands ported; smoke scripts/docs updated; tests skipped per decision
+

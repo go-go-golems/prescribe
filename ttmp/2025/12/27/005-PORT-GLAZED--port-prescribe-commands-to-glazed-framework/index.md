@@ -1,7 +1,7 @@
 ---
 Title: Port Prescribe Commands to Glazed Framework
 Ticket: 005-PORT-GLAZED
-Status: active
+Status: review
 Topics:
     - glazed
     - prescribe
@@ -48,8 +48,6 @@ RelatedFiles:
       Note: |-
         Glazed logging/help init and loading Prescribe help topics (commit 90d7951)
         Explicit command initialization via cmds.InitRootCmd (commit da425db)
-    - Path: prescribe/pkg/doc.go
-      Note: Removed no-op init() to avoid implicit initialization (commit fc233a3)
     - Path: prescribe/pkg/doc/embed.go
       Note: Embeds Prescribe markdown help sections for Glazed help system (commit 90d7951)
     - Path: prescribe/pkg/doc/topics/01-filters-and-glob-syntax.md
@@ -68,10 +66,11 @@ RelatedFiles:
       Note: Onboarding playbook for porting commands
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T15:08:44.37609457-05:00
+LastUpdated: 2025-12-27T16:54:22.815236356-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
