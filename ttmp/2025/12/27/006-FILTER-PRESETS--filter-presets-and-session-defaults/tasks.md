@@ -1,0 +1,41 @@
+# Tasks
+
+## TODO
+
+- [ ] **Define filter preset YAML schema + locations**
+- [x] Decide schema (mirror prompt presets): `name`, `description`, `rules[{type,pattern}]`
+- [x] Decide directories:
+- [x] Project: `<repo>/.pr-builder/filters/*.yaml`
+- [x] Global: `~/.pr-builder/filters/*.yaml`
+  - [ ] Add an example preset file in docs/test fixtures
+
+- [ ] **Implement filter preset load/save in controller**
+- [x] Add `LoadProjectFilterPresets()` and `LoadGlobalFilterPresets()` (modeled after prompt presets)
+- [x] Add `SaveFilterPreset(name, description, rules, location)` writing YAML
+- [x] Decide preset ID strategy (filename vs slug) and keep it stable
+
+- [ ] **Implement “default filters for new sessions in current repo”**
+  - [ ] Define per-repo config file (proposed): `<repo>/.pr-builder/config.yaml`
+  - [ ] Add `defaults.filter_presets: [ ... ]` list (IDs or filenames)
+  - [ ] On TUI boot (`internal/tui/app/boot.go`):
+    - [ ] If session missing, load repo defaults and apply them
+    - [ ] Decide whether to auto-save a new session after applying defaults
+  - [ ] CLI parity: decide whether CLI commands should also apply defaults when session is missing
+
+- [ ] **Expose preset management via CLI**
+  - [ ] Add subcommands:
+    - [ ] `prescribe filter preset list [--project|--global|--all]`
+    - [ ] `prescribe filter preset save --name ... [--project|--global] [--from-active|--exclude/--include ...]`
+    - [ ] `prescribe filter preset apply PRESET_ID`
+  - [ ] Ensure commands do not clobber existing sessions (load default session if exists before mutating)
+
+- [ ] **TUI integration**
+  - [ ] Decide whether “quick presets” remain hardcoded or become data-driven from preset dirs
+  - [ ] Add UI affordance to “save current active filters as preset” (project/global)
+  - [ ] Add UI affordance to apply a saved preset
+
+- [ ] **Tests + docs**
+- [x] Unit tests: YAML round-trip for presets (load/save)
+  - [ ] Unit tests: boot behavior (missing session + defaults applied)
+  - [ ] Update docs: explain preset locations and default behavior
+
