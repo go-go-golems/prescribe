@@ -58,9 +58,9 @@ func (m Model) Init() tea.Cmd {
 func (m Model) contentWH() (w, h int) {
 	frameW, frameH := m.styles.BorderBox.GetFrameSize()
 
-	// Keep a 1-row slack to prevent terminal scrolling if any view accidentally
-	// over-produces lines (this preserves the top border reliably in tmux captures).
-	return max(0, m.width-frameW), max(0, m.height-frameH-1)
+	// Keep a 1-col/1-row slack to prevent terminal clipping/scrolling if any view
+	// accidentally over-produces width/height (this preserves borders reliably in tmux captures).
+	return max(0, m.width-frameW-1), max(0, m.height-frameH-1)
 }
 
 func (m *Model) footerHeight() int {
