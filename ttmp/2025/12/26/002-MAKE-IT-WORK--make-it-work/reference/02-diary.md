@@ -430,7 +430,7 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
 - Ensuring “visible” semantics (post-filters) are consistent across: select-all/unselect-all, generation input, and the token count.
 
 ### What should be done in the future
-- Wire `a`/`A` in `internal/tui/app` to call `SetAllVisibleIncluded()` + auto-save + toast.
+- Now that inclusion mutations are path-based, start Phase 4 by extracting the file list into a dedicated component model (stable ID = path).
 
 ---
 
@@ -438,28 +438,35 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
 
 This step wires the “copy context” workflow end-to-end: build the canonical generation request, format it into a human-readable text blob, and copy it to the system clipboard with toast feedback. The key goal is to make it trivial to paste the exact context into another tool (or into an LLM UI) without re-running generation.
 
-**Commit (code):** N/A — in progress
+**Commit (code):**
+- 10cf5fd38b2fe54b1022dc55a8da2c68efae922d — "TUI: add generation context export formatter"
+- 9502e96567cae71d31f708ca3c5938d360c5de7a — "TUI: copy generation context to clipboard"
 
 ### What I did
-- N/A (in progress)
+- Added `internal/tui/export` with `export.BuildGenerationContextText(req)` and a small unit test.
+- Wired `y` (`keys.KeyMap.CopyContext`) in `internal/tui/app` (Main + Result modes):
+  - builds the canonical request via `Controller.BuildGenerateDescriptionRequest()`
+  - formats it via `export.BuildGenerationContextText`
+  - copies to clipboard via `Deps.ClipboardWriteAll`
+  - shows a toast on success/failure
 
 ### Why
 - “Copy context” is a key UX primitive for this tool: it enables fast iteration and easy handoff without requiring the built-in mock generator.
 
 ### What worked
-- N/A (in progress)
+- Copying context is now end-to-end and uses the same canonical request builder as generation (single source of truth for included inputs).
 
 ### What didn't work
 - N/A (in progress)
 
 ### What I learned
-- N/A (in progress)
+- The existing `events.ClipboardCopiedMsg` / `events.ClipboardCopyFailedMsg` were already the right abstraction for this wiring.
 
 ### What was tricky to build
-- N/A (in progress)
+- Handling “no files included” as a user-facing warning (vs. a scary clipboard error) so the UX nudges the user to select files first.
 
 ### What warrants a second pair of eyes
 - Making sure the exported text matches the exact inputs used by `Controller.GenerateDescription()` (same included files, same prompt, same additional context).
 
 ### What should be done in the future
-- N/A (in progress)
+- Consider adding a second copy mode for “copy generated result” (separate key) once the Result screen moves to a viewport component.
