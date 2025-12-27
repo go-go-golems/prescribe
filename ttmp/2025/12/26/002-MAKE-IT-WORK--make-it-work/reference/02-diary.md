@@ -390,7 +390,9 @@ This step was a small but surprisingly tricky debugging detour: we tried to gene
 
 This step starts Phase 3 of the refactor: move the remaining “index-based” mutations out of the TUI and into controller helper APIs keyed by stable IDs (file paths). The immediate payoff is enabling select-all/unselect-all in a way that is correct under filters and doesn’t require the UI to scan `ChangedFiles` manually.
 
-**Commit (code):** a893d13fc84e8e9b359487c1277bad4f9bf2321c — "Controller: add path-based inclusion + request builder"
+**Commit (code):**
+- a893d13fc84e8e9b359487c1277bad4f9bf2321c — "Controller: add path-based inclusion + request builder"
+- f233c0d5c64b0a470d6112ca4f4d34d6d67ff736 — "TUI: wire select-all/unselect-all in app"
 
 ### What I did
 - Loaded the ticket task list and verified the current `internal/tui/app` state (Phase 2 app root is active; keymap already has `a`/`A` bindings but app Update does not handle them yet).
@@ -401,12 +403,18 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
   - `Controller.BuildGenerateDescriptionRequest()` (canonical generation inputs)
 - Updated `Controller.GenerateDescription()` to use `BuildGenerateDescriptionRequest()` (single source of truth).
 - Added unit tests in `internal/controller/controller_test.go` covering path lookup, bulk include with filters, and request building.
+- Wired `internal/tui/app` to use controller helpers:
+  - Space toggle now uses `SetFileIncludedByPath` (no UI-local scan of `ChangedFiles`)
+  - `a` selects all visible files (respects filters) + auto-saves + toast
+  - `A` unselects all visible files + auto-saves + toast
+  - filtered view remains read-only (select-all/unselect-all shows an info toast)
 
 ### Why
 - The current app root still does a brittle path→index scan in the UI to toggle inclusion. Phase 3 makes the Controller the single place that knows how to mutate files by stable path IDs.
 
 ### What worked
 - Controller-level unit tests now cover the “visible + included” contract, which unblocks wiring select-all/unselect-all in the TUI without UI-local hacks.
+- The new keys are visible in help (`keys.KeyMap`) and now produce immediate feedback via toasts.
 
 ### What didn't work
 - N/A (in progress)
@@ -416,7 +424,7 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
 - `Controller` methods are easy to unit test without a git repo by constructing `&Controller{data: ...}` in-package.
 
 ### What was tricky to build
-- N/A (in progress)
+- Keeping semantics consistent across list modes: select-all/unselect-all must operate on *visible* files, while the “filtered view” is explicitly read-only for now.
 
 ### What warrants a second pair of eyes
 - Ensuring “visible” semantics (post-filters) are consistent across: select-all/unselect-all, generation input, and the token count.
