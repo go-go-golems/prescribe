@@ -73,7 +73,7 @@ This step creates a concrete map of the current `prescribe/internal/tui` impleme
 - Whether we should preserve the current “auto-save on toggle/filter change” semantics exactly, or introduce an explicit save action with a toast.
 
 ### What should be done in the future
-- Extend the analysis doc with a “behavioral contract” section: what exactly happens on each key in each screen, and what controller mutations occur.
+- Extend the analysis doc with a "behavioral contract" section: what exactly happens on each key in each screen, and what controller mutations occur.
 - Use the analysis doc to plan the bobatea-style component decomposition (list component, footer/help component, toast component).
 
 ---
@@ -136,11 +136,73 @@ This step shifts focus from UI to the “engine room”: the Controller and the 
 ### What warrants a second pair of eyes
 - Whether we should rename `.pr-builder/` to `.prescribe/` as part of ticket 002 (breaking change) or defer it (and document it as legacy).
 
+---
 
-## Usage Examples
+## Step 4: Create CLI Testing Playbook and Validate Commands
 
-<!-- Show how to use this reference in practice -->
+This step creates a comprehensive testing playbook for first-time users and validates that all CLI commands work correctly with the hierarchical verb structure introduced in ticket 001. The goal is to ensure the program is testable and usable, documenting any issues or gaps found during systematic testing.
 
-## Related
+**Commit (code):** N/A — testing and documentation phase
 
-<!-- Link to related documents or resources -->
+### What I did
+- Created comprehensive playbook: `playbooks/01-cli-testing-playbook.md`
+  - Step-by-step instructions for all command groups
+  - Phase-by-phase testing approach (Session → File → Filter → Context → Generate → TUI)
+  - Error handling and edge case tests
+  - Integration workflow examples
+- Built the binary: `go build -o ./dist/prescribe ./cmd/prescribe`
+- Set up test repository: `/tmp/pr-builder-test-repo` (via `test-scripts/setup-test-repo.sh`)
+- Tested core commands systematically:
+  - `session init --save`: ✓ Works, creates `.pr-builder/session.yaml`
+  - `session show`: ✓ Works, displays human-readable session state
+  - `filter list`: ✓ Works, shows "No active filters" initially
+  - `filter add`: ✓ Works, adds filter and auto-saves
+  - `file toggle`: ✓ Works, toggles inclusion and auto-saves
+  - `context add --note`: ✓ Works, adds note and updates token count
+  - `generate --output`: ✓ Works, generates PR description (mock API)
+  - `filter show`: ✓ Works, shows filtered file status
+  - `tui` smoke test: ✓ UI launches (non-interactive, ran under `script` + `timeout`)
+
+### What didn't work
+- Test script references `master` branch but creates `main` branch (minor inconsistency, doesn't break functionality)
+- Filter pattern `*test*` doesn't match `tests/auth.test.ts` - glob patterns match against filename only, not full path. Need to use `tests/*` or `**/*test*` to match paths.
+
+### What I learned
+- The hierarchical command structure is intuitive: `prescribe session init` is clearer than `prescribe init`
+- Token counting works and updates dynamically
+- **Glob pattern matching**: Patterns like `*test*` match against filename only, not full path. To match paths, use `tests/*` or `**/*test*` (doublestar supports `**` for recursive matching).
+
+### What should be done in the future
+- Update test scripts (`test-scripts/*.sh`) to use hierarchical commands (`filter add` instead of `add-filter`)
+- Test `prescribe tui` interactively (tmux) beyond the basic launch smoke test
+- Decide whether to rename `.pr-builder/` to `.prescribe/` or document as legacy
+
+---
+
+## Step 5: Deepen and sharpen the TUI modularization design doc
+
+This step revisits the original bobatea-style modularization proposal and makes it much more concrete: exact package boundaries, a shared message vocabulary to avoid import cycles, explicit layout structs, and an implementation order that can be executed incrementally with tight “exit criteria” per phase. The goal is to turn the doc into an implementation-ready blueprint rather than just a directional architecture note.
+
+**Commit (code):** N/A — documentation/design phase
+
+### What I did
+- Updated `design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md` to include:
+  - a more precise proposed package layout (including `events/`, `layout/`, `export/`)
+  - explicit package boundary rules (app = side-effect boundary; components = UI-only)
+  - a concrete `AppModel` state sketch (Mode, flags, caches, child models)
+  - a concrete `Deps` interface for clipboard/time
+  - a shared typed message taxonomy (`events.*`) including boot/session + toasts
+  - a concrete `layout.Layout` + `Compute()` API
+  - proposed controller helpers to enable “select all” and clipboard export without UI hacks
+  - a detailed phased implementation plan with checklists and exit criteria
+
+### What I learned
+- The current `EnhancedModel` already illustrates the right orchestration pattern, but the design needs to explicitly address:
+  - stable IDs (paths) vs. index-based mutation APIs
+  - cycle-free message typing (`events` package)
+  - session-load error handling semantics (ignore missing file, surface mismatch)
+
+### What warrants a second pair of eyes
+- Whether `Deps` should be an interface (as proposed) or a small struct of functions (common in go-go-golems code)
+- Whether we should add controller helpers (`SetAllVisibleIncluded`, `BuildGenerateDescriptionRequest`) as early as Phase 3, or keep them as UI-local helpers initially
+

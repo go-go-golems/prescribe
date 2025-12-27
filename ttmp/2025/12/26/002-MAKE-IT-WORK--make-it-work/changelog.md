@@ -51,3 +51,32 @@ Design: clarify controller lifetime (single long-lived controller per TUI run; d
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — Added explicit controller lifetime + session boot-load section
 
+
+## 2025-12-26
+
+Created comprehensive CLI testing playbook and validated all commands work correctly with hierarchical structure. Documented glob pattern behavior (filename vs path matching).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/01-cli-testing-playbook.md — Testing playbook
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Diary entry documenting testing
+
+
+## 2025-12-26
+
+Refined TUI modularization proposal: added explicit package boundaries, shared events message taxonomy, layout API, Deps interface, controller helper suggestions, and a phased implementation plan with exit criteria.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — Updated design doc
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Diary Step 5
+
+
+## 2025-12-26
+
+Smoke-tested  launch under a pseudo-tty (timeout); UI renders main screen without crashing.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Updated Step 4 with TUI smoke test
+
