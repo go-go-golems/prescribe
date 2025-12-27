@@ -137,3 +137,12 @@ Step 9: Port filter add to Glazed-built BareCommand (legacy flags preserved) (co
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/add.go — BareCommand + layer schema + controller init from parsed layers
 
+
+## 2025-12-27
+
+Step 10: Drop dual-mode/back-compat glue; ported query commands now always use Glazed output (commit 9860e32)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/show.go — Removed classic + yaml flag
+

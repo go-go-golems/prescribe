@@ -20,11 +20,17 @@ RelatedFiles:
     - Path: prescribe/cmd/prescribe/cmds/filter/add.go
       Note: Port filter add to Glazed-built BareCommand (legacy flags preserved) (commit 451d28b)
     - Path: prescribe/cmd/prescribe/cmds/filter/list.go
-      Note: Dual-mode filter list (classic + Glaze structured output) (commit da425db)
+      Note: |-
+        Dual-mode filter list (classic + Glaze structured output) (commit da425db)
+        Dropped dual-mode toggle; always Glazed output (commit 9860e32)
     - Path: prescribe/cmd/prescribe/cmds/filter/show.go
-      Note: Dual-mode filter show (classic + Glaze output) (commit 3f05fca)
+      Note: |-
+        Dual-mode filter show (classic + Glaze output) (commit 3f05fca)
+        Dropped dual-mode toggle; always Glazed output (commit 9860e32)
     - Path: prescribe/cmd/prescribe/cmds/filter/test.go
-      Note: Dual-mode filter test with legacy flags + Glaze row output (commit 3a028b5)
+      Note: |-
+        Dual-mode filter test with legacy flags + Glaze row output (commit 3a028b5)
+        Dropped dual-mode toggle; always Glazed output (commit 9860e32)
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller.go
       Note: Controller pattern used by all commands
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go
@@ -35,7 +41,9 @@ RelatedFiles:
         Root command now initializes logging in PersistentPreRunE (commit 90d7951)
         NewRootCmd/InitRootCmd for deterministic init (commit da425db)
     - Path: prescribe/cmd/prescribe/cmds/session/show.go
-      Note: Dual-mode session show with --yaml preserved and Glaze summary row output (commit 425af79)
+      Note: |-
+        Dual-mode session show with --yaml preserved and Glaze summary row output (commit 425af79)
+        Dropped classic output + --yaml; always Glazed output (commit 9860e32)
     - Path: prescribe/cmd/prescribe/main.go
       Note: |-
         Glazed logging/help init and loading Prescribe help topics (commit 90d7951)
@@ -62,6 +70,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

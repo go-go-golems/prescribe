@@ -878,3 +878,51 @@ The main change is that the command no longer reads Cobra flags directly; it use
 - Validate:
   - `cd prescribe && go run ./cmd/prescribe filter add --help`
   - `cd prescribe && go run ./cmd/prescribe filter add --name test --exclude '**/*.md'`
+
+## Step 16: Simplify — drop backwards compatibility and remove dual-mode toggle plumbing
+
+This step intentionally breaks backwards compatibility to simplify the migration: instead of maintaining “classic output vs Glazed output” dual-mode and a `--with-glaze-output` toggle, the ported query commands now **always run as Glazed commands**. This significantly reduces code and removes a whole class of branching and subtle behavior differences.
+
+It also means we stop carrying “classic-only” flags like `session show --yaml`. If users want YAML now, they should use Glazed’s formatter flags: `--output yaml`.
+
+**Commit (code):** 9860e32be94852851326d48e42a35936ced75c3d — "prescribe: drop dual-mode / compatibility glue"
+
+### What I did
+- Removed dual-mode Cobra builders and classic-mode run functions from:
+  - `filter list`
+  - `filter show`
+  - `filter test`
+  - `session show`
+- Removed the `--with-glaze-output` toggle flag entirely (ported commands always expose Glazed output flags directly).
+- Simplified `session show` by removing the `--yaml` flag and classic output implementation.
+
+### Why
+- You explicitly don’t want backwards compatibility; dual-mode was pure complexity.
+- Single-mode Glazed commands are easier to reason about and standardize (output formatting via Glazed, no custom printing).
+
+### What worked
+- `go test ./... -count=1` still passes.
+- `prescribe filter list --output json` works without requiring a mode toggle.
+
+### What didn't work
+- When piping to `head` during smoke tests, Glazed JSON output can end with “broken pipe”; this is expected when the consumer closes early.
+
+### What I learned
+- Once you commit to “Glazed-first”, the command implementations become dramatically smaller and more uniform.
+
+### What was tricky to build
+- Deciding what to do with classic-only flags (`--yaml`). The cleanest approach is to remove them and rely on Glazed format flags.
+
+### What warrants a second pair of eyes
+- Review the UX change: help output no longer shows a “classic mode”. Confirm this aligns with intended usage and docs.
+
+### What should be done in the future
+- Update any scripts and docs that referenced `--with-glaze-output` or `session show --yaml`.
+
+### Code review instructions
+- Start with:
+  - `cmd/prescribe/cmds/filter/list.go`
+  - `cmd/prescribe/cmds/session/show.go`
+- Validate:
+  - `cd prescribe && go run ./cmd/prescribe filter list --output json`
+  - `cd prescribe && go run ./cmd/prescribe session show --output yaml`

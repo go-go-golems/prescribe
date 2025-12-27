@@ -28,7 +28,7 @@
 - [ ] Testing: Create unit tests for all layer creation and settings extraction
 - [ ] Testing: Create integration tests for commands with mock controllers
 - [ ] Testing: Create E2E tests for full command execution with real git repositories
-- [ ] Testing: Verify backward compatibility - ensure existing scripts still work with same flag names and behavior
+- [ ] Testing: Verify behavior for ported commands (no backwards compatibility promised; update scripts as needed)
 - [ ] Documentation: Update command help text and examples to reflect Glazed integration
 - [ ] Documentation: Add examples showing structured output usage (JSON/YAML/CSV) for dual-mode commands
 - [x] Phase 1: Update root command to add PersistentPreRunE with logging.InitLoggerFromCobra(cmd) for logging initialization
