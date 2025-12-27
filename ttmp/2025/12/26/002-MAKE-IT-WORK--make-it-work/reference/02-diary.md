@@ -288,3 +288,10 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - global quit/help keys via centralized keymap (`q`/`ctrl+c`, `?`)
   - session load result messages by emitting a toast (success/warning)
 
+**Commit (code):** 43149ccb3c450eb44f2648bb6c22bee935930478 — "TUI: add DefaultDeps (clipboard/time)"
+
+### What I did (cont.)
+- Added `internal/tui/app/DefaultDeps` implementing `Deps` using:
+  - `time.Now()` for time
+  - `github.com/atotto/clipboard` for clipboard writes (errors will be surfaced as toasts once copy is wired)
+
