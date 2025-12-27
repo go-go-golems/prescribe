@@ -42,3 +42,12 @@ Docs: add didactic deep-dive of core architecture (Controller + domain + git/ses
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/02-core-architecture-controller-domain-model-git-session-api-subsystems.md — New core-architecture analysis doc
 
+
+## 2025-12-26
+
+Design: clarify controller lifetime (single long-lived controller per TUI run; default session load once at boot)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — Added explicit controller lifetime + session boot-load section
+

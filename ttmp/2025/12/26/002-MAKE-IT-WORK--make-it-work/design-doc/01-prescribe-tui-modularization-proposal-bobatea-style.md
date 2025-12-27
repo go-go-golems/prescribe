@@ -152,6 +152,25 @@ AppModel (root)
   - toast:    status.ToastState
 ```
 
+### Controller lifetime and session loading (one-time boot)
+
+The modular TUI should follow the same lifetime model as the current `prescribe tui` command: **create one controller, keep it for the whole program**.
+
+That controller is the *single source of truth* for the whole app run:
+
+- `Controller.data` (`*domain.PRData`) is the canonical mutable state during the TUI session.
+- UI components never create controllers; they only emit intent messages.
+
+Session loading also becomes a **single, explicit boot step** (not a helper sprinkled throughout the codebase):
+
+1) `ctrl := controller.NewController(repoPath)`
+2) `ctrl.Initialize(targetBranch)`  // loads branches + changed files
+3) `ctrl.LoadSession(ctrl.GetDefaultSessionPath())`
+   - ignore “file not found”
+   - surface other errors (especially branch mismatch) via toast/error UI
+
+This removes the need for repeated “load default session” logic in subcommands and components.
+
 ### Messages: what we will make explicit
 
 We define typed messages in `internal/tui/app/messages.go` (and some in component packages).

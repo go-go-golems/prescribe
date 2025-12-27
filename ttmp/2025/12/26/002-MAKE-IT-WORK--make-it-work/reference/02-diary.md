@@ -90,6 +90,7 @@ This step turns the raw “what exists today” analysis into an actionable arch
   - `internal/session/session.go` (session YAML schema and apply semantics)
 - Wrote the design doc:
   - `design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md`
+  - Clarified that the modular app keeps a single long-lived `*controller.Controller` for the whole TUI run and loads the default session once at boot (no repeated `LoadDefaultSessionIfExists` style calls).
 
 ### Why
 - The current monolithic model makes cross-cutting features brittle.
