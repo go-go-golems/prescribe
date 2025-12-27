@@ -32,6 +32,8 @@ RelatedFiles:
         Root command structure with persistent flags
         Root command now initializes logging in PersistentPreRunE (commit 90d7951)
         NewRootCmd/InitRootCmd for deterministic init (commit da425db)
+    - Path: prescribe/cmd/prescribe/cmds/session/show.go
+      Note: Dual-mode session show with --yaml preserved and Glaze summary row output (commit 425af79)
     - Path: prescribe/cmd/prescribe/main.go
       Note: |-
         Glazed logging/help init and loading Prescribe help topics (commit 90d7951)
@@ -56,6 +58,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

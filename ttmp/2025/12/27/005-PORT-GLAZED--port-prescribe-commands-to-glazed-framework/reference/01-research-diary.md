@@ -750,3 +750,52 @@ In Glaze mode (`--with-glaze-output`), the command emits one row per file with a
   - row schema in `RunIntoGlazeProcessor`
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe filter test --exclude '**/*.md' --with-glaze-output --output json`
+
+## Step 13: Port `session show` to dual-mode Glazed output (preserve `--yaml`)
+
+This step ports `prescribe session show` to dual-mode. The classic output remains the default, and `--yaml/-y` still produces the same YAML serialization as before. When `--with-glaze-output` is requested, the command instead emits a single structured “session summary” row (which can be formatted as JSON/YAML/CSV via Glazed output flags).
+
+To avoid ambiguous combinations, `--yaml` is treated as **classic-only**: using it together with `--with-glaze-output` returns a clear error telling users to use `--output yaml` instead.
+
+**Commit (code):** 425af79cd76e4642dd3900b3279ad9bd2dc2b0c2 — "prescribe: dual-mode session show"
+
+### What I did
+- Reworked `cmd/prescribe/cmds/session/show.go` to build `ShowCmd` via the Glazed dual-mode Cobra builder.
+- Added a small `session-show` layer carrying the legacy `--yaml/-y` flag so it stays available for classic mode.
+- Implemented Glaze mode output as a single row containing:
+  - branch info, file counts, filter/context counts, token count
+  - preset metadata (if set) or a prompt preview (if no preset)
+- Added an explicit error when `--yaml` is combined with `--with-glaze-output`.
+
+### Why
+- `session show` is a “query command”; structured output makes it easy to introspect and automate.
+- Preserving `--yaml` avoids breaking existing usage while we migrate the command plumbing.
+
+### What worked
+- `go test ./... -count=1` passed.
+- Smoke tests:
+  - `cd prescribe && go run ./cmd/prescribe session show --yaml`
+  - `cd prescribe && go run ./cmd/prescribe session show --with-glaze-output --output json`
+  - `cd prescribe && go run ./cmd/prescribe session show --with-glaze-output --yaml --output json` (expected error)
+
+### What didn't work
+- N/A.
+
+### What I learned
+- Treating “classic-only” flags as a small command-specific layer is a clean way to preserve compatibility even when the Cobra command itself is built by Glazed.
+
+### What was tricky to build
+- Choosing a stable row schema for a “session summary” without exploding into many row types; keeping it to one row keeps it predictable for scripting.
+
+### What warrants a second pair of eyes
+- Confirm the chosen row fields are the right long-term contract for structured output (especially prompt/preset fields).
+
+### What should be done in the future
+- If we later add a structured “detailed mode” (files, filters, context items), decide whether to expose it as separate subcommands or additional flags (but keep row schema stable).
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/session/show.go` and review:
+  - `--yaml` classic-only enforcement
+  - row schema
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe session show --with-glaze-output --output json`
