@@ -70,7 +70,6 @@ func (m Model) renderMain() string {
 
 	b.WriteString("\n")
 	b.WriteString(m.status.View())
-	b.WriteString("\n")
 
 	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
@@ -118,7 +117,6 @@ func (m Model) renderFilters() string {
 	b.WriteString("\n\n")
 
 	b.WriteString(m.status.View())
-	b.WriteString("\n")
 
 	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
@@ -131,7 +129,6 @@ func (m Model) renderGenerating() string {
 	b.WriteString(m.styles.Base.Render("Generating PR description..."))
 	b.WriteString("\n\n")
 	b.WriteString(m.status.View())
-	b.WriteString("\n")
 	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
 
@@ -151,7 +148,6 @@ func (m Model) renderResult() string {
 	}
 
 	b.WriteString(m.status.View())
-	b.WriteString("\n")
 
 	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }

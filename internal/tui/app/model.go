@@ -70,6 +70,35 @@ func (m Model) contentWH() (w, h int) {
 	return max(0, m.width-frameW), max(0, m.height-frameH)
 }
 
+func (m *Model) footerHeight() int {
+	// Most screens put a blank line before the status footer for readability.
+	base := 1 + lipgloss.Height(m.status.View())
+	switch m.mode {
+	case ModeFilters:
+		// Filters screen renders a fixed "Quick Add Presets" block before the status footer.
+		// Height breakdown:
+		// - blank line (1)
+		// - header line (1)
+		// - separator line (1)
+		// - presets line (1)
+		// - blank line (1)
+		const presetsBlockH = 5
+		return presetsBlockH + base
+	default:
+		return base
+	}
+}
+
+func (m *Model) recomputeLayout() {
+	contentW, contentH := m.contentWH()
+	m.layout = layout.Compute(contentW, contentH, m.headerHeight(), m.footerHeight())
+	m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
+	m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
+	m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
+	m.syncFilelist()
+	m.syncFilterpane()
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
@@ -80,13 +109,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.status.SetSize(m.width)
 		m.status.SetShowFullHelp(m.showFullHelp)
-		contentW, contentH := m.contentWH()
-		m.layout = layout.Compute(contentW, contentH, m.headerHeight(), lipgloss.Height(m.status.View()))
-		m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
-		m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
-		m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
-		m.syncFilelist()
-		m.syncFilterpane()
+		m.recomputeLayout()
 
 	case tea.KeyMsg:
 		switch {
@@ -96,25 +119,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Help):
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
-			contentW, contentH := m.contentWH()
-			m.layout = layout.Compute(contentW, contentH, m.headerHeight(), lipgloss.Height(m.status.View()))
-			m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
-			m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
-			m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
-			m.syncFilelist()
-			m.syncFilterpane()
+			m.recomputeLayout()
 
 		case key.Matches(msg, m.keymap.Back):
 			// Global "back" semantics.
 			switch m.mode {
 			case ModeFilters, ModeResult:
 				m.mode = ModeMain
-				m.syncFilelist()
+				m.recomputeLayout()
 			}
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
 			m.mode = ModeFilters
-			m.syncFilterpane()
+			m.recomputeLayout()
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleFilteredView):
 			m.showFiltered = !m.showFiltered
@@ -122,6 +139,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Generate):
 			m.mode = ModeGenerating
+			m.recomputeLayout()
 			cmds = append(cmds, generateCmd(m.ctrl))
 
 		case (m.mode == ModeMain || m.mode == ModeResult) && key.Matches(msg, m.keymap.CopyContext):
@@ -186,12 +204,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.result.SetContent(m.generatedDesc)
 		m.err = nil
 		m.mode = ModeResult
+		m.recomputeLayout()
 
 	case events.DescriptionGenerationFailedMsg:
 		m.generatedDesc = ""
 		m.result.SetContent("")
 		m.err = msg.Err
 		m.mode = ModeResult
+		m.recomputeLayout()
 
 	case events.ToggleFileIncludedRequested:
 		if m.showFiltered {
