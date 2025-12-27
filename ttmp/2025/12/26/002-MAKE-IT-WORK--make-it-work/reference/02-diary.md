@@ -304,3 +304,11 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - toggle included (space) + auto-save via `tea.Cmd` emitting `events.SessionSavedMsg` / `events.SessionSaveFailedMsg`
   - toggle filtered view (v) as a read-only list view for now
 
+**Commit (code):** c3c9a12e9e08fb0910c2bb7516887f8254bb7ffc — "TUI: app modes (filters/generating/result)"
+
+### What I did (cont.)
+- Added minimal mode transitions in the app root:
+  - `f` enters a stub Filters screen (Phase 5 will replace it)
+  - `g` enters Generating mode and runs `Controller.GenerateDescription()` via `tea.Cmd`
+  - result screen shows generated markdown (or error) and supports `Esc` back
+
