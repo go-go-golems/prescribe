@@ -328,3 +328,16 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
 - Switched `prescribe tui` to launch the new app root model (`internal/tui/app`) instead of `internal/tui/EnhancedModel`.
 - Ran a quick pseudo-tty smoke test (`script` + `timeout`) to confirm the UI renders and doesn’t crash.
 
+**Commit (code):** 0fa1b980d62f4f9f29fb3fd5bfa02cfcd6a5bff2 — "TUI: compute layout on resize/help"
+
+### What I did (cont.)
+- Wired the app to recompute `layout.Layout` on resize and on help toggle (uses footer height from `status.View()`).
+
+**Commit (code):** f961325fd262fba0fa5409c2254ccdb98720227c — "Scripts: add tmux harness for TUI scenarios"
+
+### What I did (cont.)
+- Added a tmux-based harness script under the ticket `scripts/` directory:
+  - start/stop the TUI in a named tmux session
+  - run a basic smoke scenario (filters → preset → generate → result) and capture panes to files
+  - high-level actions for common operations (filters, toggle, generate, back, quit)
+
