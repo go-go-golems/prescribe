@@ -833,3 +833,48 @@ This step removes an empty `init()` function that lived in `prescribe/pkg/doc.go
 ### Code review instructions
 - Verify the deletion is safe and unused:
   - `cd prescribe && go test ./... -count=1`
+
+## Step 15: Port `filter add` to a Glazed-built BareCommand (preserve legacy flags)
+
+This step ports `prescribe filter add` to the Glazed command builder, while keeping the existing CLI flags intact (`--name/-n`, `--description/-d`, `--exclude/-e`, `--include/-i`). The command remains “classic output only” (BareCommand): it prints confirmation text and saves the session, just like before.
+
+The main change is that the command no longer reads Cobra flags directly; it uses `*layers.ParsedLayers` and the shared `NewInitializedControllerFromParsedLayers` helper. This keeps the migration consistent with the other command ports and reduces future flag-plumbing.
+
+**Commit (code):** 451d28b025f658c5b38453e4548173098ecb559a — "prescribe: glazed barecommand filter add"
+
+### What I did
+- Reworked `cmd/prescribe/cmds/filter/add.go` to:
+  - build `AddFilterCmd` via `cli.BuildCobraCommand` from a `cmds.BareCommand`
+  - define a dedicated layer (`filter-add`) that exposes the legacy flags and requiredness
+  - use repository settings from inherited root flags (`--repo`, `--target`) via the existing-flags wrapper
+  - initialize controller via `helpers.NewInitializedControllerFromParsedLayers`
+
+### Why
+- Make `filter add` consistent with the “Glazed parsing + explicit init” architecture.
+- Keep backwards compatibility at the CLI surface while migrating internals.
+
+### What worked
+- `go test ./... -count=1` passed.
+- Manual smoke test:
+  - `cd prescribe && go run ./cmd/prescribe filter add --name \"Exclude docs\" --exclude \"**/*.md\"`
+
+### What didn't work
+- N/A.
+
+### What I learned
+- BareCommands are a good fit for state-modifying commands: we still benefit from Glazed layer parsing without forcing structured output.
+
+### What was tricky to build
+- Ensuring we don’t re-add `--repo/--target` flags (they’re already persistent on the root) while still allowing Glazed parsing for those values.
+
+### What warrants a second pair of eyes
+- Confirm the `filter-add` layer schema is a good long-term contract (especially requiredness of `--name`) and that error messages remain user-friendly vs the old Cobra-required behavior.
+
+### What should be done in the future
+- Consider extracting a shared “legacy filter flags layer” for `filter add` + `filter test` to reduce duplication, if we find ourselves repeating these definitions.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/filter/add.go`.
+- Validate:
+  - `cd prescribe && go run ./cmd/prescribe filter add --help`
+  - `cd prescribe && go run ./cmd/prescribe filter add --name test --exclude '**/*.md'`

@@ -17,6 +17,8 @@ RelatedFiles:
       Note: Primary tutorial for building Glazed commands
     - Path: glazed/pkg/doc/tutorials/custom-layer.md
       Note: Tutorial for creating custom parameter layers
+    - Path: prescribe/cmd/prescribe/cmds/filter/add.go
+      Note: Port filter add to Glazed-built BareCommand (legacy flags preserved) (commit 451d28b)
     - Path: prescribe/cmd/prescribe/cmds/filter/list.go
       Note: Dual-mode filter list (classic + Glaze structured output) (commit da425db)
     - Path: prescribe/cmd/prescribe/cmds/filter/show.go
@@ -60,6 +62,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

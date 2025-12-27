@@ -128,3 +128,12 @@ Step 8: Remove no-op init() (explicit init preference) (commit fc233a3)
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc.go — Deleted empty init file
 
+
+## 2025-12-27
+
+Step 9: Port filter add to Glazed-built BareCommand (legacy flags preserved) (commit 451d28b)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/add.go — BareCommand + layer schema + controller init from parsed layers
+

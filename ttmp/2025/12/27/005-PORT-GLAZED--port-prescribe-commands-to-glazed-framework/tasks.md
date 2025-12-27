@@ -15,7 +15,7 @@
 - [x] Phase 2: Port filter show command to dual-mode with structured output support
 - [x] Phase 2: Port filter test command to dual-mode with structured output support
 - [x] Phase 2: Port session show command to dual-mode with structured output support
-- [ ] Phase 3: Port filter add command to BareCommand using FilterLayer
+- [x] Phase 3: Port filter add command to BareCommand using FilterLayer
 - [ ] Phase 3: Port generate command to dual-mode (text output + metadata)
 - [ ] Phase 4: Port filter remove command to BareCommand
 - [ ] Phase 4: Port filter clear command to BareCommand
