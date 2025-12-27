@@ -341,3 +341,45 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - run a basic smoke scenario (filters → preset → generate → result) and capture panes to files
   - high-level actions for common operations (filters, toggle, generate, back, quit)
 
+---
+
+## Step 8: tmux harness “blank capture” bug hunt (backfill)
+
+This step was a small but surprisingly tricky debugging detour: we tried to generate “screenshots” as tmux `capture-pane` text dumps so we can keep UI regression snapshots in the ticket. The first attempts produced **blank capture files**, even though the TUI clearly rendered when run manually. The goal became: make capturing reliable enough that we can automate smoke scenarios and embed the results into docs.
+
+**Commit (code):** N/A — investigation + script iteration
+
+### What I did
+- Added `scripts/tui-tmux.sh` harness (start/stop, scenario smoke, capture).
+- Ran the smoke scenario and noticed captures like `tui-00-start-*.txt` were mostly empty/whitespace.
+- Tried tmux alt-screen capture (`tmux capture-pane -a -p`) and saw `no alternate screen` in some runs.
+- Verified `tmux capture-pane` itself works by starting a tiny session that just prints a marker:
+  - `tmux new-session ... "echo HELLO_FROM_TMUX; sleep 5"` and then `tmux capture-pane ...`
+  - This produced the expected output, proving the toolchain works.
+- Debugged with a manual tmux session that runs the TUI and captures after a fixed delay:
+  - `tmux new-session ... "./dist/prescribe ... tui" && sleep 2 && tmux capture-pane ...`
+  - This produced the expected box-drawn UI, proving the TUI is capturable in principle.
+
+### What didn’t work (and why)
+- **Capturing too early**: the harness initially waited only ~0.2s on start and ~0.12s between actions; this is too aggressive, especially when using `go run` (compile + startup).
+- **Alt-screen capture semantics**: even when `tmux capture-pane -a -p` succeeds, the alt buffer can be empty for a moment, leading to “successful but blank” captures.
+- **Generate timing**: the generate flow often takes a few seconds. Capturing the “result” frame after ~0.4–1.2s frequently still showed “GENERATING”.
+
+### What worked (fixes)
+- Switched harness default `CMD` to `./dist/prescribe` (fast startup), and added a `build` command to rebuild it.
+- Increased waits and made them configurable via env vars:
+  - `START_WAIT`, `ACTION_WAIT`, `CAPTURE_WAIT`, `CAPTURE_RETRIES`, `GENERATE_WAIT`
+- Made capture smarter:
+  - try alt-screen capture, but if it’s empty/whitespace fall back to normal capture
+  - wait for a non-empty render before writing the capture
+- Increased smoke scenario’s post-generate wait so that `05-after-generate` reliably captures the PR description (not just “GENERATING”).
+
+### What I learned
+- In tmux + Bubbletea, “capture success” ≠ “useful capture”; you need a content check and a fallback strategy.
+- For repeatable UI snapshots, always prefer a built binary over `go run` to avoid timing flakiness.
+- Generation latency needs an explicit wait or a “wait until text matches” rule.
+
+### What should be done in the future
+- Add a `wait-until <regex>` helper to the harness (instead of fixed sleeps) for “wait until result screen shows `# Pull Request:`”.
+- Add a separate “capture only” command that writes to a stable filename (optional), and keep the default as timestamped.
+
