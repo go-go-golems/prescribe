@@ -226,3 +226,9 @@ This step starts implementing Phase 1 of the refactor as described in the modula
 ### What warrants a second pair of eyes
 - Whether the message taxonomy should be even smaller initially (to keep churn down), or if this set is the right “minimum viable vocabulary”.
 
+**Commit (code):** 9be853f73a63a0afef9695ecd23cd879875653be — "TUI: add layout helper and basic tests"
+
+### What I did (cont.)
+- Added `internal/tui/layout` with a small `Layout` struct and a `Compute()` helper.
+- Added unit tests ensuring `BodyH` never goes negative and the basic dimension math is correct.
+
