@@ -102,3 +102,14 @@ Phase 1 scaffolding started: added shared events, layout helper + tests, central
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/layout/layout.go — Layout Compute()
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/styles/styles.go — Styles struct
 
+
+## 2025-12-26
+
+Phase 2 started: added internal/tui/app root skeleton, boot-time session load cmd (emits events), basic Update loop for resize/help/toast, and DefaultDeps (clipboard/time).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/boot.go — Boot session load
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/default_deps.go — Deps implementation
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/model.go — App root model
+

@@ -17,9 +17,9 @@
 - [x] [Phase 1 / scaffolding] Implement toast state machine: show toast + tick + expire (ID-safe)
 - [x] [Phase 1 / scaffolding] Add minimal unit tests for toast expiry / ID safety (new package tests)
 - [x] [Phase 1 / scaffolding] Add minimal unit tests for `layout.Compute()` edge cases (small terminal sizes)
-- [ ] [Phase 2 / app root] Create `internal/tui/app` skeleton files: state/deps/model/view/commands/boot
-- [ ] [Phase 2 / app root] Implement `Deps` (time + clipboard) and a real default implementation
-- [ ] [Phase 2 / app root] Implement boot-time session load cmd: ignore missing file; toast on other errors
+- [x] [Phase 2 / app root] Create `internal/tui/app` skeleton files: state/deps/model/view/commands/boot
+- [x] [Phase 2 / app root] Implement `Deps` (time + clipboard) and a real default implementation
+- [x] [Phase 2 / app root] Implement boot-time session load cmd: ignore missing file; toast on other errors
 - [ ] [Phase 2 / app root] Implement Mode state machine (Main/Filters/Generating/Result) matching current EnhancedModel
 - [ ] [Phase 2 / app root] Wire `cmd/prescribe/cmds/tui.go` to launch new app model (replacing `NewEnhancedModel`)
 - [ ] [Phase 2 / app root] Preserve existing key contract (q, j/k, arrows, space, f, v, g, esc) end-to-end
