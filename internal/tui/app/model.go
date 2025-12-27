@@ -60,7 +60,9 @@ func (m Model) contentWH() (w, h int) {
 
 	// Content size is the terminal size minus the border+padding frame.
 	// This is the size we should pass to child components and PlaceHorizontal() calls.
-	return max(0, m.width-frameW), max(0, m.height-frameH)
+	// Keep a 1-row slack to prevent terminal scrolling when something accidentally
+	// over-produces a line (tmux captures then “lose” the top border).
+	return max(0, m.width-frameW), max(0, m.height-frameH-1)
 }
 
 func (m Model) boxWH() (w, h int) {
@@ -83,7 +85,8 @@ func (m Model) boxWH() (w, h int) {
 	if bottom {
 		borderH += b.GetBottomSize()
 	}
-	return max(0, m.width-borderW), max(0, m.height-borderH)
+	// Keep a 1-row slack to avoid scrolling in tmux captures.
+	return max(0, m.width-borderW), max(0, m.height-borderH-1)
 }
 
 func (m *Model) footerHeight() int {
