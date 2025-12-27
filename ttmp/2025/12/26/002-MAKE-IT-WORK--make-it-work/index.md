@@ -10,13 +10,16 @@ Topics:
 DocType: index
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md
+      Note: Detailed phased refactor task breakdown
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-26T18:32:05.980662011-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Make it work
 

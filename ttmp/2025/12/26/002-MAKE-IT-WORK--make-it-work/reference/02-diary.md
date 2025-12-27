@@ -206,3 +206,23 @@ This step revisits the original bobatea-style modularization proposal and makes 
 - Whether `Deps` should be an interface (as proposed) or a small struct of functions (common in go-go-golems code)
 - Whether we should add controller helpers (`SetAllVisibleIncluded`, `BuildGenerateDescriptionRequest`) as early as Phase 3, or keep them as UI-local helpers initially
 
+---
+
+## Step 6: Phase 1 scaffolding (events/layout/keys/styles/status)
+
+This step starts implementing Phase 1 of the refactor as described in the modularization design doc: introduce the scaffolding packages that make later UI decomposition safe (cycle-free messages, layout helpers, centralized keymap, and status/toast plumbing). The goal is to land these as small, compiling commits that don’t change behavior yet.
+
+**Commit (code):** 3678d89cbd4c1e377e8b7e82f7001f8c78d07e27 — "TUI: add shared events message vocabulary"
+
+### What I did
+- Added `internal/tui/events` with the shared typed message vocabulary used to avoid import cycles between app and components.
+
+### Why
+- We need typed intents/results/toasts that both root and components can share without cyclic imports.
+
+### What worked
+- `go test ./...` passes after adding the new package.
+
+### What warrants a second pair of eyes
+- Whether the message taxonomy should be even smaller initially (to keep churn down), or if this set is the right “minimum viable vocabulary”.
+

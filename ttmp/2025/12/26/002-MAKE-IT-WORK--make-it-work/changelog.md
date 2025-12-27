@@ -80,3 +80,12 @@ Smoke-tested  launch under a pseudo-tty (timeout); UI renders main screen withou
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Updated Step 4 with TUI smoke test
 
+
+## 2025-12-26
+
+Expanded refactor work into a detailed phased task breakdown (scaffolding → app root → controller helpers → components → features → cleanup + testing). Marked Bubbletea guide task complete.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md — Added detailed tasks
+
