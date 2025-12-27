@@ -224,3 +224,15 @@ Step 17: Port `tui` to a Glazed BareCommand (commit b0e58f8)
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/tui.go — Glazed BareCommand for launching interactive TUI
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Explicit init wiring for tui
 
+
+## 2025-12-27
+
+Step 18: Update smoke scripts + docs to match new Glazed CLI surface (commit fe689b5)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-session-cli.sh — Updated to new grouped commands and `--output yaml`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-all.sh — Updated to new grouped commands and `--output yaml`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-filters.sh — Updated to new grouped commands
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/README.md — Updated examples for Glazed CLI and flag names
+

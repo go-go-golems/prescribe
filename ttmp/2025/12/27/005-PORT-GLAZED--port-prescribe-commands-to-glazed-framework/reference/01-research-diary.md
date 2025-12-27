@@ -1243,3 +1243,51 @@ Because `tuiCmd` is registered at the root level (not inside a command group `In
   - `cmd/prescribe/cmds/root.go`
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe tui --help`
+
+## Step 25: Update smoke scripts + docs for the new Glazed CLI surface (no back-compat)
+
+This step cleans up the practical fallout from intentionally dropping backwards compatibility: we had multiple smoke scripts and docs still using the old CLI surface (`show --yaml`, `generate --session`, and flat verbs like `add-filter`/`toggle-file`). Those would now fail and confuse future devs.
+
+We updated the tracked smoke scripts under `prescribe/test/` to use the new grouped command tree (`session …`, `filter …`, `file …`, `context …`) and the new Glazed output conventions (eg. `session show --output yaml`). We also made the scripts more portable by building a local `prescribe` binary in `/tmp` instead of pointing at a hardcoded `/home/ubuntu/...` path.
+
+Finally, we updated the top-level docs (`README.md`, `PROJECT-SUMMARY.md`, and the Bubbletea TUI playbook) so examples match the new CLI.
+
+**Commit (code/docs):** fe689b50bdec6c5590cc4281d9c23587e17da864 — "prescribe: update smoke scripts + docs for glazed cli"
+
+### What I did
+- Updated `prescribe/test/*.sh` to:
+  - build a local binary (`/tmp/prescribe`) for consistent execution
+  - switch commands to the new grouped layout:
+    - `session init/show/save/load`
+    - `filter add/list/test/show/remove/clear`
+    - `file toggle`
+    - `context add`
+    - `generate` flags via GenerationLayer (`--load-session`, `--output-file`)
+  - replace legacy YAML export (`--yaml`) with Glazed formatting (`--output yaml`)
+  - gate `generate` behind `PRESCRIBE_RUN_GENERATE=1` so smoke tests don’t require API credentials by default
+- Updated `prescribe/README.md`, `prescribe/PROJECT-SUMMARY.md`, and `prescribe/PLAYBOOK-Bubbletea-TUI-Development.md` to match the new command names and output flags.
+
+### Why
+- Keep smoke tests runnable after the no-back-compat migration.
+- Prevent docs/scripts from teaching a CLI interface that no longer exists.
+
+### What worked
+- The updated smoke scripts run successfully with `PRESCRIBE_RUN_GENERATE` unset (generation tests skipped).
+
+### What was tricky to build
+- The earlier docs/scripts assumed a “flat” CLI (`show`, `add-filter`, etc.); mapping those to grouped commands required systematic updates across multiple files.
+
+### What warrants a second pair of eyes
+- Confirm the doc examples are now consistent everywhere we care about (especially `--load-session` vs the old `--session`).
+
+### What should be done in the future
+- If we later re-introduce a compatibility layer (unlikely for this ticket), we should do it intentionally and update scripts accordingly. For now, the no-back-compat contract is reflected in smoke scripts and docs.
+
+### Code review instructions
+- Start in:
+  - `prescribe/test/test-session-cli.sh`
+  - `prescribe/test/test-all.sh`
+  - `prescribe/test/test-filters.sh`
+  - `prescribe/README.md`
+- Validate with:
+  - `cd prescribe && bash test/test-cli.sh`
