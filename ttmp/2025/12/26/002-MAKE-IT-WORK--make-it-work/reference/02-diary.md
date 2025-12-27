@@ -232,3 +232,9 @@ This step starts implementing Phase 1 of the refactor as described in the modula
 - Added `internal/tui/layout` with a small `Layout` struct and a `Compute()` helper.
 - Added unit tests ensuring `BodyH` never goes negative and the basic dimension math is correct.
 
+**Commit (code):** 59832093273a55de0f4f9e013d9abf305bf56f23 — "TUI: add centralized keymap (bubbles/help)"
+
+### What I did (cont.)
+- Added `internal/tui/keys` with a centralized `KeyMap` (based on `bubbles/key`) and `ShortHelp`/`FullHelp` groupings.
+- Added `github.com/charmbracelet/bubbles` dependency (needed later for `bubbles/help.Model`).
+
