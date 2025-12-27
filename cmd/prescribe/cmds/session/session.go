@@ -22,6 +22,14 @@ func Init() error {
 			initErr = err
 			return
 		}
+		if err := InitSaveCmd(); err != nil {
+			initErr = err
+			return
+		}
+		if err := InitLoadCmd(); err != nil {
+			initErr = err
+			return
+		}
 		if err := InitShowCmd(); err != nil {
 			initErr = err
 			return
