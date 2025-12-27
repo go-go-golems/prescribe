@@ -92,3 +92,12 @@ Step 4: Remove init()-based Cobra wiring; add explicit Init() funcs + first dual
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/list.go — Dual-mode Glazed output
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Deterministic initialization
 
+
+## 2025-12-27
+
+Step 5: Port filter show to dual-mode (classic + Glaze structured output) (commit 3f05fca)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/show.go — Dual-mode command wiring + row schema
+

@@ -654,3 +654,49 @@ With deterministic initialization in place, I also completed the first Phase 2 p
   - `cd prescribe && go test ./... -count=1`
   - `cd prescribe && go run ./cmd/prescribe filter list --help`
   - `cd prescribe && go run ./cmd/prescribe filter list --with-glaze-output --output json`
+
+## Step 11: Port `filter show` to dual-mode Glazed output
+
+This step ports `prescribe filter show` to the same dual-mode pattern as `filter list`: classic text output remains the default, but users can request Glazed structured output with `--with-glaze-output`. This keeps backwards compatibility while enabling JSON/YAML/CSV export of the filtered file list.
+
+The command is still implemented on top of the existing controller and session model. The port is mostly “plumbing”: constructing a Glazed command description, parsing repository settings from inherited root flags, and emitting a row per filtered file.
+
+**Commit (code):** 3f05fca7ea9a7019664590be0abf48a952bec7f2 — "prescribe: dual-mode filter show"
+
+### What I did
+- Converted `filter/show.go` to build `ShowFilteredCmd` via Glazed’s Cobra builder (dual-mode).
+- Added `InitShowFilteredCmd()` and wired it into `filter.Init()` so command registration is explicit and deterministic.
+- Implemented Glaze output as one row per filtered file with:
+  - `file_path`, `additions`, `deletions`, `tokens`
+  - plus summary counts (`total_files`, `visible_files`, `filtered_files`) for convenience.
+
+### Why
+- `filter show` is naturally “query output”, which benefits from structured output formats.
+- Keeping classic output as default avoids breaking existing usage and keeps the UX for interactive terminal usage unchanged.
+
+### What worked
+- `go test ./... -count=1` passed.
+- Smoke test:
+  - `cd prescribe && go run ./cmd/prescribe filter show --help`
+  - `cd prescribe && go run ./cmd/prescribe filter show --with-glaze-output --output json`
+
+### What didn't work
+- N/A.
+
+### What I learned
+- Once the “existing persistent flags” wrapper is in place, porting additional query commands becomes repetitive in a good way: build command description + output rows + keep a classic run function.
+
+### What was tricky to build
+- Ensuring `filter.Init()` initializes `ShowFilteredCmd` before registering it, so we never reintroduce init-order panics.
+
+### What warrants a second pair of eyes
+- Confirm the chosen Glaze row schema (especially the inclusion of summary counts on every row) is what we want long-term vs emitting a separate “summary row”.
+
+### What should be done in the future
+- Consider a small shared helper for “emit file rows + counts” to keep future ports (`filter show`, `filter test`, maybe `tui export`) consistent.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/filter/show.go`.
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe filter show --help`
+  - `cd prescribe && go run ./cmd/prescribe filter show --with-glaze-output --output json`

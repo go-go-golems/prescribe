@@ -12,7 +12,7 @@
 - [ ] Phase 1: Update root command to integrate Glazed help system and add layers to root command
 - [x] Phase 1: Create controller initialization helpers that use layers instead of reading Cobra flags directly
 - [x] Phase 2: Port filter list command to dual-mode (BareCommand + GlazeCommand) with structured output support
-- [ ] Phase 2: Port filter show command to dual-mode with structured output support
+- [x] Phase 2: Port filter show command to dual-mode with structured output support
 - [ ] Phase 2: Port filter test command to dual-mode with structured output support
 - [ ] Phase 2: Port session show command to dual-mode with structured output support
 - [ ] Phase 3: Port filter add command to BareCommand using FilterLayer

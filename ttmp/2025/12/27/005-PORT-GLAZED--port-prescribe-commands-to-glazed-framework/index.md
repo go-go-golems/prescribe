@@ -19,6 +19,8 @@ RelatedFiles:
       Note: Tutorial for creating custom parameter layers
     - Path: prescribe/cmd/prescribe/cmds/filter/list.go
       Note: Dual-mode filter list (classic + Glaze structured output) (commit da425db)
+    - Path: prescribe/cmd/prescribe/cmds/filter/show.go
+      Note: Dual-mode filter show (classic + Glaze output) (commit 3f05fca)
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller.go
       Note: Controller pattern used by all commands
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go
@@ -52,6 +54,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
