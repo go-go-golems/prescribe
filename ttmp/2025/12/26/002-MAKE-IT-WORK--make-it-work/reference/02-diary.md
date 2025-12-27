@@ -477,16 +477,20 @@ This step wires the “copy context” workflow end-to-end: build the canonical 
 
 This step introduces a proper Result screen component using `bubbles/viewport` so long PR descriptions are scrollable and resize correctly. It also establishes the pattern for size propagation: the app root computes layout on `tea.WindowSizeMsg` and then pushes the content area size into child models.
 
-**Commit (code):** N/A — in progress
+**Commit (code):** 816d355ebfb86879155b85abb6623937435dc490 — "TUI: add scrollable result viewport component"
 
 ### What I did
-- N/A (in progress)
+- Added `internal/tui/components/result` backed by `bubbles/viewport` (scrollable content).
+- Wired `internal/tui/app` to:
+  - compute layout with a small Result header height,
+  - push `layout.BodyW/BodyH` into the result viewport on resize/help toggle,
+  - forward key messages to the viewport only in `ModeResult` (prevents key stealing in Main/Filters).
 
 ### Why
 - The current Result view renders a boxed blob with no scrolling; it truncates badly and makes resize correctness hard to reason about.
 
 ### What worked
-- N/A (in progress)
+- Result output is now scrollable and resizes correctly (viewport width/height derived from computed body layout).
 
 ### What didn't work
 - N/A (in progress)
@@ -495,7 +499,7 @@ This step introduces a proper Result screen component using `bubbles/viewport` s
 - N/A (in progress)
 
 ### What was tricky to build
-- N/A (in progress)
+- The root model still renders most screens as “monolithic strings”, so we introduced a minimal `headerHeight()` just for Result to keep the viewport size aligned with the non-scrollable header.
 
 ### What warrants a second pair of eyes
 - Making sure the viewport size is based on the *body* layout area (excluding the footer/status) and that resize updates keep the cursor/scroll offset stable enough.
