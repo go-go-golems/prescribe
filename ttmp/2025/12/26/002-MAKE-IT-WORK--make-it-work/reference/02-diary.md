@@ -390,23 +390,30 @@ This step was a small but surprisingly tricky debugging detour: we tried to gene
 
 This step starts Phase 3 of the refactor: move the remaining “index-based” mutations out of the TUI and into controller helper APIs keyed by stable IDs (file paths). The immediate payoff is enabling select-all/unselect-all in a way that is correct under filters and doesn’t require the UI to scan `ChangedFiles` manually.
 
-**Commit (code):** N/A — in progress
+**Commit (code):** a893d13fc84e8e9b359487c1277bad4f9bf2321c — "Controller: add path-based inclusion + request builder"
 
 ### What I did
 - Loaded the ticket task list and verified the current `internal/tui/app` state (Phase 2 app root is active; keymap already has `a`/`A` bindings but app Update does not handle them yet).
 - Verified `go test ./...` is green before starting Phase 3 work.
+- Implemented controller helpers:
+  - `Controller.SetFileIncludedByPath(path, included)`
+  - `Controller.SetAllVisibleIncluded(included)` (respects filters)
+  - `Controller.BuildGenerateDescriptionRequest()` (canonical generation inputs)
+- Updated `Controller.GenerateDescription()` to use `BuildGenerateDescriptionRequest()` (single source of truth).
+- Added unit tests in `internal/controller/controller_test.go` covering path lookup, bulk include with filters, and request building.
 
 ### Why
 - The current app root still does a brittle path→index scan in the UI to toggle inclusion. Phase 3 makes the Controller the single place that knows how to mutate files by stable path IDs.
 
 ### What worked
-- N/A (in progress)
+- Controller-level unit tests now cover the “visible + included” contract, which unblocks wiring select-all/unselect-all in the TUI without UI-local hacks.
 
 ### What didn't work
 - N/A (in progress)
 
 ### What I learned
 - The scaffolding is already in place for these features: `keys.KeyMap` includes select-all/unselect-all and `events` already defines `SetAllVisibleIncludedRequested`.
+- `Controller` methods are easy to unit test without a git repo by constructing `&Controller{data: ...}` in-package.
 
 ### What was tricky to build
 - N/A (in progress)
@@ -415,4 +422,4 @@ This step starts Phase 3 of the refactor: move the remaining “index-based” m
 - Ensuring “visible” semantics (post-filters) are consistent across: select-all/unselect-all, generation input, and the token count.
 
 ### What should be done in the future
-- After landing controller helpers + wiring, consider updating generation to use the same “build request” helper (single source of truth for “what is included”).
+- Wire `a`/`A` in `internal/tui/app` to call `SetAllVisibleIncluded()` + auto-save + toast.
