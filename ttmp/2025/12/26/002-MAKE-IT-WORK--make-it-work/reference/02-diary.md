@@ -518,6 +518,7 @@ This step begins Phase 4 by extracting the Main screen file list into a dedicate
 - 5023d132154b8e7770ffc97976d86be2d1016bcb — "TUI: filelist model supports Update()"
 - 0af2bf5d37fb661d739b222d79ff93f67dc2bc61 — "TUI: filelist emits typed intents"
 - 48cef4c8d006ccbfcb8d8be42fb4ccddc8c6bd82 — "TUI: wire filelist component into main screen"
+- f2b193a4f7959893400a8a6edc1319c608b4b542 — "TUI: make file list single-line per item"
 
 ### What I did
 - Added `internal/tui/components/filelist` (based on `bubbles/list`) with stable IDs (file path).
@@ -525,12 +526,14 @@ This step begins Phase 4 by extracting the Main screen file list into a dedicate
   - `events.ToggleFileIncludedRequested{Path}`
   - `events.SetAllVisibleIncludedRequested{Included}`
 - Wired the app root to render the list on the Main screen and handle those intents via controller helpers + autosave + toast.
+- Switched the file list rendering to a custom single-line delegate so each file consumes **one row** (no title+description two-liner).
 
 ### Why
 - The root model currently owns selection indices and manual list rendering, which makes later features (select-all, better list UX, resize correctness) harder to evolve safely.
 
 ### What worked
 - Main screen selection/navigation/toggles now go through the filelist component instead of manual index math and string rendering.
+- The file list is compact again (one line per file), avoiding excessive vertical usage.
 
 ### What didn't work
 - N/A (in progress)
