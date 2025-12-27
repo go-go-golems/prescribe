@@ -513,16 +513,24 @@ This step introduces a proper Result screen component using `bubbles/viewport` s
 
 This step begins Phase 4 by extracting the Main screen file list into a dedicated component model based on `bubbles/list`. The core goal is to move selection/navigation/toggle intents into a child model, and let the app root only orchestrate controller mutations and persistence.
 
-**Commit (code):** N/A — in progress
+**Commit (code):**
+- eb6fc06daaba8252eb92965578067391f0a03801 — "TUI: add filelist component scaffold"
+- 5023d132154b8e7770ffc97976d86be2d1016bcb — "TUI: filelist model supports Update()"
+- 0af2bf5d37fb661d739b222d79ff93f67dc2bc61 — "TUI: filelist emits typed intents"
+- 48cef4c8d006ccbfcb8d8be42fb4ccddc8c6bd82 — "TUI: wire filelist component into main screen"
 
 ### What I did
-- N/A (in progress)
+- Added `internal/tui/components/filelist` (based on `bubbles/list`) with stable IDs (file path).
+- Implemented filelist key handling to emit typed intents:
+  - `events.ToggleFileIncludedRequested{Path}`
+  - `events.SetAllVisibleIncludedRequested{Included}`
+- Wired the app root to render the list on the Main screen and handle those intents via controller helpers + autosave + toast.
 
 ### Why
 - The root model currently owns selection indices and manual list rendering, which makes later features (select-all, better list UX, resize correctness) harder to evolve safely.
 
 ### What worked
-- N/A (in progress)
+- Main screen selection/navigation/toggles now go through the filelist component instead of manual index math and string rendering.
 
 ### What didn't work
 - N/A (in progress)
@@ -531,7 +539,7 @@ This step begins Phase 4 by extracting the Main screen file list into a dedicate
 - N/A (in progress)
 
 ### What was tricky to build
-- N/A (in progress)
+- Preserving “filtered view is read-only” semantics even though the component emits toggle intents: the root is still the side-effect boundary that enforces this.
 
 ### What warrants a second pair of eyes
 - Ensuring the component emits stable-ID messages (`Path`) and the root remains the single side-effect boundary (save/toast/controller).
