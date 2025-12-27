@@ -89,12 +89,22 @@ func (c *SessionInitCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 		return err
 	}
 
+	// Apply repo defaults (if configured) as part of explicit session initialization.
+	// This keeps TUI startup strict (must have a saved session) while still supporting repo-level defaults.
+	n, err := ctrl.ApplyDefaultFilterPresetsFromRepoConfig()
+	if err != nil {
+		return errors.Wrap(err, "failed to apply repo default filter presets")
+	}
+
 	data := ctrl.GetData()
 
 	fmt.Printf("Initialized PR builder session\n")
 	fmt.Printf("  Source: %s\n", data.SourceBranch)
 	fmt.Printf("  Target: %s\n", data.TargetBranch)
 	fmt.Printf("  Files: %d\n", len(data.ChangedFiles))
+	if n > 0 {
+		fmt.Printf("  Defaults: applied %d filter preset(s)\n", n)
+	}
 
 	if settings.Save {
 		savePath := settings.Path

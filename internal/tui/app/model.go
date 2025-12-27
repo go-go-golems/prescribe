@@ -221,28 +221,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case events.SessionLoadSkippedMsg:
 		// No toast for missing session by default; keep quiet.
 
-	case events.DefaultFiltersAppliedMsg:
-		m.status, cmd = m.status.Update(events.ShowToastMsg{
-			Text:     fmt.Sprintf("Applied %d default filter preset(s)", msg.Count),
-			Level:    events.ToastInfo,
-			Duration: 3 * time.Second,
-		})
-		m.syncFilelist()
-		m.syncFilterpane()
-		if cmd != nil {
-			cmds = append(cmds, cmd)
-		}
-
-	case events.DefaultFiltersApplyFailedMsg:
-		m.status, cmd = m.status.Update(events.ShowToastMsg{
-			Text:     "Failed to apply default filters: " + msg.Err.Error(),
-			Level:    events.ToastWarning,
-			Duration: 5 * time.Second,
-		})
-		if cmd != nil {
-			cmds = append(cmds, cmd)
-		}
-
 	case events.SessionSavedMsg:
 		m.status, cmd = m.status.Update(events.ShowToastMsg{
 			Text:     "Session saved",

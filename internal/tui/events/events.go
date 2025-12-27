@@ -21,16 +21,6 @@ type SessionLoadFailedMsg struct {
 	Err  error
 }
 
-// DefaultFiltersAppliedMsg indicates repo-default filter presets were applied because session.yaml was missing.
-type DefaultFiltersAppliedMsg struct {
-	Count int
-}
-
-// DefaultFiltersApplyFailedMsg indicates repo-default filter preset application failed.
-type DefaultFiltersApplyFailedMsg struct {
-	Err error
-}
-
 // SessionSavedMsg indicates the current session was persisted successfully.
 type SessionSavedMsg struct{ Path string }
 

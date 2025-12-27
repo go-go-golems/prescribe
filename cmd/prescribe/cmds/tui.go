@@ -2,6 +2,8 @@ package cmds
 
 import (
 	"context"
+	stderrors "errors"
+	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-go-golems/glazed/pkg/cli"
@@ -52,7 +54,15 @@ func (c *TuiCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Parsed
 		return err
 	}
 
-	helpers.LoadDefaultSessionIfExists(ctrl)
+	// The TUI requires an initialized, persisted session.
+	// This ensures users explicitly capture their working set (filters + included files) before interacting.
+	sessionPath := ctrl.GetDefaultSessionPath()
+	if err := ctrl.LoadSession(sessionPath); err != nil {
+		if stderrors.Is(err, os.ErrNotExist) {
+			return errors.Errorf("no session found at %s; run 'prescribe session init --save' first", sessionPath)
+		}
+		return errors.Wrap(err, "failed to load session")
+	}
 
 	p := tea.NewProgram(app.New(ctrl, app.DefaultDeps{}), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {

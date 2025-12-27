@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,7 +13,7 @@ import (
 // bootCmd attempts to load the default session at startup.
 //
 // Semantics:
-// - missing file: ignored (SessionLoadSkippedMsg)
+// - missing file: SessionLoadFailedMsg (TUI requires an initialized session)
 // - other errors: SessionLoadFailedMsg (the app should toast this)
 // - success: SessionLoadedMsg
 func bootCmd(ctrl *controller.Controller) tea.Cmd {
@@ -20,15 +21,10 @@ func bootCmd(ctrl *controller.Controller) tea.Cmd {
 		path := ctrl.GetDefaultSessionPath()
 		if err := ctrl.LoadSession(path); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				// New session: apply repo defaults (if configured).
-				n, err2 := ctrl.ApplyDefaultFilterPresetsFromRepoConfig()
-				if err2 != nil {
-					return events.DefaultFiltersApplyFailedMsg{Err: err2}
+				return events.SessionLoadFailedMsg{
+					Path: path,
+					Err:  fmt.Errorf("no session found; run 'prescribe session init --save' first"),
 				}
-				if n > 0 {
-					return events.DefaultFiltersAppliedMsg{Count: n}
-				}
-				return events.SessionLoadSkippedMsg{Path: path}
 			}
 			return events.SessionLoadFailedMsg{Path: path, Err: err}
 		}
