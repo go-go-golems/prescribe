@@ -22,6 +22,14 @@ func Init() error {
 			initErr = err
 			return
 		}
+		if err := InitRemoveFilterCmd(); err != nil {
+			initErr = err
+			return
+		}
+		if err := InitClearFiltersCmd(); err != nil {
+			initErr = err
+			return
+		}
 		if err := InitTestFilterCmd(); err != nil {
 			initErr = err
 			return

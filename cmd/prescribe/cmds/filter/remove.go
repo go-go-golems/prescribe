@@ -1,77 +1,153 @@
 package filter
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
+	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-var RemoveFilterCmd = &cobra.Command{
-	Use:   "remove <index|name>",
-	Short: "Remove a filter from the session",
-	Long:  `Remove a filter by index or name.`,
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmdCmd *cobra.Command, args []string) error {
-		ctrl, err := helpers.NewInitializedController(cmdCmd)
-		if err != nil {
-			return err
-		}
+var RemoveFilterCmd *cobra.Command
 
-		if err := helpers.LoadDefaultSession(ctrl); err != nil {
-			return err
-		}
+type FilterRemoveSettings struct {
+	IndexOrName string `glazed.parameter:"index-or-name"`
+}
 
-		// Get filters
-		filters := ctrl.GetFilters()
-		if len(filters) == 0 {
-			return fmt.Errorf("no filters to remove")
-		}
+type FilterRemoveCommand struct {
+	*cmds.CommandDescription
+}
 
-		// Try to parse as index
-		index, err := strconv.Atoi(args[0])
-		if err != nil {
-			// Not a number, try to find by name
-			found := false
-			for i, filter := range filters {
-				if filter.Name == args[0] {
-					index = i
-					found = true
-					break
-				}
+var _ cmds.BareCommand = &FilterRemoveCommand{}
+
+func NewFilterRemoveCommand() (*FilterRemoveCommand, error) {
+	repoLayer, err := prescribe_layers.NewRepositoryLayer()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create repository layer")
+	}
+	repoLayerExisting, err := prescribe_layers.WrapAsExistingCobraFlagsLayer(repoLayer)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wrap repository layer as existing flags layer")
+	}
+
+	defaultLayer, err := schema.NewSection(
+		schema.DefaultSlug,
+		"Default",
+		schema.WithArguments(
+			fields.New(
+				"index-or-name",
+				fields.TypeString,
+				fields.WithHelp("Filter index (0-based) or filter name"),
+				fields.WithRequired(true),
+			),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	cmdDesc := cmds.NewCommandDescription(
+		"remove",
+		cmds.WithShort("Remove a filter from the session"),
+		cmds.WithLong("Remove a filter by index (0-based) or name."),
+		cmds.WithLayersList(
+			repoLayerExisting,
+			defaultLayer,
+		),
+	)
+
+	return &FilterRemoveCommand{CommandDescription: cmdDesc}, nil
+}
+
+func (c *FilterRemoveCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
+	_ = ctx
+
+	settings := &FilterRemoveSettings{}
+	if err := parsedLayers.InitializeStruct(schema.DefaultSlug, settings); err != nil {
+		return errors.Wrap(err, "failed to initialize filter remove settings")
+	}
+
+	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
+	if err != nil {
+		return err
+	}
+
+	if err := helpers.LoadDefaultSession(ctrl); err != nil {
+		return err
+	}
+
+	filters := ctrl.GetFilters()
+	if len(filters) == 0 {
+		return errors.New("no filters to remove")
+	}
+
+	selector := settings.IndexOrName
+
+	// Try to parse as index
+	index, err := strconv.Atoi(selector)
+	if err != nil {
+		// Not a number, try to find by name
+		found := false
+		for i, filter := range filters {
+			if filter.Name == selector {
+				index = i
+				found = true
+				break
 			}
-			if !found {
-				return fmt.Errorf("filter not found: %s", args[0])
-			}
 		}
-
-		// Validate index
-		if index < 0 || index >= len(filters) {
-			return fmt.Errorf("invalid filter index: %d (valid range: 0-%d)", index, len(filters)-1)
+		if !found {
+			return errors.Errorf("filter not found: %s", selector)
 		}
+	}
 
-		// Get filter name before removing
-		filterName := filters[index].Name
+	// Validate index
+	if index < 0 || index >= len(filters) {
+		return errors.Errorf("invalid filter index: %d (valid range: 0-%d)", index, len(filters)-1)
+	}
 
-		// Remove filter
-		if err := ctrl.RemoveFilter(index); err != nil {
-			return fmt.Errorf("failed to remove filter: %w", err)
-		}
+	filterName := filters[index].Name
 
-		// Save session
-		savePath := ctrl.GetDefaultSessionPath()
-		if err := ctrl.SaveSession(savePath); err != nil {
-			return fmt.Errorf("failed to save session: %w", err)
-		}
+	if err := ctrl.RemoveFilter(index); err != nil {
+		return errors.Wrap(err, "failed to remove filter")
+	}
 
-		fmt.Printf("Filter '%s' removed and session saved\n", filterName)
+	savePath := ctrl.GetDefaultSessionPath()
+	if err := ctrl.SaveSession(savePath); err != nil {
+		return errors.Wrap(err, "failed to save session")
+	}
 
-		// Show new impact
-		data := ctrl.GetData()
-		fmt.Printf("  Visible files: %d\n", len(data.GetVisibleFiles()))
-		fmt.Printf("  Filtered files: %d\n", len(data.GetFilteredFiles()))
+	fmt.Printf("Filter '%s' removed and session saved\n", filterName)
 
-		return nil
-	},
+	data := ctrl.GetData()
+	fmt.Printf("  Visible files: %d\n", len(data.GetVisibleFiles()))
+	fmt.Printf("  Filtered files: %d\n", len(data.GetFilteredFiles()))
+
+	return nil
+}
+
+func InitRemoveFilterCmd() error {
+	glazedCmd, err := NewFilterRemoveCommand()
+	if err != nil {
+		return err
+	}
+	cobraCmd, err := cli.BuildCobraCommand(
+		glazedCmd,
+		cli.WithParserConfig(cli.CobraParserConfig{
+			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	RemoveFilterCmd = cobraCmd
+	return nil
 }
