@@ -322,3 +322,9 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - add presets (1/2/3)
   - auto-save after mutations via `tea.Cmd` (`SessionSavedMsg` / `SessionSaveFailedMsg`)
 
+**Commit (code):** 8132d67caa71f223624cdb9d3598bd53778d3769 — "CLI: switch tui to app root model"
+
+### What I did (cont.)
+- Switched `prescribe tui` to launch the new app root model (`internal/tui/app`) instead of `internal/tui/EnhancedModel`.
+- Ran a quick pseudo-tty smoke test (`script` + `timeout`) to confirm the UI renders and doesn’t crash.
+
