@@ -3,7 +3,6 @@ package filelist
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -51,6 +50,12 @@ func New(km keys.KeyMap, st styles.Styles) Model {
 
 func (m Model) View() string { return m.list.View() }
 
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
+}
+
 func (m *Model) SetSize(w, h int) {
 	if w < 0 {
 		w = 0
@@ -97,17 +102,5 @@ func (m *Model) SetSelectedIndex(i int) {
 
 func (m Model) SelectedIndex() int { return m.list.Index() }
 
-// HandleKeys updates list selection based on shared keymap.
-// It returns true if the key was handled.
-func (m *Model) HandleKeys(msg tea.KeyMsg) bool {
-	switch {
-	case key.Matches(msg, m.keymap.Up):
-		m.list.CursorUp()
-		return true
-	case key.Matches(msg, m.keymap.Down):
-		m.list.CursorDown()
-		return true
-	default:
-		return false
-	}
-}
+func (m *Model) CursorUp()   { m.list.CursorUp() }
+func (m *Model) CursorDown() { m.list.CursorDown() }
