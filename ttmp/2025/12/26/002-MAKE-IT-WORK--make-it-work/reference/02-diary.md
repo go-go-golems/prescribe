@@ -470,3 +470,35 @@ This step wires the “copy context” workflow end-to-end: build the canonical 
 
 ### What should be done in the future
 - Consider adding a second copy mode for “copy generated result” (separate key) once the Result screen moves to a viewport component.
+
+---
+
+## Step 11: Result viewport component + resize propagation (WIP)
+
+This step introduces a proper Result screen component using `bubbles/viewport` so long PR descriptions are scrollable and resize correctly. It also establishes the pattern for size propagation: the app root computes layout on `tea.WindowSizeMsg` and then pushes the content area size into child models.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- N/A (in progress)
+
+### Why
+- The current Result view renders a boxed blob with no scrolling; it truncates badly and makes resize correctness hard to reason about.
+
+### What worked
+- N/A (in progress)
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- N/A (in progress)
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Making sure the viewport size is based on the *body* layout area (excluding the footer/status) and that resize updates keep the cursor/scroll offset stable enough.
+
+### What should be done in the future
+- Apply the same pattern to Phase 4/5 components: file list + filter pane should be true child models with explicit `SetSize()`.
