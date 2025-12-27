@@ -1,6 +1,6 @@
 ---
-Title: Prescribe: End-to-End PR Description Workflow
-Slug: prescribe-how-to-generate-pr-description
+Title: End-to-End PR Description Workflow
+Slug: how-to-generate-pr-description
 Short: End-to-end guide for using prescribe (TUI or CLI) to generate a pull request description from a repo diff.
 Topics:
 - prescribe
@@ -102,7 +102,7 @@ prescribe filter preset apply exclude_tests.yaml
 Filter rules use doublestar globs, and multiple `--include` patterns are ANDed. For a deep dive:
 
 ```bash
-prescribe help prescribe-filters-and-glob-syntax
+prescribe help filters-and-glob-syntax
 ```
 
 ## Step 3: Choose which files are included in generation
@@ -208,7 +208,7 @@ prescribe session init --save
 Most often this is an AND trap with multiple include patterns. Use a single glob with `{alt1,...}` instead. See:
 
 ```bash
-prescribe help prescribe-filters-and-glob-syntax
+prescribe help filters-and-glob-syntax
 ```
 
 ## Reference: Where things live on disk

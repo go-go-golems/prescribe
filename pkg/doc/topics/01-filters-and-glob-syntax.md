@@ -1,6 +1,6 @@
 ---
-Title: Prescribe Filters and Glob Syntax
-Slug: prescribe-filters-and-glob-syntax
+Title: Filters and Glob Syntax
+Slug: filters-and-glob-syntax
 Short: Playbook for creating file filters in prescribe and writing correct doublestar glob patterns.
 Topics:
 - prescribe
