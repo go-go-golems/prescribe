@@ -2,10 +2,11 @@ package filelist
 
 import (
 	"fmt"
+	"io"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
@@ -27,6 +28,53 @@ func (i item) Description() string {
 }
 func (i item) FilterValue() string { return i.file.Path }
 
+type singleLineDelegate struct {
+	styles styles.Styles
+}
+
+func (d singleLineDelegate) Height() int  { return 1 }
+func (d singleLineDelegate) Spacing() int { return 0 }
+
+func (d singleLineDelegate) Update(_ tea.Msg, _ *list.Model) tea.Cmd { return nil }
+
+func (d singleLineDelegate) Render(w io.Writer, m list.Model, index int, listItem list.Item) {
+	it, ok := listItem.(item)
+	if !ok {
+		return
+	}
+
+	included := " "
+	if it.file.Included {
+		included = "✓"
+	}
+
+	// Single-line, old-style summary. Keep it compact; truncate if terminal is narrow.
+	line := fmt.Sprintf("[%s] %s +%d -%d (%dt)",
+		included,
+		it.file.Path,
+		it.file.Additions,
+		it.file.Deletions,
+		it.file.Tokens,
+	)
+
+	prefix := "  "
+	style := lipgloss.NewStyle()
+	if index == m.Index() {
+		prefix = "▶ "
+		style = lipgloss.NewStyle().Foreground(d.styles.Primary).Bold(true)
+	}
+
+	available := m.Width()
+	// Leave a tiny buffer so we don't wrap in tight terminals.
+	if available > 0 {
+		available = max(0, available-1)
+	}
+	out := prefix + line
+	out = truncate(out, available)
+
+	_, _ = fmt.Fprint(w, style.Render(out))
+}
+
 type Model struct {
 	list   list.Model
 	keymap keys.KeyMap
@@ -34,11 +82,7 @@ type Model struct {
 }
 
 func New(km keys.KeyMap, st styles.Styles) Model {
-	delegate := list.NewDefaultDelegate()
-	delegate.Styles.SelectedTitle = lipgloss.NewStyle().Inherit(st.SelectedItem)
-	delegate.Styles.SelectedDesc = lipgloss.NewStyle().Inherit(st.SelectedItem)
-	delegate.Styles.NormalTitle = lipgloss.NewStyle().Inherit(st.UnselectedItem)
-	delegate.Styles.NormalDesc = lipgloss.NewStyle().Inherit(st.UnselectedItem)
+	delegate := singleLineDelegate{styles: st}
 
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = ""
@@ -128,3 +172,25 @@ func (m Model) SelectedIndex() int { return m.list.Index() }
 
 func (m *Model) CursorUp()   { m.list.CursorUp() }
 func (m *Model) CursorDown() { m.list.CursorDown() }
+
+func truncate(s string, w int) string {
+	if w <= 0 {
+		return s
+	}
+	// If already short enough, return as-is.
+	if len([]rune(s)) <= w {
+		return s
+	}
+	if w == 1 {
+		return "…"
+	}
+	rs := []rune(s)
+	return string(rs[:w-1]) + "…"
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
