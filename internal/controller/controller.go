@@ -26,7 +26,7 @@ func NewController(repoPath string) (*Controller, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize git service: %w", err)
 	}
-	
+
 	return &Controller{
 		data:       domain.NewPRData(),
 		gitService: gitService,
@@ -42,7 +42,7 @@ func (c *Controller) Initialize(targetBranch string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get current branch: %w", err)
 	}
-	
+
 	// If no target branch specified, use default
 	if targetBranch == "" {
 		targetBranch, err = c.gitService.GetDefaultBranch()
@@ -50,18 +50,18 @@ func (c *Controller) Initialize(targetBranch string) error {
 			return fmt.Errorf("failed to get default branch: %w", err)
 		}
 	}
-	
+
 	c.data.SourceBranch = sourceBranch
 	c.data.TargetBranch = targetBranch
-	
+
 	// Get changed files
 	files, err := c.gitService.GetChangedFiles(sourceBranch, targetBranch)
 	if err != nil {
 		return fmt.Errorf("failed to get changed files: %w", err)
 	}
-	
+
 	c.data.ChangedFiles = files
-	
+
 	return nil
 }
 
@@ -73,6 +73,29 @@ func (c *Controller) GetData() *domain.PRData {
 // ToggleFileInclusion toggles file inclusion
 func (c *Controller) ToggleFileInclusion(index int) error {
 	return c.data.ToggleFileInclusion(index)
+}
+
+// SetFileIncludedByPath sets file inclusion for a stable file path.
+func (c *Controller) SetFileIncludedByPath(path string, included bool) error {
+	for i := range c.data.ChangedFiles {
+		if c.data.ChangedFiles[i].Path == path {
+			c.data.ChangedFiles[i].Included = included
+			return nil
+		}
+	}
+	return fmt.Errorf("file not found: %s", path)
+}
+
+// SetAllVisibleIncluded sets inclusion for all visible files (i.e. files that pass active filters).
+// Returns the number of visible files affected.
+func (c *Controller) SetAllVisibleIncluded(included bool) (int, error) {
+	visible := c.data.GetVisibleFiles()
+	for _, f := range visible {
+		if err := c.SetFileIncludedByPath(f.Path, included); err != nil {
+			return 0, err
+		}
+	}
+	return len(visible), nil
 }
 
 // ReplaceWithFullFile replaces a file's diff with full content
@@ -102,23 +125,23 @@ func (c *Controller) AddContextFile(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get file content: %w", err)
 	}
-	
+
 	tokens := len(content) / 4 // rough estimate
-	
+
 	c.data.AddContextItem(domain.ContextItem{
 		Type:    domain.ContextTypeFile,
 		Path:    path,
 		Content: content,
 		Tokens:  tokens,
 	})
-	
+
 	return nil
 }
 
 // AddContextNote adds a text note as context
 func (c *Controller) AddContextNote(content string) {
 	tokens := len(content) / 4 // rough estimate
-	
+
 	c.data.AddContextItem(domain.ContextItem{
 		Type:    domain.ContextTypeNote,
 		Content: content,
@@ -146,7 +169,7 @@ func (c *Controller) LoadPromptPreset(presetID string) error {
 			return nil
 		}
 	}
-	
+
 	// Check project presets
 	projectPresets, err := c.LoadProjectPresets()
 	if err == nil {
@@ -157,7 +180,7 @@ func (c *Controller) LoadPromptPreset(presetID string) error {
 			}
 		}
 	}
-	
+
 	// Check global presets
 	globalPresets, err := c.LoadGlobalPresets()
 	if err == nil {
@@ -168,7 +191,7 @@ func (c *Controller) LoadPromptPreset(presetID string) error {
 			}
 		}
 	}
-	
+
 	return fmt.Errorf("preset not found: %s", presetID)
 }
 
@@ -191,43 +214,43 @@ func (c *Controller) LoadGlobalPresets() ([]domain.PromptPreset, error) {
 // loadPresetsFromDir loads presets from a directory
 func (c *Controller) loadPresetsFromDir(dir string, location domain.PresetLocation) ([]domain.PromptPreset, error) {
 	presets := make([]domain.PromptPreset, 0)
-	
+
 	// Check if directory exists
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return presets, nil
 	}
-	
+
 	// Read all YAML files
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-		
+
 		if filepath.Ext(entry.Name()) != ".yaml" && filepath.Ext(entry.Name()) != ".yml" {
 			continue
 		}
-		
+
 		filePath := filepath.Join(dir, entry.Name())
 		data, err := os.ReadFile(filePath)
 		if err != nil {
 			continue
 		}
-		
+
 		var preset struct {
 			Name        string `yaml:"name"`
 			Description string `yaml:"description"`
 			Template    string `yaml:"template"`
 		}
-		
+
 		if err := yaml.Unmarshal(data, &preset); err != nil {
 			continue
 		}
-		
+
 		presets = append(presets, domain.PromptPreset{
 			ID:          entry.Name(),
 			Name:        preset.Name,
@@ -236,14 +259,14 @@ func (c *Controller) loadPresetsFromDir(dir string, location domain.PresetLocati
 			Location:    location,
 		})
 	}
-	
+
 	return presets, nil
 }
 
 // SavePromptPreset saves a prompt preset
 func (c *Controller) SavePromptPreset(name, description, template string, location domain.PresetLocation) error {
 	var dir string
-	
+
 	if location == domain.PresetLocationProject {
 		dir = filepath.Join(c.repoPath, ".pr-builder", "prompts")
 	} else {
@@ -253,16 +276,16 @@ func (c *Controller) SavePromptPreset(name, description, template string, locati
 		}
 		dir = filepath.Join(homeDir, ".pr-builder", "prompts")
 	}
-	
+
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
-	
+
 	// Create filename from name
 	filename := strings.ToLower(strings.ReplaceAll(name, " ", "_")) + ".yaml"
 	filePath := filepath.Join(dir, filename)
-	
+
 	// Create preset data
 	preset := struct {
 		Name        string `yaml:"name"`
@@ -273,19 +296,20 @@ func (c *Controller) SavePromptPreset(name, description, template string, locati
 		Description: description,
 		Template:    template,
 	}
-	
+
 	// Marshal to YAML
 	data, err := yaml.Marshal(preset)
 	if err != nil {
 		return err
 	}
-	
+
 	// Write to file
 	return os.WriteFile(filePath, data, 0644)
 }
 
-// GenerateDescription generates a PR description using the API
-func (c *Controller) GenerateDescription() (string, error) {
+// BuildGenerateDescriptionRequest builds the canonical API request for generating a PR description.
+// This is intended to be the single source of truth for which inputs are used (visible+included files, prompt, context).
+func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionRequest, error) {
 	// Validate we have content to generate from
 	visibleFiles := c.data.GetVisibleFiles()
 	includedFiles := make([]domain.FileChange, 0)
@@ -294,31 +318,38 @@ func (c *Controller) GenerateDescription() (string, error) {
 			includedFiles = append(includedFiles, file)
 		}
 	}
-	
+
 	if len(includedFiles) == 0 {
-		return "", fmt.Errorf("no files included for generation")
+		return api.GenerateDescriptionRequest{}, fmt.Errorf("no files included for generation")
 	}
-	
-	// Build request
-	req := api.GenerateDescriptionRequest{
+
+	return api.GenerateDescriptionRequest{
 		SourceBranch:      c.data.SourceBranch,
 		TargetBranch:      c.data.TargetBranch,
 		Files:             includedFiles,
 		AdditionalContext: c.data.AdditionalContext,
 		Prompt:            c.data.CurrentPrompt,
+	}, nil
+}
+
+// GenerateDescription generates a PR description using the API
+func (c *Controller) GenerateDescription() (string, error) {
+	req, err := c.BuildGenerateDescriptionRequest()
+	if err != nil {
+		return "", err
 	}
-	
+
 	// Validate request
 	if err := c.apiService.ValidateRequest(req); err != nil {
 		return "", err
 	}
-	
+
 	// Generate description
 	resp, err := c.apiService.GenerateDescription(req)
 	if err != nil {
 		return "", err
 	}
-	
+
 	c.data.GeneratedDescription = resp.Description
 	return resp.Description, nil
 }
@@ -342,13 +373,13 @@ func (c *Controller) ClearFilters() {
 func (c *Controller) TestFilter(filter domain.Filter) (matched []string, unmatched []string) {
 	matched = make([]string, 0)
 	unmatched = make([]string, 0)
-	
+
 	for _, file := range c.data.ChangedFiles {
 		passes := true
 		for _, rule := range filter.Rules {
 			// Test pattern matching
 			matches := domain.TestPattern(file.Path, rule.Pattern)
-			
+
 			if rule.Type == domain.FilterTypeExclude && matches {
 				passes = false
 				break
@@ -358,14 +389,14 @@ func (c *Controller) TestFilter(filter domain.Filter) (matched []string, unmatch
 				break
 			}
 		}
-		
+
 		if passes {
 			matched = append(matched, file.Path)
 		} else {
 			unmatched = append(unmatched, file.Path)
 		}
 	}
-	
+
 	return matched, unmatched
 }
 
