@@ -33,8 +33,8 @@
 - [x] [Phase 3 / controller APIs] Add `Controller.BuildGenerateDescriptionRequest()` (single source of truth for generation inputs)
 - [x] [Phase 3 / controller APIs] Update `Controller.GenerateDescription()` to call `BuildGenerateDescriptionRequest()`
 - [x] [Phase 3 / controller APIs] Add unit tests for new controller helpers (path lookup, bulk include, empty visible)
-- [ ] [Phase 4 / file list component] Create `internal/tui/components/filelist` using `bubbles/list`
-- [ ] [Phase 4 / file list component] Define file list item struct (stable ID = file path) + list delegate rendering
+- [x] [Phase 4 / file list component] Create `internal/tui/components/filelist` using `bubbles/list`
+- [x] [Phase 4 / file list component] Define file list item struct (stable ID = file path) + list delegate rendering
 - [ ] [Phase 4 / file list component] Implement filelist key handling (up/down, space toggle) emitting `events.ToggleFileIncludedRequested`
 - [ ] [Phase 4 / file list component] Implement select-all/unselect-all keys in filelist emitting `events.SetAllVisibleIncludedRequested`
 - [ ] [Phase 4 / file list component] Root: build list items from `ctrl.GetVisibleFiles()` and apply mutations via controller helpers
