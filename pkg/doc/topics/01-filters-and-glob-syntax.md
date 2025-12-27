@@ -94,6 +94,53 @@ prescribe filter add --name "Only source" \
   --include "**/*.{go,ts,js,py}"
 ```
 
+## Filter presets and repo defaults
+
+Filter presets let you save common filter definitions as YAML files and apply them later. Repo defaults allow you to automatically apply one or more presets when starting the TUI in a repo that does not yet have a `.pr-builder/session.yaml`.
+
+### Filter preset locations
+
+- Project: `<repo>/.pr-builder/filters/*.yaml`
+- Global: `~/.pr-builder/filters/*.yaml`
+
+### Minimal preset schema
+
+```yaml
+name: Exclude tests
+description: Exclude common test files
+rules:
+  - type: exclude
+    pattern: "**/*test*"
+  - type: exclude
+    pattern: "**/*spec*"
+```
+
+### Preset CLI commands
+
+```bash
+# List presets
+prescribe filter preset list --all
+
+# Save a preset
+prescribe filter preset save --project --name "Exclude tests" \
+  --exclude "**/*test*" --exclude "**/*spec*"
+
+# Apply a preset into the current session
+prescribe filter preset apply exclude_tests.yaml
+```
+
+### Repo defaults (TUI “new session” behavior)
+
+Create `<repo>/.pr-builder/config.yaml`:
+
+```yaml
+defaults:
+  filter_presets:
+    - exclude_tests.yaml
+```
+
+When `prescribe tui` starts and `<repo>/.pr-builder/session.yaml` is missing, these defaults are applied (session state still wins when it exists).
+
 ## Creating and managing filters (TUI)
 
 The TUI provides a filter management mode (and some quick-add presets) to add and remove filters interactively. The semantics are the same as CLI-defined filters, so the glob rules below apply unchanged.
