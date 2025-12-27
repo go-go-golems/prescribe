@@ -107,7 +107,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.status.SetSize(m.width)
+		contentW, _ := m.contentWH()
+		m.status.SetSize(contentW)
 		m.status.SetShowFullHelp(m.showFullHelp)
 		m.recomputeLayout()
 
@@ -368,9 +369,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
+	beforeFooterH := lipgloss.Height(m.status.View())
 	m.status, cmd = m.status.Update(msg)
 	if cmd != nil {
 		cmds = append(cmds, cmd)
+	}
+	afterFooterH := lipgloss.Height(m.status.View())
+	if beforeFooterH != afterFooterH {
+		m.recomputeLayout()
 	}
 
 	// Let result model consume messages too (viewport scrolling / internal state),
