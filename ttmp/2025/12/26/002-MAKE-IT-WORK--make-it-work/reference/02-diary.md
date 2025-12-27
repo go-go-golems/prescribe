@@ -243,3 +243,11 @@ This step starts implementing Phase 1 of the refactor as described in the modula
 ### What I did (cont.)
 - Added `internal/tui/styles` with a `Styles` struct and `Default()` constructor to start migrating away from global style variables.
 
+**Commit (code):** 11871ff0473ff4591c52026259437f434fbb863c — "TUI: add status component with toast state machine"
+
+### What I did (cont.)
+- Added `internal/tui/components/status` with:
+  - a `ToastState` that is ID-safe against stale timers,
+  - a small footer `Model` that renders `bubbles/help` plus the current toast,
+  - a unit test that verifies old IDs don’t clear newer toasts.
+
