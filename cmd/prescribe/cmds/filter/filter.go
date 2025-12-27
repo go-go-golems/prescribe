@@ -30,6 +30,10 @@ func Init() error {
 			initErr = err
 			return
 		}
+		if err := InitShowFilteredCmd(); err != nil {
+			initErr = err
+			return
+		}
 
 		FilterCmd.AddCommand(
 			AddFilterCmd,
