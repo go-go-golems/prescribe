@@ -1,10 +1,11 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
@@ -123,13 +124,106 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			selected := visible[m.selectedIndex]
-			for i, f := range m.ctrl.GetData().ChangedFiles {
-				if f.Path == selected.Path {
-					_ = m.ctrl.ToggleFileInclusion(i)
-					cmds = append(cmds, saveSessionCmd(m.ctrl))
-					break
+			if err := m.ctrl.SetFileIncludedByPath(selected.Path, !selected.Included); err != nil {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Failed to toggle file: " + err.Error(),
+					Level:    events.ToastError,
+					Duration: 5 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
 				}
+				break
 			}
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.SelectAllVisible):
+			if m.showFiltered {
+				// Filtered view is read-only for now.
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Filtered view is read-only",
+					Level:    events.ToastInfo,
+					Duration: 2 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				break
+			}
+
+			n, err := m.ctrl.SetAllVisibleIncluded(true)
+			if err != nil {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Select all failed: " + err.Error(),
+					Level:    events.ToastError,
+					Duration: 5 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				break
+			}
+			if n == 0 {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "No visible files",
+					Level:    events.ToastInfo,
+					Duration: 2 * time.Second,
+				})
+			} else {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     fmt.Sprintf("Selected %d files", n),
+					Level:    events.ToastSuccess,
+					Duration: 2 * time.Second,
+				})
+			}
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.UnselectAllVisible):
+			if m.showFiltered {
+				// Filtered view is read-only for now.
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Filtered view is read-only",
+					Level:    events.ToastInfo,
+					Duration: 2 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				break
+			}
+
+			n, err := m.ctrl.SetAllVisibleIncluded(false)
+			if err != nil {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Unselect all failed: " + err.Error(),
+					Level:    events.ToastError,
+					Duration: 5 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				break
+			}
+			if n == 0 {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "No visible files",
+					Level:    events.ToastInfo,
+					Duration: 2 * time.Second,
+				})
+			} else {
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     fmt.Sprintf("Unselected %d files", n),
+					Level:    events.ToastSuccess,
+					Duration: 2 * time.Second,
+				})
+			}
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			cmds = append(cmds, saveSessionCmd(m.ctrl))
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Generate):
 			m.mode = ModeGenerating
@@ -282,5 +376,3 @@ func generateCmd(ctrl *controller.Controller) tea.Cmd {
 func (m Model) View() string {
 	return m.view()
 }
-
-
