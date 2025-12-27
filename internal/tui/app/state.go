@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/go-go-golems/prescribe/internal/controller"
+	"github.com/go-go-golems/prescribe/internal/tui/components/filelist"
 	"github.com/go-go-golems/prescribe/internal/tui/components/result"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
@@ -47,6 +48,7 @@ type Model struct {
 	// generation/result
 	generatedDesc string
 	result        result.Model
+	filelist      filelist.Model
 
 	// shared UI primitives
 	keymap keys.KeyMap

@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tui/components/filelist"
 	"github.com/go-go-golems/prescribe/internal/tui/components/result"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
@@ -28,6 +29,7 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 	st := styles.Default()
 	sm := statusModel(km, st)
 	rm := result.New()
+	fl := filelist.New(km, st)
 
 	return Model{
 		ctrl:   ctrl,
@@ -37,6 +39,7 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 		styles: st,
 		status: sm,
 		result: rm,
+		filelist: fl,
 	}
 }
 

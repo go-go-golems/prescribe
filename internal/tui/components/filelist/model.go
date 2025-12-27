@@ -3,10 +3,12 @@ package filelist
 import (
 	"fmt"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
 )
@@ -51,6 +53,28 @@ func New(km keys.KeyMap, st styles.Styles) Model {
 func (m Model) View() string { return m.list.View() }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keymap.Up):
+			m.list.CursorUp()
+			return m, nil
+		case key.Matches(msg, m.keymap.Down):
+			m.list.CursorDown()
+			return m, nil
+		case key.Matches(msg, m.keymap.ToggleIncluded):
+			path, ok := m.SelectedPath()
+			if !ok {
+				return m, nil
+			}
+			return m, func() tea.Msg { return events.ToggleFileIncludedRequested{Path: path} }
+		case key.Matches(msg, m.keymap.SelectAllVisible):
+			return m, func() tea.Msg { return events.SetAllVisibleIncludedRequested{Included: true} }
+		case key.Matches(msg, m.keymap.UnselectAllVisible):
+			return m, func() tea.Msg { return events.SetAllVisibleIncludedRequested{Included: false} }
+		}
+	}
+
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
