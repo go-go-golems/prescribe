@@ -59,6 +59,61 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Help):
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.Up):
+			if m.selectedIndex > 0 {
+				m.selectedIndex--
+			}
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.Down):
+			limit := len(m.ctrl.GetData().GetVisibleFiles())
+			if m.showFiltered {
+				limit = len(m.ctrl.GetData().GetFilteredFiles())
+			}
+			if limit > 0 && m.selectedIndex < limit-1 {
+				m.selectedIndex++
+			}
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleFilteredView):
+			m.showFiltered = !m.showFiltered
+			// Clamp selection to new list length.
+			limit := len(m.ctrl.GetData().GetVisibleFiles())
+			if m.showFiltered {
+				limit = len(m.ctrl.GetData().GetFilteredFiles())
+			}
+			if limit == 0 {
+				m.selectedIndex = 0
+			} else if m.selectedIndex >= limit {
+				m.selectedIndex = limit - 1
+			}
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleIncluded):
+			if m.showFiltered {
+				// Filtered view is read-only for now.
+				m.status, cmd = m.status.Update(events.ShowToastMsg{
+					Text:     "Filtered view is read-only",
+					Level:    events.ToastInfo,
+					Duration: 2 * time.Second,
+				})
+				if cmd != nil {
+					cmds = append(cmds, cmd)
+				}
+				break
+			}
+
+			visible := m.ctrl.GetData().GetVisibleFiles()
+			if len(visible) == 0 || m.selectedIndex < 0 || m.selectedIndex >= len(visible) {
+				break
+			}
+
+			selected := visible[m.selectedIndex]
+			for i, f := range m.ctrl.GetData().ChangedFiles {
+				if f.Path == selected.Path {
+					_ = m.ctrl.ToggleFileInclusion(i)
+					cmds = append(cmds, saveSessionCmd(m.ctrl))
+					break
+				}
+			}
 		}
 
 	case events.SessionLoadedMsg:
@@ -81,6 +136,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case events.SessionLoadSkippedMsg:
 		// No toast for missing session by default; keep quiet.
+
+	case events.SessionSavedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     "Session saved",
+			Level:    events.ToastSuccess,
+			Duration: 2 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+
+	case events.SessionSaveFailedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     "Failed to save session: " + msg.Err.Error(),
+			Level:    events.ToastError,
+			Duration: 5 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
@@ -90,6 +165,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+func saveSessionCmd(ctrl *controller.Controller) tea.Cmd {
+	return func() tea.Msg {
+		path := ctrl.GetDefaultSessionPath()
+		if err := ctrl.SaveSession(path); err != nil {
+			return events.SessionSaveFailedMsg{Path: path, Err: err}
+		}
+		return events.SessionSavedMsg{Path: path}
+	}
 }
 
 func (m Model) View() string {

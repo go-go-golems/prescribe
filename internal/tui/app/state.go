@@ -32,6 +32,9 @@ type Model struct {
 	showFiltered bool
 	showFullHelp bool
 
+	// selection
+	selectedIndex int
+
 	// terminal + layout
 	width  int
 	height int
