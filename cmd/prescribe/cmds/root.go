@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-go-golems/glazed/pkg/cmds/logging"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/file"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/filter"
@@ -24,6 +25,14 @@ It allows you to:
 - Customize prompts with presets
 - Generate AI-powered PR descriptions`,
 	Version: "0.1.0",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Ensure logging is initialized before any subcommand runs.
+		return logging.InitLoggerFromCobra(cmd)
+	},
+}
+
+func RootCmd() *cobra.Command {
+	return rootCmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
