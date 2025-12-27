@@ -295,3 +295,12 @@ This step begins Phase 2 by creating the `internal/tui/app` package, which will 
   - `time.Now()` for time
   - `github.com/atotto/clipboard` for clipboard writes (errors will be surfaced as toasts once copy is wired)
 
+**Commit (code):** bf458884e0de5593427a41d799e5be1e543fec7a — "TUI: app main screen rendering + navigation"
+
+### What I did (cont.)
+- Implemented a first-pass `ModeMain` UI in the app root:
+  - dynamic-width main screen rendering (no fixed `PlaceHorizontal(80)` constants)
+  - up/down navigation (j/k + arrows via keymap)
+  - toggle included (space) + auto-save via `tea.Cmd` emitting `events.SessionSavedMsg` / `events.SessionSaveFailedMsg`
+  - toggle filtered view (v) as a read-only list view for now
+
