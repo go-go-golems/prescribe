@@ -51,3 +51,8 @@ Closeout: added example preset fixture; TUI quick presets now loaded from preset
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc/fixtures/filter-presets/exclude_tests.yaml — Example preset fixture (task 6)
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/007-TUI-FILTER-PRESETS--tui-affordances-for-filter-presets/tasks.md — Follow-up ticket for richer TUI affordances
 
+
+## 2025-12-27
+
+All tasks completed; follow-up TUI affordances tracked in 007
+

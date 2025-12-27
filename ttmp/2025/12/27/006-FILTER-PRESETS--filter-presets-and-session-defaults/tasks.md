@@ -23,7 +23,7 @@
 - [x] CLI parity: decide whether CLI commands should also apply defaults when session is missing
 
 - [x] **Expose preset management via CLI**
-  - [ ] Add subcommands:
+- [x] Add subcommands:
 - [x] `prescribe filter preset list [--project|--global|--all]`
 - [x] `prescribe filter preset save --name ... [--project|--global] [--from-active|--exclude/--include ...]`
 - [x] `prescribe filter preset apply PRESET_ID`
