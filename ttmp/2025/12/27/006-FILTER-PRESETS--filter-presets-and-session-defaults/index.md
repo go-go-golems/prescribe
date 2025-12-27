@@ -1,7 +1,7 @@
 ---
 Title: Filter presets and session defaults
 Ticket: 006-FILTER-PRESETS
-Status: active
+Status: review
 Topics:
     - prescribe
     - filters
@@ -25,10 +25,11 @@ RelatedFiles:
       Note: Background analysis and requirements
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T16:39:29.640611745-05:00
+LastUpdated: 2025-12-27T17:43:31.85350664-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Filter presets and session defaults
