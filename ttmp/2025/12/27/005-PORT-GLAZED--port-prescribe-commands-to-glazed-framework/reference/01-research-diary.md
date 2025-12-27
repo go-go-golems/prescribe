@@ -1123,3 +1123,45 @@ We kept the positional `<path>` argument (required) and implemented it via a `sc
   - `cmd/prescribe/cmds/file/file.go`
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe file toggle --help`
+
+## Step 22: Port `context add` to a Glazed BareCommand (flag `--note` + optional positional `[file-path]`)
+
+This step ports `prescribe context add` from plain Cobra to a Glazed-built `BareCommand`. This command is slightly special because it has a mutually-exclusive input model: either you add a note (`--note`) or you add a context file (positional `[file-path]`). The port keeps that behavior exactly, but moves parsing and validation into ParsedLayers-based settings initialization.
+
+We modeled the two inputs as:
+- a command section (`context-add`) containing the `--note` flag, and
+- a default section (`schema.DefaultSlug`) containing an optional positional `file-path` argument.
+
+**Commit (code):** 519a9593a87a112b1dc5b718990234776af64372 — "prescribe: port context add to glazed"
+
+### What I did
+- Converted `cmd/prescribe/cmds/context/add.go` into a Glazed `cmds.BareCommand`.
+- Implemented mutually-exclusive input validation after decoding:
+  - error if both `--note` and `[file-path]` are empty
+  - error if both are provided
+- Kept behavior the same:
+  - loads default session if it exists
+  - adds note or file to context
+  - saves session and prints token count
+
+### Why
+- Remove the last Cobra-only parsing in the `context` command group.
+- Keep command plumbing consistent across the app (ParsedLayers + controller init from layers).
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed.
+- `prescribe context add --help` shows correct usage and flags.
+
+### What was tricky to build
+- Mapping a mutually-exclusive “either arg or flag” contract cleanly into Glazed’s section model (default section for args + a dedicated section for flags).
+
+### What warrants a second pair of eyes
+- Confirm the UX for invalid combinations is clear enough (especially the error text).
+
+### What should be done in the future
+- Consider adding an integration test for the mutual-exclusion behavior so we don’t regress on the CLI contract.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/context/add.go`.
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe context add --help`

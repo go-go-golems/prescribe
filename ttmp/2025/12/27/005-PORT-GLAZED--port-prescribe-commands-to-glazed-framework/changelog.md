@@ -196,3 +196,12 @@ Step 14: Port `file toggle` to a Glazed BareCommand (commit 8909c02)
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/file/toggle.go — Glazed BareCommand with required positional `<path>`
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/file/file.go — Explicit init wiring for toggle
 
+
+## 2025-12-27
+
+Step 15: Port `context add` to a Glazed BareCommand (commit 519a959)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/context/add.go — Glazed BareCommand with `--note` + optional positional `[file-path]` and mutual exclusion validation
+
