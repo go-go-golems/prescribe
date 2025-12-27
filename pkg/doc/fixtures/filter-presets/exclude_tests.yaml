@@ -1,0 +1,9 @@
+name: Exclude tests
+description: Exclude common test files from the PR context
+rules:
+  - type: exclude
+    pattern: "**/*test*"
+  - type: exclude
+    pattern: "**/*spec*"
+
+
