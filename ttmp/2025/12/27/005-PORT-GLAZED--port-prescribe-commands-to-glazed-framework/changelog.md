@@ -214,3 +214,13 @@ Step 16: Port `generate` to a Glazed BareCommand (commit 2184c62)
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — Glazed BareCommand using GenerationLayer and default-session loading
 
+
+## 2025-12-27
+
+Step 17: Port `tui` to a Glazed BareCommand (commit b0e58f8)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/tui.go — Glazed BareCommand for launching interactive TUI
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Explicit init wiring for tui
+

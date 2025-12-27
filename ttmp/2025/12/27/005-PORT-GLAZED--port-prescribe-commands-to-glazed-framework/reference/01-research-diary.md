@@ -1205,3 +1205,41 @@ One intentional behavior tweak: we now load the **default session if it exists**
 - Start in `cmd/prescribe/cmds/generate.go`.
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe generate --help`
+
+## Step 24: Port `tui` to a Glazed BareCommand and wire it via explicit init
+
+This step ports the root-level `prescribe tui` command to a Glazed-built `BareCommand`. The big goal here is consistency: even interactive commands should initialize the controller from ParsedLayers (instead of reading Cobra flags directly) so the overall CLI has a single, predictable parsing path.
+
+Because `tuiCmd` is registered at the root level (not inside a command group `Init()`), we also added an explicit `InitTuiCmd()` call in `cmds.InitRootCmd` to ensure the Cobra command is built deterministically before it’s added to the root command.
+
+**Commit (code):** b0e58f853c1d3fa75f8107c3b5edd0fd3f985b47 — "prescribe: port tui to glazed"
+
+### What I did
+- Converted `cmd/prescribe/cmds/tui.go` into a Glazed `cmds.BareCommand` built with `cli.BuildCobraCommand(...)`.
+- Switched controller initialization to `helpers.NewInitializedControllerFromParsedLayers`.
+- Kept existing behavior of loading the default session if it exists before launching the UI.
+- Updated `cmd/prescribe/cmds/root.go` to call `InitTuiCmd()` during `InitRootCmd`.
+
+### Why
+- Reduce “special casing”: root-level commands should follow the same Glazed initialization pattern as subcommands.
+- Avoid accidental nil command registration by ensuring `tuiCmd` is built before it’s added to the root command.
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed.
+- `prescribe tui --help` works and no longer depends on a pre-constructed Cobra command literal.
+
+### What was tricky to build
+- Remembering that `tuiCmd` is not initialized anywhere unless we explicitly call `InitTuiCmd()` in `InitRootCmd`.
+
+### What warrants a second pair of eyes
+- Verify we didn’t introduce any UX regressions for TUI startup (flags, session loading, alt-screen behavior).
+
+### What should be done in the future
+- Consider whether we want to attach additional layers (session/filter) to TUI to support config-driven initialization (not necessary for the migration, but now possible).
+
+### Code review instructions
+- Start in:
+  - `cmd/prescribe/cmds/tui.go`
+  - `cmd/prescribe/cmds/root.go`
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe tui --help`

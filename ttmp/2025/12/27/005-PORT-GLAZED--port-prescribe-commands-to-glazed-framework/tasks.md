@@ -24,7 +24,7 @@
 - [x] Phase 4: Port session save command to Glazed BareCommand
 - [x] Phase 4: Port file toggle command to Glazed BareCommand
 - [x] Phase 4: Port context add command to Glazed BareCommand
-- [ ] Phase 4: Update tui command to use layers (no structural changes needed)
+- [x] Phase 4: Update tui command to use layers (no structural changes needed)
 - [ ] Testing: Create unit tests for all layer creation and settings extraction
 - [ ] Testing: Create integration tests for commands with mock controllers
 - [ ] Testing: Create E2E tests for full command execution with real git repositories
