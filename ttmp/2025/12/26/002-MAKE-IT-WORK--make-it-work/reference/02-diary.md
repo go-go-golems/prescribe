@@ -570,3 +570,29 @@ This step removes the legacy Bubbletea root models (`internal/tui/model.go` and 
 
 ### What warrants a second pair of eyes
 - Sanity check `go test ./...` still passes and `prescribe tui` starts (the CLI entrypoint now only has one root model option).
+
+---
+
+## Step 14: Phase 5 filter pane component (WIP)
+
+This step extracts the Filters screen into a dedicated component model. Like the file list, the component handles selection + key mapping and emits typed intent messages; the app root remains the single side-effect boundary that mutates the controller, saves the session, and shows toasts.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- N/A (in progress)
+
+### Why
+- Keeping Filters screen logic in the root model makes it harder to evolve UX (rule previews, impact stats, resize propagation) without touching unrelated app-level orchestration.
+
+### What worked
+- N/A (in progress)
+
+### What didn't work
+- N/A (in progress)
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Confirm the root remains the only place that saves sessions and performs controller mutations (component must stay UI-only).
