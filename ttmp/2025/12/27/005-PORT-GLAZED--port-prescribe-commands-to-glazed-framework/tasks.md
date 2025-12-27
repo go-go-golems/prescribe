@@ -31,7 +31,7 @@
 - [ ] Testing: Verify backward compatibility - ensure existing scripts still work with same flag names and behavior
 - [ ] Documentation: Update command help text and examples to reflect Glazed integration
 - [ ] Documentation: Add examples showing structured output usage (JSON/YAML/CSV) for dual-mode commands
-- [ ] Phase 1: Update root command to add PersistentPreRunE with logging.InitLoggerFromCobra(cmd) for logging initialization
-- [ ] Phase 1: Add logging layer to root command using logging.AddLoggingLayerToRootCommand(rootCmd, "prescribe") in main()
-- [ ] Phase 1: Set up Glazed help system with help.NewHelpSystem() and help_cmd.SetupCobraRootCommand() in main()
-- [ ] Phase 1: Update main() function structure to follow Glazed program initialization pattern (logging, help system, command registration)
+- [x] Phase 1: Update root command to add PersistentPreRunE with logging.InitLoggerFromCobra(cmd) for logging initialization
+- [x] Phase 1: Add logging layer to root command using logging.AddLoggingLayerToRootCommand(rootCmd, "prescribe") in main()
+- [x] Phase 1: Set up Glazed help system with help.NewHelpSystem() and help_cmd.SetupCobraRootCommand() in main()
+- [x] Phase 1: Update main() function structure to follow Glazed program initialization pattern (logging, help system, command registration)

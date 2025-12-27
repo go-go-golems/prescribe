@@ -456,3 +456,54 @@ Document the research process for understanding how to port Prescribe CLI comman
 - Design layer structure
 - Plan migration strategy
 - Identify which commands to port first
+
+## Step 7: Initialize Prescribe with Glazed logging + help system
+
+This step wires Prescribe into the “Glazed program initialization” pattern: logging flags are registered on the root command and logging is initialized early (via `PersistentPreRunE`) so every command run has consistent logging. In the same step, we boot a Glazed help system and load Prescribe’s own markdown help topics into it, so `prescribe help ...` can surface richer docs than plain Cobra help.
+
+This is intentionally “groundwork only”: it should not change existing command semantics, but it unlocks follow-up work where we can port individual subcommands to Glazed (dual-mode or full GlazeCommand) while keeping `prescribe` feeling like a single cohesive CLI.
+
+**Commit (code):** 90d79514c295a366d53a3c035d6a3356f5777c23 — "prescribe: init glazed help + logging"
+
+### What I did
+- Added `PersistentPreRunE` on `cmd/prescribe/cmds/root.go` to call `logging.InitLoggerFromCobra(cmd)`.
+- Updated `cmd/prescribe/main.go` to:
+  - call `logging.AddLoggingLayerToRootCommand(rootCmd, "prescribe")`
+  - create a `help.NewHelpSystem()` and call `help_cmd.SetupCobraRootCommand(...)`
+  - load Prescribe’s embedded help topics via `helpSystem.LoadSectionsFromFS(...)`
+- Added a small `pkg/doc` Go package to embed `pkg/doc/topics/*.md` for the help system.
+
+### Why
+- We want Prescribe to behave like a Glazed application so future command ports can reuse Glazed layers, structured output, and help pages.
+- Initializing logging in `PersistentPreRunE` ensures subcommands and middlewares can emit logs consistently (and early).
+- Loading markdown help topics via Glazed’s help system gives us a scalable path for richer CLI docs as we add Glazed-based commands.
+
+### What worked
+- `go test ./... -count=1` passed in the `prescribe/` module after the changes.
+
+### What didn't work
+- I initially tried to run `git` from the workspace root (`/home/manuel/workspaces/2025-12-26/prescribe-import`) and hit “not a git repository”; `prescribe/` is a git worktree with its gitdir outside the workspace, so commits need to be done from the `prescribe/` directory.
+
+### What I learned
+- The Glazed help system can be incrementally adopted: it works fine with a small embedded doc set, and `LoadSectionsFromFS` is resilient (warns but doesn’t hard-fail when dirs don’t exist).
+
+### What was tricky to build
+- Keeping the initialization small and non-invasive: Glazed layers/help are added without restructuring existing Cobra command implementations yet.
+
+### What warrants a second pair of eyes
+- Confirm the help system integration doesn’t interfere with Cobra help output in surprising ways for existing commands (especially piping/help text destination).
+
+### What should be done in the future
+- Add more Prescribe help topics and link them to commands/flags as we port commands to Glazed.
+- Decide whether we want to configure the help writer (stdout vs stderr) explicitly for Prescribe (see `glazed/pkg/doc/topics/01-help-system.md`).
+
+### Code review instructions
+- Start with `cmd/prescribe/main.go` and verify the initialization order (logging, help system, doc loading).
+- Then review `cmd/prescribe/cmds/root.go` for the `PersistentPreRunE` addition.
+- Run:
+  - `cd prescribe && go test ./... -count=1`
+  - `cd prescribe && go run ./cmd/prescribe --help` and `cd prescribe && go run ./cmd/prescribe help prescribe-filters-and-glob-syntax`
+
+### Technical details
+- The embedded docs live in `pkg/doc/topics/*.md` and are loaded with:
+  - `helpSystem.LoadSectionsFromFS(prescribe_doc.FS, "topics")`

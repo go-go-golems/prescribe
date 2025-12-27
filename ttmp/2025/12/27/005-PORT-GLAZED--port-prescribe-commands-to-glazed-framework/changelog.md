@@ -50,3 +50,14 @@ Added section on Glazed program initialization explaining how to set up root com
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/005-PORT-GLAZED--port-prescribe-commands-to-glazed-framework/analysis/01-command-mapping-analysis.md — Added Glazed Program Initialization section
 
+
+## 2025-12-27
+
+Step 1: Initialize Prescribe with Glazed logging + help system and embed Prescribe help topics (commit 90d7951)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Logging init in PersistentPreRunE
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/main.go — Glazed init wiring
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc/embed.go — Embedded docs source
+
