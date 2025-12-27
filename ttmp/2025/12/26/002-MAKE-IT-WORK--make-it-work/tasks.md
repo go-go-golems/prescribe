@@ -35,10 +35,10 @@
 - [x] [Phase 3 / controller APIs] Add unit tests for new controller helpers (path lookup, bulk include, empty visible)
 - [x] [Phase 4 / file list component] Create `internal/tui/components/filelist` using `bubbles/list`
 - [x] [Phase 4 / file list component] Define file list item struct (stable ID = file path) + list delegate rendering
-- [ ] [Phase 4 / file list component] Implement filelist key handling (up/down, space toggle) emitting `events.ToggleFileIncludedRequested`
-- [ ] [Phase 4 / file list component] Implement select-all/unselect-all keys in filelist emitting `events.SetAllVisibleIncludedRequested`
-- [ ] [Phase 4 / file list component] Root: build list items from `ctrl.GetVisibleFiles()` and apply mutations via controller helpers
-- [ ] [Phase 4 / file list component] Root: support toggling view between visible vs filtered list (`showFiltered` flag)
+- [x] [Phase 4 / file list component] Implement filelist key handling (up/down, space toggle) emitting `events.ToggleFileIncludedRequested`
+- [x] [Phase 4 / file list component] Implement select-all/unselect-all keys in filelist emitting `events.SetAllVisibleIncludedRequested`
+- [x] [Phase 4 / file list component] Root: build list items from `ctrl.GetVisibleFiles()` and apply mutations via controller helpers
+- [x] [Phase 4 / file list component] Root: support toggling view between visible vs filtered list (`showFiltered` flag)
 - [ ] [Phase 5 / filter pane component] Create `internal/tui/components/filterpane` (list filters + rule preview)
 - [ ] [Phase 5 / filter pane component] Implement filterpane key handling (delete, clear, presets) emitting `events.*Filter*Requested`
 - [ ] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
