@@ -32,7 +32,7 @@ func (m Model) renderMain() string {
 	var b strings.Builder
 
 	title := m.styles.Title.Render("PRESCRIBE")
-	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.layout.Width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 
 	branchInfo := fmt.Sprintf("%s → %s", data.SourceBranch, data.TargetBranch)
@@ -54,7 +54,7 @@ func (m Model) renderMain() string {
 		b.WriteString(m.styles.Header.Render("CHANGED FILES"))
 	}
 	b.WriteString("\n")
-	b.WriteString(strings.Repeat("─", max(0, m.width-6)))
+	b.WriteString(strings.Repeat("─", max(0, m.layout.Width)))
 	b.WriteString("\n")
 
 	if len(files) == 0 {
@@ -72,7 +72,7 @@ func (m Model) renderMain() string {
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
 
-	return m.styles.BorderBox.Render(b.String())
+	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
 
 func (m Model) renderFilters() string {
@@ -82,7 +82,7 @@ func (m Model) renderFilters() string {
 	var b strings.Builder
 
 	title := m.styles.Title.Render("FILTER MANAGEMENT")
-	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.layout.Width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 
 	stats := fmt.Sprintf("Active Filters: %d | Filtered Files: %d | Files: %d visible",
@@ -95,7 +95,7 @@ func (m Model) renderFilters() string {
 
 	b.WriteString(m.styles.Header.Render("ACTIVE FILTERS"))
 	b.WriteString("\n")
-	b.WriteString(strings.Repeat("─", max(0, m.width-6)))
+	b.WriteString(strings.Repeat("─", max(0, m.layout.Width)))
 	b.WriteString("\n")
 
 	if len(filters) == 0 {
@@ -112,7 +112,7 @@ func (m Model) renderFilters() string {
 	b.WriteString("\n")
 	b.WriteString(m.styles.Header.Render("QUICK ADD PRESETS"))
 	b.WriteString("\n")
-	b.WriteString(strings.Repeat("─", max(0, m.width-6)))
+	b.WriteString(strings.Repeat("─", max(0, m.layout.Width)))
 	b.WriteString("\n")
 	b.WriteString(m.styles.Base.Render("[1] Exclude Tests  [2] Exclude Docs  [3] Only Source"))
 	b.WriteString("\n\n")
@@ -120,26 +120,26 @@ func (m Model) renderFilters() string {
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
 
-	return m.styles.BorderBox.Render(b.String())
+	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
 
 func (m Model) renderGenerating() string {
 	var b strings.Builder
 	title := m.styles.Title.Render("GENERATING")
-	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.layout.Width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 	b.WriteString(m.styles.Base.Render("Generating PR description..."))
 	b.WriteString("\n\n")
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
-	return m.styles.BorderBox.Render(b.String())
+	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
 
 func (m Model) renderResult() string {
 	var b strings.Builder
 
 	title := m.styles.Title.Render("RESULT")
-	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.layout.Width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 
 	if m.err != nil {
@@ -153,7 +153,7 @@ func (m Model) renderResult() string {
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
 
-	return m.styles.BorderBox.Render(b.String())
+	return m.styles.BorderBox.Width(max(0, m.width)).Height(max(0, m.height)).Render(b.String())
 }
 
 func max(a, b int) int {

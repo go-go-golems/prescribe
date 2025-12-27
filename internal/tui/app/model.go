@@ -55,6 +55,21 @@ func (m Model) Init() tea.Cmd {
 	return bootCmd(m.ctrl)
 }
 
+func (m Model) frameWH() (w, h int) {
+	// styles.BorderBox has:
+	// - border left/right (2)
+	// - padding left/right (4)
+	// - border top/bottom (2)
+	// - padding top/bottom (2)
+	// Total frame overhead: 6 cols, 4 rows.
+	return 6, 4
+}
+
+func (m Model) contentWH() (w, h int) {
+	frameW, frameH := m.frameWH()
+	return max(0, m.width-frameW), max(0, m.height-frameH)
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	var cmd tea.Cmd
@@ -65,7 +80,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 		m.status.SetSize(m.width)
 		m.status.SetShowFullHelp(m.showFullHelp)
-		m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
+		contentW, contentH := m.contentWH()
+		m.layout = layout.Compute(contentW, contentH, m.headerHeight(), lipgloss.Height(m.status.View()))
 		m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 		m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
 		m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
@@ -80,7 +96,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keymap.Help):
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
-			m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
+			contentW, contentH := m.contentWH()
+			m.layout = layout.Compute(contentW, contentH, m.headerHeight(), lipgloss.Height(m.status.View()))
 			m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 			m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
 			m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
