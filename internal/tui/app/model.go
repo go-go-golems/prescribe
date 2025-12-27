@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
+	"github.com/go-go-golems/prescribe/internal/tui/export"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
 	"github.com/go-go-golems/prescribe/internal/tui/layout"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
@@ -229,6 +231,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.mode = ModeGenerating
 			cmds = append(cmds, generateCmd(m.ctrl))
 
+		case (m.mode == ModeMain || m.mode == ModeResult) && key.Matches(msg, m.keymap.CopyContext):
+			cmds = append(cmds, copyContextCmd(m.ctrl, m.deps))
+
 		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Up):
 			if m.filterIndex > 0 {
 				m.filterIndex--
@@ -342,6 +347,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.generatedDesc = ""
 		m.err = msg.Err
 		m.mode = ModeResult
+
+	case events.ClipboardCopiedMsg:
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     fmt.Sprintf("Copied %s (%d bytes)", msg.What, msg.Bytes),
+			Level:    events.ToastSuccess,
+			Duration: 2 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+
+	case events.ClipboardCopyFailedMsg:
+		level := events.ToastError
+		text := "Copy failed: " + msg.Err.Error()
+		if strings.Contains(msg.Err.Error(), "no files included") {
+			level = events.ToastWarning
+			text = msg.Err.Error()
+		}
+		m.status, cmd = m.status.Update(events.ShowToastMsg{
+			Text:     text,
+			Level:    level,
+			Duration: 5 * time.Second,
+		})
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
@@ -370,6 +401,21 @@ func generateCmd(ctrl *controller.Controller) tea.Cmd {
 			return events.DescriptionGenerationFailedMsg{Err: err}
 		}
 		return events.DescriptionGeneratedMsg{Text: desc}
+	}
+}
+
+func copyContextCmd(ctrl *controller.Controller, deps Deps) tea.Cmd {
+	return func() tea.Msg {
+		req, err := ctrl.BuildGenerateDescriptionRequest()
+		if err != nil {
+			return events.ClipboardCopyFailedMsg{Err: err}
+		}
+
+		text := export.BuildGenerationContextText(req)
+		if err := deps.ClipboardWriteAll(text); err != nil {
+			return events.ClipboardCopyFailedMsg{Err: err}
+		}
+		return events.ClipboardCopiedMsg{What: "context", Bytes: len(text)}
 	}
 }
 
