@@ -33,8 +33,7 @@ func statusModel(km keys.KeyMap, st styles.Styles) (m status.Model) {
 }
 
 func (m Model) Init() tea.Cmd {
-	// Boot/session-load will be wired in a later Phase 2 commit.
-	return nil
+	return bootCmd(m.ctrl)
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
