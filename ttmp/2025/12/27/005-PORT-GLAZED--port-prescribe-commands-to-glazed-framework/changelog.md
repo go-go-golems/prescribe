@@ -61,3 +61,15 @@ Step 1: Initialize Prescribe with Glazed logging + help system and embed Prescri
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/main.go — Glazed init wiring
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc/embed.go — Embedded docs source
 
+
+## 2025-12-27
+
+Step 2: Add Phase 1 Glazed parameter layers package (repository/session/filter/generation) with settings helpers (commit cb59b50)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/filter.go — New schema section
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/generation.go — New schema section
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/repository.go — New schema section
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/session.go — New schema section
+

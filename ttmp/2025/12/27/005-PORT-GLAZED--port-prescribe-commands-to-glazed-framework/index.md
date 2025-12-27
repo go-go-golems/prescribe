@@ -29,12 +29,21 @@ RelatedFiles:
       Note: Embeds Prescribe markdown help sections for Glazed help system (commit 90d7951)
     - Path: prescribe/pkg/doc/topics/01-filters-and-glob-syntax.md
       Note: Prescribe help topic loaded into Glazed help system (commit 90d7951)
+    - Path: prescribe/pkg/layers/filter.go
+      Note: FilterLayer + GetFilterSettings helper (commit cb59b50)
+    - Path: prescribe/pkg/layers/generation.go
+      Note: GenerationLayer + GetGenerationSettings helper (commit cb59b50)
+    - Path: prescribe/pkg/layers/repository.go
+      Note: RepositoryLayer + GetRepositorySettings helper (commit cb59b50)
+    - Path: prescribe/pkg/layers/session.go
+      Note: SessionLayer + GetSessionSettings helper (commit cb59b50)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

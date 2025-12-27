@@ -4,11 +4,11 @@
 
 - [ ] Add tasks here
 
-- [ ] Phase 1: Create RepositoryLayer in prescribe/pkg/layers/repository.go with schema.NewSection() and fields.New() API
-- [ ] Phase 1: Create SessionLayer in prescribe/pkg/layers/session.go
-- [ ] Phase 1: Create FilterLayer in prescribe/pkg/layers/filter.go
-- [ ] Phase 1: Create GenerationLayer in prescribe/pkg/layers/generation.go
-- [ ] Phase 1: Create helper functions GetRepositorySettings(), GetSessionSettings(), GetFilterSettings(), GetGenerationSettings() for extracting settings from parsed layers
+- [x] Phase 1: Create RepositoryLayer in prescribe/pkg/layers/repository.go with schema.NewSection() and fields.New() API
+- [x] Phase 1: Create SessionLayer in prescribe/pkg/layers/session.go
+- [x] Phase 1: Create FilterLayer in prescribe/pkg/layers/filter.go
+- [x] Phase 1: Create GenerationLayer in prescribe/pkg/layers/generation.go
+- [x] Phase 1: Create helper functions GetRepositorySettings(), GetSessionSettings(), GetFilterSettings(), GetGenerationSettings() for extracting settings from parsed layers
 - [ ] Phase 1: Update root command to integrate Glazed help system and add layers to root command
 - [ ] Phase 1: Create controller initialization helpers that use layers instead of reading Cobra flags directly
 - [ ] Phase 2: Port filter list command to dual-mode (BareCommand + GlazeCommand) with structured output support

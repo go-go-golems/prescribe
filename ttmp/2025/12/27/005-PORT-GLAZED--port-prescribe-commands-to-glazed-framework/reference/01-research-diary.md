@@ -507,3 +507,51 @@ This is intentionally “groundwork only”: it should not change existing comma
 ### Technical details
 - The embedded docs live in `pkg/doc/topics/*.md` and are loaded with:
   - `helpSystem.LoadSectionsFromFS(prescribe_doc.FS, "topics")`
+
+## Step 8: Add Phase 1 Glazed parameter layers (repository/session/filter/generation)
+
+This step extracts Prescribe’s most common “global config” and shared flag groups into Glazed-style parameter sections. The immediate benefit is that future Glazed commands can compose these layers consistently without duplicating flag definitions in every command.
+
+I intentionally kept this to “schema definitions + settings extraction helpers” only—no behavioral changes and no command ports yet. That keeps review small and makes the next step (controller init from parsed layers, then dual-mode command ports) much easier.
+
+**Commit (code):** cb59b50746bb2f02a4203d7baf0bd755110d8f58 — "prescribe: add glazed parameter layers"
+
+### What I did
+- Added `prescribe/pkg/layers/` with four sections implemented using `schema.NewSection()` + `fields.New()`:
+  - `repository` (`repo`, `target`)
+  - `session` (`session-path`, `auto-save`)
+  - `filter` (`filter-name`, `filter-description`, `exclude-patterns`, `include-patterns`)
+  - `generation` (`prompt`, `preset`, `load-session`, `output-file`)
+- Added `Get…Settings(parsedLayers)` helpers for each layer, returning typed settings structs.
+
+### Why
+- These flags are reused across many commands; layers make the reuse explicit and keep help/flag definitions consistent.
+- Typed settings helpers reduce the amount of “flag plumbing” in command implementations and make it easier to test parsing behavior.
+
+### What worked
+- `go test ./... -count=1` passed in the `prescribe/` module after adding the new package.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- Using the `schema`/`fields` aliases keeps new Glazed code in Prescribe readable and aligned with the newer Glazed docs and examples.
+
+### What was tricky to build
+- Keeping flag names aligned with existing Cobra flags (`repo`, `target`, etc.) so we don’t accidentally introduce breaking changes when we start using these layers in commands.
+
+### What warrants a second pair of eyes
+- Confirm the chosen layer slugs and field names match what we’ll want long-term (especially `session-path` and `auto-save`) before many commands start depending on them.
+
+### What should be done in the future
+- Add small unit tests around the layer definitions + defaults (to lock down flag names, defaults, and short flags).
+- Add controller initialization helpers that read these settings from `*layers.ParsedLayers` (instead of Cobra flags).
+
+### Code review instructions
+- Start in `prescribe/pkg/layers/` and verify:
+  - slugs (`RepositorySlug`, etc.)
+  - field names and short flags
+  - defaults
+  - helper error wrapping and nil handling
+- Run:
+  - `cd prescribe && go test ./... -count=1`
