@@ -538,3 +538,23 @@ This step begins Phase 4 by extracting the Main screen file list into a dedicate
 
 ### What should be done in the future
 - Once the file list is componentized, repeat the same process for the filter screen (Phase 5 filter pane component).
+
+---
+
+## Step 13: Remove legacy TUI root models (Phase 8 cleanup) (WIP)
+
+This step removes the legacy Bubbletea root models (`internal/tui/model.go` and `internal/tui/model_enhanced.go`) now that the CLI entrypoint launches the new app root (`internal/tui/app`). Keeping both around creates confusion during refactors and invites accidental regressions via stale codepaths.
+
+**Commit (code):** N/A — in progress
+
+### What I did
+- N/A (in progress)
+
+### Why
+- `prescribe tui` now launches `internal/tui/app`, so the old models are dead code. Deleting them reduces cognitive load and avoids accidentally debugging the wrong codepath.
+
+### What was tricky to build
+- N/A (in progress)
+
+### What warrants a second pair of eyes
+- Confirm no other command or package imports `github.com/go-go-golems/prescribe/internal/tui` directly (it will disappear once these files are removed).
