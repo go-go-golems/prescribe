@@ -251,3 +251,24 @@ This step starts implementing Phase 1 of the refactor as described in the modula
   - a small footer `Model` that renders `bubbles/help` plus the current toast,
   - a unit test that verifies old IDs don’t clear newer toasts.
 
+---
+
+## Step 7: Phase 2 app root scaffolding (create app package)
+
+This step begins Phase 2 by creating the `internal/tui/app` package, which will become the root Bubbletea model orchestrating the new modular TUI. The goal in this first sub-step is purely structural: create the package + core types so we can wire behavior incrementally without breaking compilation.
+
+**Commit (code):** 7fa24ec9bcd87c82cbb05b586590564e78959099 — "TUI: add app root model skeleton"
+
+### What I did
+- Added `internal/tui/app` skeleton:
+  - `state.go` (Mode + root Model fields)
+  - `deps.go` (Deps interface for side-effects)
+  - `model.go` (constructor + placeholder Init/Update/View)
+  - `view.go` (placeholder root view that renders footer help/toast)
+
+### Why
+- We need a stable root package to grow into a real orchestrator (boot/session load, layout, components) while keeping changes reviewable and compiling.
+
+### What worked
+- `go test ./...` passes after introducing the package.
+
