@@ -9,6 +9,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/api"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/git"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 	"gopkg.in/yaml.v3"
 )
 
@@ -126,13 +127,13 @@ func (c *Controller) AddContextFile(path string) error {
 		return fmt.Errorf("failed to get file content: %w", err)
 	}
 
-	tokens := len(content) / 4 // rough estimate
+	tokens_ := tokens.Count(content)
 
 	c.data.AddContextItem(domain.ContextItem{
 		Type:    domain.ContextTypeFile,
 		Path:    path,
 		Content: content,
-		Tokens:  tokens,
+		Tokens:  tokens_,
 	})
 
 	return nil
@@ -140,12 +141,12 @@ func (c *Controller) AddContextFile(path string) error {
 
 // AddContextNote adds a text note as context
 func (c *Controller) AddContextNote(content string) {
-	tokens := len(content) / 4 // rough estimate
+	tokens_ := tokens.Count(content)
 
 	c.data.AddContextItem(domain.ContextItem{
 		Type:    domain.ContextTypeNote,
 		Content: content,
-		Tokens:  tokens,
+		Tokens:  tokens_,
 	})
 }
 

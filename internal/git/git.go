@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 )
 
 // Service provides git operations
@@ -115,15 +116,15 @@ func (s *Service) GetChangedFiles(sourceBranch, targetBranch string) ([]domain.F
 		fullBefore, _ := s.GetFileContent(targetBranch, path)
 		fullAfter, _ := s.GetFileContent(sourceBranch, path)
 		
-		// Estimate tokens (rough: 1 token per 4 characters)
-		tokens := len(diff) / 4
+		// Count tokens using tokenizer (preflight estimate)
+		tokens_ := tokens.Count(diff)
 		
 		files = append(files, domain.FileChange{
 			Path:       path,
 			Included:   true, // Include by default
 			Additions:  additions,
 			Deletions:  deletions,
-			Tokens:     tokens,
+			Tokens:     tokens_,
 			Type:       domain.FileTypeDiff,
 			Diff:       diff,
 			FullBefore: fullBefore,

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 	"gopkg.in/yaml.v3"
 )
 
@@ -163,6 +164,25 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 				file.Type = domain.FileTypeFull
 				file.Version = domain.FileVersionBoth
 			}
+
+			// Recompute tokens based on selected mode so the TUI totals are consistent
+			// immediately after loading a session.
+			switch file.Type {
+			case domain.FileTypeDiff:
+				file.Tokens = tokens.Count(file.Diff)
+			case domain.FileTypeFull:
+				switch file.Version {
+				case domain.FileVersionBefore:
+					file.Tokens = tokens.Count(file.FullBefore)
+				case domain.FileVersionAfter:
+					file.Tokens = tokens.Count(file.FullAfter)
+				case domain.FileVersionBoth:
+					file.Tokens = tokens.Count(file.FullBefore) + tokens.Count(file.FullAfter)
+				default:
+					// Best effort: count both if version is unspecified.
+					file.Tokens = tokens.Count(file.FullBefore) + tokens.Count(file.FullAfter)
+				}
+			}
 		}
 	}
 	
@@ -187,12 +207,12 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 	// Apply context
 	data.AdditionalContext = make([]domain.ContextItem, 0)
 	for _, cc := range s.Context {
-		tokens := len(cc.Content) / 4
+		tokens_ := tokens.Count(cc.Content)
 		data.AdditionalContext = append(data.AdditionalContext, domain.ContextItem{
 			Type:    domain.ContextType(cc.Type),
 			Path:    cc.Path,
 			Content: cc.Content,
-			Tokens:  tokens,
+			Tokens:  tokens_,
 		})
 	}
 	

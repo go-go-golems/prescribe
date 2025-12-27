@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 )
 
 // FileChange represents a changed file in the PR
@@ -230,14 +231,13 @@ func (d *PRData) ReplaceWithFullFile(index int, version FileVersion) error {
 	file.Version = version
 	
 	// Recalculate tokens based on version
-	// In a real implementation, this would use actual token counting
 	switch version {
 	case FileVersionBefore:
-		file.Tokens = len(file.FullBefore) / 4 // rough estimate
+		file.Tokens = tokens.Count(file.FullBefore)
 	case FileVersionAfter:
-		file.Tokens = len(file.FullAfter) / 4
+		file.Tokens = tokens.Count(file.FullAfter)
 	case FileVersionBoth:
-		file.Tokens = (len(file.FullBefore) + len(file.FullAfter)) / 4
+		file.Tokens = tokens.Count(file.FullBefore) + tokens.Count(file.FullAfter)
 	}
 	
 	return nil
@@ -252,7 +252,7 @@ func (d *PRData) RestoreToDiff(index int) error {
 	file := &d.ChangedFiles[index]
 	file.Type = FileTypeDiff
 	file.Version = ""
-	file.Tokens = len(file.Diff) / 4 // rough estimate
+	file.Tokens = tokens.Count(file.Diff)
 	
 	return nil
 }

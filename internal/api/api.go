@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 )
 
 // Service provides API operations for generating PR descriptions
@@ -116,7 +117,7 @@ func (s *Service) GenerateDescription(req GenerateDescriptionRequest) (*Generate
 	}
 	
 	// Calculate mock token usage
-	tokensUsed := len(sb.String()) / 4
+	tokensUsed := tokens.Count(sb.String())
 	
 	return &GenerateDescriptionResponse{
 		Description: sb.String(),
