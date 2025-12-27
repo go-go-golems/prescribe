@@ -799,3 +799,37 @@ To avoid ambiguous combinations, `--yaml` is treated as **classic-only**: using 
   - row schema
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe session show --with-glaze-output --output json`
+
+## Step 14: Cleanup — remove a no-op init() to keep initialization explicit
+
+This step removes an empty `init()` function that lived in `prescribe/pkg/doc.go`. It didn’t do anything, but given our migration goal (predictable, explicit initialization rather than implicit side effects), removing no-op inits helps keep the codebase consistent and avoids future “why is this here?” questions.
+
+**Commit (code):** fc233a3718eca45b09e5d51f9af1fa0bc9a8e6b0 — "prescribe: remove no-op init"
+
+### What I did
+- Deleted `prescribe/pkg/doc.go`, which contained an empty `init()` function.
+
+### Why
+- Align the codebase with the explicit initialization approach (and avoid implicit side-effect hooks that can later become ordering footguns).
+
+### What worked
+- `go test ./... -count=1` still passes after the deletion.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- N/A.
+
+### What was tricky to build
+- N/A.
+
+### What warrants a second pair of eyes
+- N/A (mechanical deletion).
+
+### What should be done in the future
+- N/A.
+
+### Code review instructions
+- Verify the deletion is safe and unused:
+  - `cd prescribe && go test ./... -count=1`

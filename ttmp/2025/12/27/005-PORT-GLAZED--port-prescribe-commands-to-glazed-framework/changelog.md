@@ -119,3 +119,12 @@ Step 7: Port session show to dual-mode (classic + Glaze structured output) (comm
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/show.go — Dual-mode command + --yaml handling
 
+
+## 2025-12-27
+
+Step 8: Remove no-op init() (explicit init preference) (commit fc233a3)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc.go — Deleted empty init file
+
