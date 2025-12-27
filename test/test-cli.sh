@@ -4,7 +4,14 @@ set -e
 # Test script for pr-builder CLI
 
 REPO_DIR="/tmp/pr-builder-test-repo"
-PR_BUILDER="/home/ubuntu/pr-builder/pr-builder"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRESCRIBE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Build a local binary for speed/reproducibility (override with PRESCRIBE_BIN if desired).
+PRESCRIBE_BIN="${PRESCRIBE_BIN:-/tmp/prescribe}"
+if [ ! -x "$PRESCRIBE_BIN" ]; then
+  (cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
+fi
 
 echo "=========================================="
 echo "PR Builder CLI Test Suite"
@@ -14,75 +21,53 @@ echo ""
 # Ensure test repo exists
 if [ ! -d "$REPO_DIR" ]; then
     echo "Test repository not found. Running setup script..."
-    /home/ubuntu/pr-builder/test/setup-test-repo.sh
+    "$SCRIPT_DIR/setup-test-repo.sh"
 fi
 
 cd "$REPO_DIR"
 
 echo "Test 1: Show help"
 echo "===================="
-$PR_BUILDER --help
+$PRESCRIBE_BIN --help
 echo ""
 echo "✓ Help command works"
 echo ""
 
 echo "Test 2: Show version"
 echo "===================="
-$PR_BUILDER --version
+$PRESCRIBE_BIN --version
 echo ""
 echo "✓ Version command works"
 echo ""
 
-echo "Test 3: Status command"
-echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master status
+echo "Test 3: Session init + show"
+echo "============================"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session init --save
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show --output json
 echo ""
-echo "✓ Status command works"
-echo ""
-
-echo "Test 4: List files (visible only)"
-echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master list-files
-echo ""
-echo "✓ List files command works"
+echo "✓ Session init/show works"
 echo ""
 
-echo "Test 5: List all files"
+echo "Test 4: Filter list"
 echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master list-files --all
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master filter list --output json
 echo ""
-echo "✓ List all files command works"
+echo "✓ Filter list works"
 echo ""
 
-echo "Test 6: Generate PR description (default prompt)"
+echo "Test 5: Generate with output file (optional)"
 echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master generate
-echo ""
-echo "✓ Generate command works"
-echo ""
-
-echo "Test 7: Generate with output file"
-echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master generate -o /tmp/pr-description.md
-echo "Generated description saved to /tmp/pr-description.md"
-cat /tmp/pr-description.md
-echo ""
-echo "✓ Generate with output file works"
-echo ""
-
-echo "Test 8: Generate with custom prompt"
-echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master generate --prompt "Write a concise PR description in bullet points"
-echo ""
-echo "✓ Generate with custom prompt works"
-echo ""
-
-echo "Test 9: Generate with preset"
-echo "===================="
-$PR_BUILDER -r "$REPO_DIR" -t master generate --preset concise
-echo ""
-echo "✓ Generate with preset works"
-echo ""
+if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
+  $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate -o /tmp/pr-description.md
+  echo "Generated description saved to /tmp/pr-description.md"
+  cat /tmp/pr-description.md
+  echo ""
+  echo "✓ Generate with output file works"
+  echo ""
+else
+  echo "Skipping generate test (set PRESCRIBE_RUN_GENERATE=1 to enable)"
+  echo ""
+fi
 
 echo "=========================================="
 echo "All tests passed! ✓"

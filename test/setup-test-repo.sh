@@ -13,7 +13,10 @@ mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
 # Initialize git repo
-git init
+git init -b master 2>/dev/null || {
+  git init
+  git checkout -b master
+}
 git config user.email "test@example.com"
 git config user.name "Test User"
 

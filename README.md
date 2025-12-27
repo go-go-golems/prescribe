@@ -1,4 +1,4 @@
-# PR Builder
+# Prescribe (PR Builder)
 
 A CLI/TUI application for generating pull request descriptions using AI, built with Go and Bubbletea.
 
@@ -25,8 +25,8 @@ PR Builder provides a powerful, session-based workflow for creating high-quality
 ### Build from Source
 
 ```bash
-cd pr-builder
-go build -o pr-builder .
+cd prescribe
+go build -o prescribe ./cmd/prescribe
 ```
 
 ## Quick Start
@@ -38,7 +38,7 @@ go build -o pr-builder .
 cd /path/to/your/repo
 
 # Initialize PR builder session
-pr-builder init --save
+prescribe session init --save
 
 # This creates .pr-builder/session.yaml with your current changes
 ```
@@ -47,96 +47,95 @@ pr-builder init --save
 
 ```bash
 # Human-readable format
-pr-builder show
+prescribe session show
 
 # YAML format
-pr-builder show --yaml
+prescribe session show --output yaml
 ```
 
 ### Generate PR Description
 
 ```bash
 # Generate with default settings
-pr-builder generate
+prescribe generate
 
 # Generate with custom prompt
-pr-builder generate --prompt "Write a concise 3-sentence description"
+prescribe generate --prompt "Write a concise 3-sentence description"
 
 # Generate with preset
-pr-builder generate --preset concise
+prescribe generate --preset concise
 
 # Save to file
-pr-builder generate -o pr-description.md
+prescribe generate -o pr-description.md
 ```
 
 ### Launch Interactive TUI
 
 ```bash
-pr-builder tui
+prescribe tui
 ```
 
 ## CLI Commands
 
 ### Session Management
 
-#### `init`
+#### `session init`
 Initialize a new session from current git state.
 
 ```bash
-pr-builder init [--save] [--output PATH]
+prescribe session init [--save] [--path PATH]
 ```
 
 Options:
-- `--save, -s`: Automatically save session after init
-- `--output, -o PATH`: Custom session file path
+- `--save`: Automatically save session after init
+- `--path, -p PATH`: Custom session file path
 
-#### `save`
+#### `session save`
 Save current session to YAML file.
 
 ```bash
-pr-builder save [PATH]
+prescribe session save [PATH]
 ```
 
 Default path: `.pr-builder/session.yaml`
 
-#### `load`
+#### `session load`
 Load session from YAML file.
 
 ```bash
-pr-builder load [PATH]
+prescribe session load [PATH]
 ```
 
-#### `show`
+#### `session show`
 Display current session state.
 
 ```bash
-pr-builder show [--yaml]
+prescribe session show [--output yaml|json|csv|table]
 ```
 
-Options:
-- `--yaml, -y`: Output as YAML instead of human-readable format
+This command is implemented as a Glazed query command, so it supports structured output formats via `--output ...`.
 
 ### File Management
 
-#### `toggle-file`
+#### `file toggle`
 Toggle whether a file is included in the context.
 
 ```bash
-pr-builder toggle-file <file-path>
+prescribe file toggle <file-path>
 ```
 
 Example:
 ```bash
-pr-builder toggle-file src/auth/login.ts
+prescribe file toggle src/auth/login.ts
 ```
 
 ### Filters
 
-#### `add-filter`
+#### `filter add`
 Add a glob-based filter to exclude or include files.
 
 ```bash
-pr-builder add-filter --name NAME [--description DESC] [--exclude PATTERN]... [--include PATTERN]...
+prescribe filter add --name NAME [--description DESC] [--exclude PATTERN]... [--include PATTERN]...
 ```
 
 Options:
@@ -148,13 +147,13 @@ Options:
 Examples:
 ```bash
 # Exclude all test files
-pr-builder add-filter --name "Exclude tests" --exclude "*test*" --exclude "*spec*"
+prescribe filter add --name "Exclude tests" --exclude "*test*" --exclude "*spec*"
 
 # Include only TypeScript files
-pr-builder add-filter --name "Only TS" --include "*.ts"
+prescribe filter add --name "Only TS" --include "*.ts"
 
 # Complex filter
-pr-builder add-filter \
+prescribe filter add \
   --name "Backend only" \
   --description "Only backend code" \
   --include "src/backend/**" \
@@ -163,15 +162,15 @@ pr-builder add-filter \
 
 ### Context
 
-#### `add-context`
+#### `context add`
 Add additional context for PR generation.
 
 ```bash
 # Add a file
-pr-builder add-context <file-path>
+prescribe context add <file-path>
 
 # Add a note
-pr-builder add-context --note "This PR is part of the Q1 security improvements"
+prescribe context add --note "This PR is part of the Q1 security improvements"
 ```
 
 ### Generation
@@ -180,28 +179,28 @@ pr-builder add-context --note "This PR is part of the Q1 security improvements"
 Generate PR description using AI.
 
 ```bash
-pr-builder generate [--output PATH] [--prompt TEXT] [--preset ID] [--session PATH]
+prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH]
 ```
 
 Options:
-- `--output, -o PATH`: Output file (default: stdout)
+- `--output-file, -o PATH`: Output file (default: stdout)
 - `--prompt, -p TEXT`: Custom prompt text
 - `--preset ID`: Prompt preset ID (detailed, concise, technical)
-- `--session, -s PATH`: Load session file before generating
+- `--load-session, -s PATH`: Load session file before generating
 
 Examples:
 ```bash
 # Generate with default settings
-pr-builder generate
+prescribe generate
 
 # Generate with custom prompt
-pr-builder generate --prompt "Write a technical PR description focusing on architecture changes"
+prescribe generate --prompt "Write a technical PR description focusing on architecture changes"
 
 # Generate using a specific session
-pr-builder generate --session /path/to/session.yaml -o pr.md
+prescribe generate --load-session /path/to/session.yaml -o pr.md
 
 # Generate with preset
-pr-builder generate --preset concise
+prescribe generate --preset concise
 ```
 
 ### TUI
@@ -210,7 +209,7 @@ pr-builder generate --preset concise
 Launch interactive Terminal User Interface.
 
 ```bash
-pr-builder tui
+prescribe tui
 ```
 
 Keyboard shortcuts:

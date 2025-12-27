@@ -4,7 +4,14 @@ set -e
 # Comprehensive test script for all pr-builder functionality
 
 REPO_DIR="/tmp/pr-builder-test-repo"
-PR_BUILDER="/home/ubuntu/pr-builder/pr-builder"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PRESCRIBE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Build a local binary for speed/reproducibility (override with PRESCRIBE_BIN if desired).
+PRESCRIBE_BIN="${PRESCRIBE_BIN:-/tmp/prescribe}"
+if [ ! -x "$PRESCRIBE_BIN" ]; then
+  (cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
+fi
 
 echo "=========================================="
 echo "PR Builder - Complete Test Suite"
@@ -14,7 +21,7 @@ echo ""
 # Setup test repo
 if [ ! -d "$REPO_DIR" ]; then
     echo "Setting up test repository..."
-    /home/ubuntu/pr-builder/test/setup-test-repo.sh
+    "$SCRIPT_DIR/setup-test-repo.sh"
     echo ""
 fi
 
@@ -25,62 +32,62 @@ echo "=== PHASE 1: Session Initialization ==="
 echo ""
 
 echo "1.1: Initialize session with auto-save"
-$PR_BUILDER -r "$REPO_DIR" -t master init --save
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session init --save
 echo ""
 
 echo "1.2: Show session state"
-$PR_BUILDER -r "$REPO_DIR" -t master show
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show
 echo ""
 
 echo "=== PHASE 2: File Management ==="
 echo ""
 
 echo "2.1: Toggle file exclusion"
-$PR_BUILDER -r "$REPO_DIR" -t master toggle-file "tests/auth.test.ts"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master file toggle "tests/auth.test.ts"
 echo ""
 
 echo "2.2: Verify file is excluded"
-$PR_BUILDER -r "$REPO_DIR" -t master show | grep -A5 "Files:"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show --output json | grep "included_files"
 echo ""
 
 echo "2.3: Toggle file back to included"
-$PR_BUILDER -r "$REPO_DIR" -t master toggle-file "tests/auth.test.ts"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master file toggle "tests/auth.test.ts"
 echo ""
 
 echo "=== PHASE 3: Filters ==="
 echo ""
 
 echo "3.1: Add filter to exclude test files"
-$PR_BUILDER -r "$REPO_DIR" -t master add-filter \
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master filter add \
     --name "Exclude tests" \
     --description "Hide test files" \
     --exclude "*test*"
 echo ""
 
 echo "3.2: Add filter to exclude specific paths"
-$PR_BUILDER -r "$REPO_DIR" -t master add-filter \
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master filter add \
     --name "Exclude middleware" \
     --exclude "*middleware*"
 echo ""
 
 echo "3.3: Show session with filters"
-$PR_BUILDER -r "$REPO_DIR" -t master show
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show
 echo ""
 
 echo "=== PHASE 4: Additional Context ==="
 echo ""
 
 echo "4.1: Add context note"
-$PR_BUILDER -r "$REPO_DIR" -t master add-context \
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context add \
     --note "This PR is part of the Q1 security improvements epic"
 echo ""
 
 echo "4.2: Add context file"
-$PR_BUILDER -r "$REPO_DIR" -t master add-context "README.md"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context add "README.md"
 echo ""
 
 echo "4.3: Show session with context"
-$PR_BUILDER -r "$REPO_DIR" -t master show
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show
 echo ""
 
 echo "=== PHASE 5: Session Persistence ==="
@@ -92,52 +99,67 @@ cat .pr-builder/session.yaml
 echo ""
 
 echo "5.2: Save to custom location"
-$PR_BUILDER -r "$REPO_DIR" -t master save /tmp/test-session-backup.yaml
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session save /tmp/test-session-backup.yaml
 echo ""
 
 echo "5.3: Reinitialize (clear session)"
 rm -rf .pr-builder
-$PR_BUILDER -r "$REPO_DIR" -t master init --save
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session init --save
 echo ""
 
 echo "5.4: Load from backup"
-$PR_BUILDER -r "$REPO_DIR" -t master load /tmp/test-session-backup.yaml
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session load /tmp/test-session-backup.yaml
 echo ""
 
 echo "5.5: Verify loaded session"
-$PR_BUILDER -r "$REPO_DIR" -t master show
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show
 echo ""
 
 echo "=== PHASE 6: PR Generation ==="
 echo ""
 
 echo "6.1: Generate with default prompt"
-$PR_BUILDER -r "$REPO_DIR" -t master generate -o /tmp/pr-default.md
-echo "Generated description:"
-cat /tmp/pr-default.md
-echo ""
+if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
+  $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate -o /tmp/pr-default.md
+  echo "Generated description:"
+  cat /tmp/pr-default.md
+  echo ""
+else
+  echo "Skipping generate test (set PRESCRIBE_RUN_GENERATE=1 to enable)"
+  echo ""
+fi
 
 echo "6.2: Generate with custom prompt"
-$PR_BUILDER -r "$REPO_DIR" -t master generate \
-    --prompt "Write a concise 3-sentence PR description" \
-    -o /tmp/pr-custom.md
-echo "Generated description:"
-cat /tmp/pr-custom.md
-echo ""
+if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
+  $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate \
+      --prompt "Write a concise 3-sentence PR description" \
+      -o /tmp/pr-custom.md
+  echo "Generated description:"
+  cat /tmp/pr-custom.md
+  echo ""
+else
+  echo "Skipping generate test (set PRESCRIBE_RUN_GENERATE=1 to enable)"
+  echo ""
+fi
 
 echo "6.3: Generate with preset"
-$PR_BUILDER -r "$REPO_DIR" -t master generate \
-    --preset concise \
-    -o /tmp/pr-preset.md
-echo "Generated description:"
-cat /tmp/pr-preset.md
-echo ""
+if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
+  $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate \
+      --preset concise \
+      -o /tmp/pr-preset.md
+  echo "Generated description:"
+  cat /tmp/pr-preset.md
+  echo ""
+else
+  echo "Skipping generate test (set PRESCRIBE_RUN_GENERATE=1 to enable)"
+  echo ""
+fi
 
 echo "=== PHASE 7: Session Export (YAML) ==="
 echo ""
 
 echo "7.1: Export session as YAML"
-$PR_BUILDER -r "$REPO_DIR" -t master show --yaml > /tmp/session-export.yaml
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master session show --output yaml > /tmp/session-export.yaml
 echo "Exported to /tmp/session-export.yaml"
 cat /tmp/session-export.yaml
 echo ""

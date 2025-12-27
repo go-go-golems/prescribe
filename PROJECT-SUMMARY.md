@@ -15,15 +15,13 @@ The application is built around a YAML session file that captures all state:
 - Complete reproducibility
 
 ### 2. Comprehensive CLI Commands
-Eight fully-functional commands:
-- `init`: Initialize new session from git state
-- `save/load`: Persist and restore sessions
-- `show`: Display current state (human or YAML)
-- `add-filter`: Add glob-based file filters
-- `toggle-file`: Include/exclude specific files
-- `add-context`: Add files or notes as context
-- `generate`: Generate PR description with AI
-- `tui`: Launch interactive interface
+Core commands are grouped under subcommands:
+- `session init/save/load/show`
+- `filter add/list/test/show/remove/clear`
+- `file toggle`
+- `context add`
+- `generate`
+- `tui`
 
 ### 3. Interactive TUI
 Built with Bubbletea following proper MVC patterns:
@@ -189,22 +187,22 @@ All tests passed successfully:
 
 ```bash
 # Initialize
-pr-builder init --save
+prescribe session init --save
 
 # Add filter
-pr-builder add-filter --name "Exclude tests" --exclude "*test*"
+prescribe filter add --name "Exclude tests" --exclude "*test*"
 
 # Toggle file
-pr-builder toggle-file "src/auth/login.ts"
+prescribe file toggle "src/auth/login.ts"
 
 # Add context
-pr-builder add-context --note "Part of Q1 security improvements"
+prescribe context add --note "Part of Q1 security improvements"
 
 # Generate
-pr-builder generate -o pr-description.md
+prescribe generate -o pr-description.md
 
 # View session
-pr-builder show --yaml
+prescribe session show --output yaml
 ```
 
 ### TUI Workflow

@@ -390,7 +390,7 @@ var showCmd = &cobra.Command{
 **Session commands**:
 - `save [path]`: Save session
 - `load [path]`: Load session
-- `show [--yaml]`: Display state
+- `session show [--output yaml]`: Display state (structured output via Glazed)
 
 **Operation commands**:
 - `add <item>`: Add item
