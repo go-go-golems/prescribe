@@ -32,13 +32,13 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 	fl := filelist.New(km, st)
 
 	return Model{
-		ctrl:   ctrl,
-		deps:   deps,
-		mode:   ModeMain,
-		keymap: km,
-		styles: st,
-		status: sm,
-		result: rm,
+		ctrl:     ctrl,
+		deps:     deps,
+		mode:     ModeMain,
+		keymap:   km,
+		styles:   st,
+		status:   sm,
+		result:   rm,
 		filelist: fl,
 	}
 }
@@ -64,6 +64,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.status.SetShowFullHelp(m.showFullHelp)
 		m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
 		m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
+		m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
+		m.syncFilelist()
 
 	case tea.KeyMsg:
 		switch {
@@ -75,165 +77,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.status.SetShowFullHelp(m.showFullHelp)
 			m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
 			m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
+			m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
+			m.syncFilelist()
 
 		case key.Matches(msg, m.keymap.Back):
 			// Global "back" semantics.
 			switch m.mode {
 			case ModeFilters, ModeResult:
 				m.mode = ModeMain
+				m.syncFilelist()
 			}
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
 			m.mode = ModeFilters
 			m.filterIndex = 0
 
-		case m.mode == ModeMain && key.Matches(msg, m.keymap.Up):
-			if m.selectedIndex > 0 {
-				m.selectedIndex--
-			}
-
-		case m.mode == ModeMain && key.Matches(msg, m.keymap.Down):
-			limit := len(m.ctrl.GetData().GetVisibleFiles())
-			if m.showFiltered {
-				limit = len(m.ctrl.GetData().GetFilteredFiles())
-			}
-			if limit > 0 && m.selectedIndex < limit-1 {
-				m.selectedIndex++
-			}
-
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleFilteredView):
 			m.showFiltered = !m.showFiltered
-			// Clamp selection to new list length.
-			limit := len(m.ctrl.GetData().GetVisibleFiles())
-			if m.showFiltered {
-				limit = len(m.ctrl.GetData().GetFilteredFiles())
-			}
-			if limit == 0 {
-				m.selectedIndex = 0
-			} else if m.selectedIndex >= limit {
-				m.selectedIndex = limit - 1
-			}
-
-		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleIncluded):
-			if m.showFiltered {
-				// Filtered view is read-only for now.
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Filtered view is read-only",
-					Level:    events.ToastInfo,
-					Duration: 2 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-
-			visible := m.ctrl.GetData().GetVisibleFiles()
-			if len(visible) == 0 || m.selectedIndex < 0 || m.selectedIndex >= len(visible) {
-				break
-			}
-
-			selected := visible[m.selectedIndex]
-			if err := m.ctrl.SetFileIncludedByPath(selected.Path, !selected.Included); err != nil {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Failed to toggle file: " + err.Error(),
-					Level:    events.ToastError,
-					Duration: 5 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
-
-		case m.mode == ModeMain && key.Matches(msg, m.keymap.SelectAllVisible):
-			if m.showFiltered {
-				// Filtered view is read-only for now.
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Filtered view is read-only",
-					Level:    events.ToastInfo,
-					Duration: 2 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-
-			n, err := m.ctrl.SetAllVisibleIncluded(true)
-			if err != nil {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Select all failed: " + err.Error(),
-					Level:    events.ToastError,
-					Duration: 5 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-			if n == 0 {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "No visible files",
-					Level:    events.ToastInfo,
-					Duration: 2 * time.Second,
-				})
-			} else {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     fmt.Sprintf("Selected %d files", n),
-					Level:    events.ToastSuccess,
-					Duration: 2 * time.Second,
-				})
-			}
-			if cmd != nil {
-				cmds = append(cmds, cmd)
-			}
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
-
-		case m.mode == ModeMain && key.Matches(msg, m.keymap.UnselectAllVisible):
-			if m.showFiltered {
-				// Filtered view is read-only for now.
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Filtered view is read-only",
-					Level:    events.ToastInfo,
-					Duration: 2 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-
-			n, err := m.ctrl.SetAllVisibleIncluded(false)
-			if err != nil {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "Unselect all failed: " + err.Error(),
-					Level:    events.ToastError,
-					Duration: 5 * time.Second,
-				})
-				if cmd != nil {
-					cmds = append(cmds, cmd)
-				}
-				break
-			}
-			if n == 0 {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     "No visible files",
-					Level:    events.ToastInfo,
-					Duration: 2 * time.Second,
-				})
-			} else {
-				m.status, cmd = m.status.Update(events.ShowToastMsg{
-					Text:     fmt.Sprintf("Unselected %d files", n),
-					Level:    events.ToastSuccess,
-					Duration: 2 * time.Second,
-				})
-			}
-			if cmd != nil {
-				cmds = append(cmds, cmd)
-			}
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
+			m.syncFilelist()
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Generate):
 			m.mode = ModeGenerating
@@ -241,6 +102,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case (m.mode == ModeMain || m.mode == ModeResult) && key.Matches(msg, m.keymap.CopyContext):
 			cmds = append(cmds, copyContextCmd(m.ctrl, m.deps))
+
+		case m.mode == ModeMain:
+			m.filelist, cmd = m.filelist.Update(msg)
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
 
 		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Up):
 			if m.filterIndex > 0 {
@@ -358,6 +225,96 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.err = msg.Err
 		m.mode = ModeResult
 
+	case events.ToggleFileIncludedRequested:
+		if m.showFiltered {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Filtered view is read-only",
+				Level:    events.ToastInfo,
+				Duration: 2 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+
+		current, ok := m.currentIncludedByPath(msg.Path)
+		if !ok {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "File not found: " + msg.Path,
+				Level:    events.ToastError,
+				Duration: 5 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+
+		if err := m.ctrl.SetFileIncludedByPath(msg.Path, !current); err != nil {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Failed to toggle file: " + err.Error(),
+				Level:    events.ToastError,
+				Duration: 5 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+
+		m.syncFilelist()
+		cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+	case events.SetAllVisibleIncludedRequested:
+		if m.showFiltered {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Filtered view is read-only",
+				Level:    events.ToastInfo,
+				Duration: 2 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+
+		n, err := m.ctrl.SetAllVisibleIncluded(msg.Included)
+		if err != nil {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Bulk update failed: " + err.Error(),
+				Level:    events.ToastError,
+				Duration: 5 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+
+		if n == 0 {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "No visible files",
+				Level:    events.ToastInfo,
+				Duration: 2 * time.Second,
+			})
+		} else {
+			verb := "Selected"
+			if !msg.Included {
+				verb = "Unselected"
+			}
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     fmt.Sprintf("%s %d files", verb, n),
+				Level:    events.ToastSuccess,
+				Duration: 2 * time.Second,
+			})
+		}
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+		m.syncFilelist()
+		cmds = append(cmds, saveSessionCmd(m.ctrl))
+
 	case events.ClipboardCopiedMsg:
 		m.status, cmd = m.status.Update(events.ShowToastMsg{
 			Text:     fmt.Sprintf("Copied %s (%d bytes)", msg.What, msg.Bytes),
@@ -449,10 +406,34 @@ func (m Model) headerHeight() int {
 	// Only the Result screen currently needs explicit "body vs header" layout separation.
 	// We keep this intentionally conservative until Phase 4/5 introduce real list components.
 	switch m.mode {
+	case ModeMain:
+		// renderMain writes a fixed header before the file list:
+		// title + blank + branch + blank + stats + blank + section header + separator.
+		return 8
 	case ModeResult:
 		// renderResult writes: title line + "\n\n" (=> 3 lines total before the viewport)
 		return 3
 	default:
 		return 0
 	}
+}
+
+func (m *Model) syncFilelist() {
+	idx := m.filelist.SelectedIndex()
+	files := m.ctrl.GetData().GetVisibleFiles()
+	if m.showFiltered {
+		files = m.ctrl.GetData().GetFilteredFiles()
+	}
+	m.filelist.SetFiles(files)
+	m.filelist.SetSelectedIndex(idx)
+	m.selectedIndex = m.filelist.SelectedIndex()
+}
+
+func (m Model) currentIncludedByPath(path string) (bool, bool) {
+	for _, f := range m.ctrl.GetData().ChangedFiles {
+		if f.Path == path {
+			return f.Included, true
+		}
+	}
+	return false, false
 }

@@ -61,17 +61,9 @@ func (m Model) renderMain() string {
 		b.WriteString(m.styles.MutedText.Render("No files to show"))
 		b.WriteString("\n")
 	} else {
-		for i, f := range files {
-			included := " "
-			if f.Included {
-				included = "✓"
-			}
-			line := fmt.Sprintf("[%s] %s +%d -%d (%dt)", included, f.Path, f.Additions, f.Deletions, f.Tokens)
-			if i == m.selectedIndex {
-				b.WriteString(m.styles.SelectedItem.Render("▶ " + line))
-			} else {
-				b.WriteString(m.styles.UnselectedItem.Render(line))
-			}
+		listView := m.filelist.View()
+		b.WriteString(listView)
+		if !strings.HasSuffix(listView, "\n") {
 			b.WriteString("\n")
 		}
 	}
