@@ -11,6 +11,22 @@ DocType: index
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: prescribe/internal/tui/components/status/model.go
+      Note: Phase 1 scaffolding - status footer model
+    - Path: prescribe/internal/tui/components/status/toast.go
+      Note: Phase 1 scaffolding - ID-safe toast state
+    - Path: prescribe/internal/tui/components/status/toast_test.go
+      Note: Phase 1 scaffolding - toast tests
+    - Path: prescribe/internal/tui/events/events.go
+      Note: Phase 1 scaffolding - shared typed TUI messages
+    - Path: prescribe/internal/tui/keys/keymap.go
+      Note: Phase 1 scaffolding - centralized keymap for help
+    - Path: prescribe/internal/tui/layout/layout.go
+      Note: Phase 1 scaffolding - layout computation helper
+    - Path: prescribe/internal/tui/layout/layout_test.go
+      Note: Phase 1 scaffolding - layout tests
+    - Path: prescribe/internal/tui/styles/styles.go
+      Note: Phase 1 scaffolding - Styles struct
     - Path: prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md
       Note: Detailed phased refactor task breakdown
 ExternalSources: []
@@ -19,6 +35,7 @@ LastUpdated: 2025-12-26T18:32:05.980662011-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Make it work
