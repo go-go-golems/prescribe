@@ -51,7 +51,7 @@
 - [x] [Phase 7 / ticket features] Implement clipboard export: `internal/tui/export/BuildGenerationContextText(req)`
 - [x] [Phase 7 / ticket features] Wire `CopyContextRequested` to build text via `BuildGenerateDescriptionRequest()` and copy via `Deps`
 - [x] [Phase 7 / ticket features] Add toast showing bytes copied for clipboard export
-- [ ] [Phase 8 / cleanup] Remove/retire legacy `internal/tui/model.go` if unused (keep history, no behavior regressions)
+- [x] [Phase 8 / cleanup] Remove/retire legacy `internal/tui/model.go` if unused (keep history, no behavior regressions)
 - [ ] [Phase 8 / cleanup] Consolidate remaining lipgloss globals into `styles.Styles` and pass through app/components
 - [ ] [Phase 8 / cleanup] Decide/document fate of `internal/model` vs `internal/domain` duplication (plan removal or justification)
 - [ ] [Testing] Update `prescribe/test-scripts/*.sh` from old flat verbs to hierarchical verbs (session/filter/file/context)
