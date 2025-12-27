@@ -9,14 +9,16 @@ import (
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/file"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/filter"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/session"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command
-var rootCmd = &cobra.Command{
-	Use:   "prescribe",
-	Short: "A TUI for building GitHub PR descriptions",
-	Long: `Prescribe is a CLI/TUI application for generating pull request descriptions using LLMs.
+func NewRootCmd() *cobra.Command {
+	// rootCmd represents the base command
+	rootCmd := &cobra.Command{
+		Use:   "prescribe",
+		Short: "A TUI for building GitHub PR descriptions",
+		Long: `Prescribe is a CLI/TUI application for generating pull request descriptions using LLMs.
 	
 It allows you to:
 - View and filter PR diffs
@@ -24,35 +26,41 @@ It allows you to:
 - Apply filters with glob patterns
 - Customize prompts with presets
 - Generate AI-powered PR descriptions`,
-	Version: "0.1.0",
-	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		// Ensure logging is initialized before any subcommand runs.
-		return logging.InitLoggerFromCobra(cmd)
-	},
-}
-
-func RootCmd() *cobra.Command {
+		Version: "0.1.0",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Ensure logging is initialized before any subcommand runs.
+			return logging.InitLoggerFromCobra(cmd)
+		},
+	}
 	return rootCmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+func InitRootCmd(rootCmd *cobra.Command) error {
+	if rootCmd == nil {
+		return errors.New("rootCmd is nil")
 	}
-}
 
-func init() {
 	// Global flags
 	rootCmd.PersistentFlags().StringP("repo", "r", ".", "Path to git repository")
 	rootCmd.PersistentFlags().StringP("target", "t", "", "Target branch (default: main or master)")
 
-	// Register subdirectory commands
-	registerCommands()
-}
+	// Explicit initialization of subcommand trees (no init() ordering reliance).
+	if err := filter.Init(); err != nil {
+		return errors.Wrap(err, "failed to init filter commands")
+	}
+	if err := session.Init(); err != nil {
+		return errors.Wrap(err, "failed to init session commands")
+	}
+	if err := file.Init(); err != nil {
+		return errors.Wrap(err, "failed to init file commands")
+	}
+	if err := context.Init(); err != nil {
+		return errors.Wrap(err, "failed to init context commands")
+	}
+	if err := InitGenerateCmd(); err != nil {
+		return errors.Wrap(err, "failed to init generate command")
+	}
 
-func registerCommands() {
 	// Command groups
 	rootCmd.AddCommand(filter.FilterCmd)
 	rootCmd.AddCommand(session.SessionCmd)
@@ -62,4 +70,14 @@ func registerCommands() {
 	// Root-level commands (generate, tui)
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(tuiCmd)
+
+	return nil
+}
+
+// Execute executes the provided root command.
+func Execute(rootCmd *cobra.Command) {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }

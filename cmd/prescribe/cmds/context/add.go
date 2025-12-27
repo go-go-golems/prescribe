@@ -61,6 +61,7 @@ var AddCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitAddCmd() error {
 	AddCmd.Flags().StringVar(&contextNote, "note", "", "Add a note as context")
+	return nil
 }

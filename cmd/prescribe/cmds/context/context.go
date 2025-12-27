@@ -1,6 +1,10 @@
 package context
 
-import "github.com/spf13/cobra"
+import (
+	"sync"
+
+	"github.com/spf13/cobra"
+)
 
 // ContextCmd groups all additional-context related subcommands.
 var ContextCmd = &cobra.Command{
@@ -9,8 +13,17 @@ var ContextCmd = &cobra.Command{
 	Long:  "Add additional context (files and notes) to the current session.",
 }
 
-func init() {
-	ContextCmd.AddCommand(
-		AddCmd,
-	)
+var initOnce sync.Once
+var initErr error
+
+func Init() error {
+	initOnce.Do(func() {
+		if err := InitAddCmd(); err != nil {
+			initErr = err
+			return
+		}
+
+		ContextCmd.AddCommand(AddCmd)
+	})
+	return initErr
 }

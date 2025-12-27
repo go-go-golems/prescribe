@@ -1,6 +1,10 @@
 package file
 
-import "github.com/spf13/cobra"
+import (
+	"sync"
+
+	"github.com/spf13/cobra"
+)
 
 // FileCmd groups all file-related subcommands.
 var FileCmd = &cobra.Command{
@@ -9,8 +13,11 @@ var FileCmd = &cobra.Command{
 	Long:  "Operations that act on individual changed files in the current session.",
 }
 
-func init() {
-	FileCmd.AddCommand(
-		ToggleFileCmd,
-	)
+var initOnce sync.Once
+
+func Init() error {
+	initOnce.Do(func() {
+		FileCmd.AddCommand(ToggleFileCmd)
+	})
+	return nil
 }

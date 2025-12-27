@@ -63,9 +63,10 @@ var generateCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitGenerateCmd() error {
 	generateCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: stdout)")
 	generateCmd.Flags().StringVarP(&promptText, "prompt", "p", "", "Custom prompt text")
 	generateCmd.Flags().StringVar(&presetID, "preset", "", "Prompt preset ID")
 	generateCmd.Flags().StringVarP(&loadSession, "session", "s", "", "Load session file before generating")
+	return nil
 }

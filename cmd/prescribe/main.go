@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	rootCmd := cmds.RootCmd()
+	rootCmd := cmds.NewRootCmd()
 
 	if err := logging.AddLoggingLayerToRootCommand(rootCmd, "prescribe"); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -23,5 +23,10 @@ func main() {
 	help_cmd.SetupCobraRootCommand(helpSystem, rootCmd)
 	_ = helpSystem.LoadSectionsFromFS(prescribe_doc.FS, "topics")
 
-	cmds.Execute()
+	if err := cmds.InitRootCmd(rootCmd); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	cmds.Execute(rootCmd)
 }

@@ -47,7 +47,8 @@ var InitCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitInitCmd() error {
 	InitCmd.Flags().BoolVar(&autoSave, "save", false, "Save session to disk after initialization")
 	InitCmd.Flags().StringVarP(&sessionPath, "path", "p", "", "Path to save session (default: app default session path)")
+	return nil
 }

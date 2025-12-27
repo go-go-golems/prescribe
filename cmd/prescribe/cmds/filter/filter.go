@@ -1,6 +1,10 @@
 package filter
 
-import "github.com/spf13/cobra"
+import (
+	"sync"
+
+	"github.com/spf13/cobra"
+)
 
 // FilterCmd groups all filter-related subcommands.
 var FilterCmd = &cobra.Command{
@@ -9,13 +13,32 @@ var FilterCmd = &cobra.Command{
 	Long:  "Create, test, list, and manage file filters in the current session.",
 }
 
-func init() {
-	FilterCmd.AddCommand(
-		AddFilterCmd,
-		ListFiltersCmd,
-		RemoveFilterCmd,
-		ClearFiltersCmd,
-		TestFilterCmd,
-		ShowFilteredCmd,
-	)
+var initOnce sync.Once
+var initErr error
+
+func Init() error {
+	initOnce.Do(func() {
+		if err := InitAddFilterCmd(); err != nil {
+			initErr = err
+			return
+		}
+		if err := InitTestFilterCmd(); err != nil {
+			initErr = err
+			return
+		}
+		if err := InitListFiltersCmd(); err != nil {
+			initErr = err
+			return
+		}
+
+		FilterCmd.AddCommand(
+			AddFilterCmd,
+			ListFiltersCmd,
+			RemoveFilterCmd,
+			ClearFiltersCmd,
+			TestFilterCmd,
+			ShowFilteredCmd,
+		)
+	})
+	return initErr
 }

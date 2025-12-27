@@ -104,6 +104,7 @@ var ShowCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitShowCmd() error {
 	ShowCmd.Flags().BoolVarP(&showYAML, "yaml", "y", false, "Show session as YAML")
+	return nil
 }

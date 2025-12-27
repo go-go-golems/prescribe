@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -78,10 +79,13 @@ var AddFilterCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitAddFilterCmd() error {
 	AddFilterCmd.Flags().StringVarP(&filterName, "name", "n", "", "Filter name (required)")
 	AddFilterCmd.Flags().StringVarP(&filterDescription, "description", "d", "", "Filter description")
 	AddFilterCmd.Flags().StringSliceVarP(&excludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
 	AddFilterCmd.Flags().StringSliceVarP(&includePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
-	AddFilterCmd.MarkFlagRequired("name")
+	if err := AddFilterCmd.MarkFlagRequired("name"); err != nil {
+		return errors.Wrap(err, "failed to mark --name required")
+	}
+	return nil
 }

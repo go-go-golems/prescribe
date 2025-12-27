@@ -86,8 +86,9 @@ var TestFilterCmd = &cobra.Command{
 	},
 }
 
-func init() {
+func InitTestFilterCmd() error {
 	TestFilterCmd.Flags().StringVarP(&testFilterName, "name", "n", "test", "Filter name for display purposes")
 	TestFilterCmd.Flags().StringSliceVarP(&testExcludePatterns, "exclude", "e", []string{}, "Exclude patterns (can specify multiple)")
 	TestFilterCmd.Flags().StringSliceVarP(&testIncludePatterns, "include", "i", []string{}, "Include patterns (can specify multiple)")
+	return nil
 }
