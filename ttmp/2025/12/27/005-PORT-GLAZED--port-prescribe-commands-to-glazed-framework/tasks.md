@@ -1,0 +1,37 @@
+# Tasks
+
+## TODO
+
+- [ ] Add tasks here
+
+- [ ] Phase 1: Create RepositoryLayer in prescribe/pkg/layers/repository.go with schema.NewSection() and fields.New() API
+- [ ] Phase 1: Create SessionLayer in prescribe/pkg/layers/session.go
+- [ ] Phase 1: Create FilterLayer in prescribe/pkg/layers/filter.go
+- [ ] Phase 1: Create GenerationLayer in prescribe/pkg/layers/generation.go
+- [ ] Phase 1: Create helper functions GetRepositorySettings(), GetSessionSettings(), GetFilterSettings(), GetGenerationSettings() for extracting settings from parsed layers
+- [ ] Phase 1: Update root command to integrate Glazed help system and add layers to root command
+- [ ] Phase 1: Create controller initialization helpers that use layers instead of reading Cobra flags directly
+- [ ] Phase 2: Port filter list command to dual-mode (BareCommand + GlazeCommand) with structured output support
+- [ ] Phase 2: Port filter show command to dual-mode with structured output support
+- [ ] Phase 2: Port filter test command to dual-mode with structured output support
+- [ ] Phase 2: Port session show command to dual-mode with structured output support
+- [ ] Phase 3: Port filter add command to BareCommand using FilterLayer
+- [ ] Phase 3: Port generate command to dual-mode (text output + metadata)
+- [ ] Phase 4: Port filter remove command to BareCommand
+- [ ] Phase 4: Port filter clear command to BareCommand
+- [ ] Phase 4: Port session init command to BareCommand
+- [ ] Phase 4: Port session load command to BareCommand
+- [ ] Phase 4: Port session save command to BareCommand
+- [ ] Phase 4: Port file toggle command to BareCommand
+- [ ] Phase 4: Port context add command to BareCommand
+- [ ] Phase 4: Update tui command to use layers (no structural changes needed)
+- [ ] Testing: Create unit tests for all layer creation and settings extraction
+- [ ] Testing: Create integration tests for commands with mock controllers
+- [ ] Testing: Create E2E tests for full command execution with real git repositories
+- [ ] Testing: Verify backward compatibility - ensure existing scripts still work with same flag names and behavior
+- [ ] Documentation: Update command help text and examples to reflect Glazed integration
+- [ ] Documentation: Add examples showing structured output usage (JSON/YAML/CSV) for dual-mode commands
+- [ ] Phase 1: Update root command to add PersistentPreRunE with logging.InitLoggerFromCobra(cmd) for logging initialization
+- [ ] Phase 1: Add logging layer to root command using logging.AddLoggingLayerToRootCommand(rootCmd, "prescribe") in main()
+- [ ] Phase 1: Set up Glazed help system with help.NewHelpSystem() and help_cmd.SetupCobraRootCommand() in main()
+- [ ] Phase 1: Update main() function structure to follow Glazed program initialization pattern (logging, help system, command registration)
