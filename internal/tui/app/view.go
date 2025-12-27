@@ -85,7 +85,11 @@ func (m Model) renderFilters() string {
 	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
 	b.WriteString("\n\n")
 
-	stats := fmt.Sprintf("Active Filters: %d | Filtered Files: %d", len(filters), len(data.GetFilteredFiles()))
+	stats := fmt.Sprintf("Active Filters: %d | Filtered Files: %d | Files: %d visible",
+		len(filters),
+		len(data.GetFilteredFiles()),
+		len(data.GetVisibleFiles()),
+	)
 	b.WriteString(m.styles.Base.Render(stats))
 	b.WriteString("\n\n")
 
@@ -98,32 +102,10 @@ func (m Model) renderFilters() string {
 		b.WriteString(m.styles.MutedText.Render("No active filters"))
 		b.WriteString("\n")
 	} else {
-		idx := m.filterIndex
-		if idx < 0 {
-			idx = 0
-		}
-		if idx >= len(filters) {
-			idx = len(filters) - 1
-		}
-
-		for i, f := range filters {
-			line := fmt.Sprintf("[%d] %s", i, f.Name)
-			if f.Description != "" {
-				line += " - " + f.Description
-			}
-			if i == idx {
-				b.WriteString(m.styles.SelectedItem.Render("▶ " + line))
-			} else {
-				b.WriteString(m.styles.UnselectedItem.Render(line))
-			}
+		paneView := m.filterpane.View()
+		b.WriteString(paneView)
+		if !strings.HasSuffix(paneView, "\n") {
 			b.WriteString("\n")
-
-			if i == idx {
-				for _, r := range f.Rules {
-					b.WriteString(m.styles.MutedText.Render(fmt.Sprintf("    %s: %s", r.Type, r.Pattern)))
-					b.WriteString("\n")
-				}
-			}
 		}
 	}
 

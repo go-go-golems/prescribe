@@ -11,6 +11,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tui/components/filelist"
+	"github.com/go-go-golems/prescribe/internal/tui/components/filterpane"
 	"github.com/go-go-golems/prescribe/internal/tui/components/result"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
@@ -30,16 +31,18 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 	sm := statusModel(km, st)
 	rm := result.New()
 	fl := filelist.New(km, st)
+	fp := filterpane.New(km, st)
 
 	return Model{
-		ctrl:     ctrl,
-		deps:     deps,
-		mode:     ModeMain,
-		keymap:   km,
-		styles:   st,
-		status:   sm,
-		result:   rm,
-		filelist: fl,
+		ctrl:       ctrl,
+		deps:       deps,
+		mode:       ModeMain,
+		keymap:     km,
+		styles:     st,
+		status:     sm,
+		result:     rm,
+		filelist:   fl,
+		filterpane: fp,
 	}
 }
 
@@ -65,7 +68,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
 		m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 		m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
+		m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
 		m.syncFilelist()
+		m.syncFilterpane()
 
 	case tea.KeyMsg:
 		switch {
@@ -78,7 +83,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.layout = layout.Compute(m.width, m.height, m.headerHeight(), lipgloss.Height(m.status.View()))
 			m.result.SetSize(m.layout.BodyW, m.layout.BodyH)
 			m.filelist.SetSize(m.layout.BodyW, m.layout.BodyH)
+			m.filterpane.SetSize(m.layout.BodyW, m.layout.BodyH)
 			m.syncFilelist()
+			m.syncFilterpane()
 
 		case key.Matches(msg, m.keymap.Back):
 			// Global "back" semantics.
@@ -90,7 +97,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
 			m.mode = ModeFilters
-			m.filterIndex = 0
+			m.syncFilterpane()
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.ToggleFilteredView):
 			m.showFiltered = !m.showFiltered
@@ -109,67 +116,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			}
 
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Up):
-			if m.filterIndex > 0 {
-				m.filterIndex--
+		case m.mode == ModeFilters:
+			m.filterpane, cmd = m.filterpane.Update(msg)
+			if cmd != nil {
+				cmds = append(cmds, cmd)
 			}
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Down):
-			filters := m.ctrl.GetFilters()
-			if len(filters) > 0 && m.filterIndex < len(filters)-1 {
-				m.filterIndex++
-			}
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.DeleteFilter):
-			filters := m.ctrl.GetFilters()
-			if len(filters) > 0 && m.filterIndex >= 0 && m.filterIndex < len(filters) {
-				_ = m.ctrl.RemoveFilter(m.filterIndex)
-				cmds = append(cmds, saveSessionCmd(m.ctrl))
-				// Clamp after deletion.
-				if m.filterIndex >= len(m.ctrl.GetFilters()) {
-					m.filterIndex = max(0, len(m.ctrl.GetFilters())-1)
-				}
-			}
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.ClearFilters):
-			m.ctrl.ClearFilters()
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
-			m.filterIndex = 0
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset1):
-			m.ctrl.AddFilter(domain.Filter{
-				Name:        "Exclude Tests",
-				Description: "Exclude test files",
-				Rules: []domain.FilterRule{
-					{Type: domain.FilterTypeExclude, Pattern: "**/*test*"},
-					{Type: domain.FilterTypeExclude, Pattern: "**/*spec*"},
-				},
-			})
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset2):
-			m.ctrl.AddFilter(domain.Filter{
-				Name:        "Exclude Docs",
-				Description: "Exclude documentation files",
-				Rules: []domain.FilterRule{
-					{Type: domain.FilterTypeExclude, Pattern: "**/*.md"},
-					{Type: domain.FilterTypeExclude, Pattern: "**/docs/**"},
-				},
-			})
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
-
-		case m.mode == ModeFilters && key.Matches(msg, m.keymap.Preset3):
-			m.ctrl.AddFilter(domain.Filter{
-				Name:        "Only Source",
-				Description: "Include only source code files",
-				Rules: []domain.FilterRule{
-					{Type: domain.FilterTypeInclude, Pattern: "**/*.go"},
-					{Type: domain.FilterTypeInclude, Pattern: "**/*.ts"},
-					{Type: domain.FilterTypeInclude, Pattern: "**/*.js"},
-					{Type: domain.FilterTypeInclude, Pattern: "**/*.py"},
-				},
-			})
-			cmds = append(cmds, saveSessionCmd(m.ctrl))
 		}
 
 	case events.SessionLoadedMsg:
@@ -340,6 +291,43 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
+
+	case events.RemoveFilterRequested:
+		if err := m.ctrl.RemoveFilter(msg.Index); err != nil {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Failed to remove filter: " + err.Error(),
+				Level:    events.ToastError,
+				Duration: 5 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+		m.syncFilterpane()
+		cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+	case events.ClearFiltersRequested:
+		m.ctrl.ClearFilters()
+		m.syncFilterpane()
+		cmds = append(cmds, saveSessionCmd(m.ctrl))
+
+	case events.AddFilterPresetRequested:
+		filter, ok := filterPreset(msg.PresetID)
+		if !ok {
+			m.status, cmd = m.status.Update(events.ShowToastMsg{
+				Text:     "Unknown preset: " + msg.PresetID,
+				Level:    events.ToastError,
+				Duration: 5 * time.Second,
+			})
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			break
+		}
+		m.ctrl.AddFilter(filter)
+		m.syncFilterpane()
+		cmds = append(cmds, saveSessionCmd(m.ctrl))
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
@@ -410,6 +398,9 @@ func (m Model) headerHeight() int {
 		// renderMain writes a fixed header before the file list:
 		// title + blank + branch + blank + stats + blank + section header + separator.
 		return 8
+	case ModeFilters:
+		// renderFilters writes: title + blank + stats + blank + header + separator.
+		return 6
 	case ModeResult:
 		// renderResult writes: title line + "\n\n" (=> 3 lines total before the viewport)
 		return 3
@@ -436,4 +427,48 @@ func (m Model) currentIncludedByPath(path string) (bool, bool) {
 		}
 	}
 	return false, false
+}
+
+func (m *Model) syncFilterpane() {
+	idx := m.filterpane.SelectedIndex()
+	filters := m.ctrl.GetFilters()
+	m.filterpane.SetFilters(filters)
+	m.filterpane.SetSelectedIndex(idx)
+	m.filterIndex = m.filterpane.SelectedIndex()
+}
+
+func filterPreset(id string) (domain.Filter, bool) {
+	switch id {
+	case "exclude-tests":
+		return domain.Filter{
+			Name:        "Exclude Tests",
+			Description: "Exclude test files",
+			Rules: []domain.FilterRule{
+				{Type: domain.FilterTypeExclude, Pattern: "**/*test*"},
+				{Type: domain.FilterTypeExclude, Pattern: "**/*spec*"},
+			},
+		}, true
+	case "exclude-docs":
+		return domain.Filter{
+			Name:        "Exclude Docs",
+			Description: "Exclude documentation files",
+			Rules: []domain.FilterRule{
+				{Type: domain.FilterTypeExclude, Pattern: "**/*.md"},
+				{Type: domain.FilterTypeExclude, Pattern: "**/docs/**"},
+			},
+		}, true
+	case "only-source":
+		return domain.Filter{
+			Name:        "Only Source",
+			Description: "Include only source code files",
+			Rules: []domain.FilterRule{
+				{Type: domain.FilterTypeInclude, Pattern: "**/*.go"},
+				{Type: domain.FilterTypeInclude, Pattern: "**/*.ts"},
+				{Type: domain.FilterTypeInclude, Pattern: "**/*.js"},
+				{Type: domain.FilterTypeInclude, Pattern: "**/*.py"},
+			},
+		}, true
+	default:
+		return domain.Filter{}, false
+	}
 }
