@@ -577,22 +577,32 @@ This step removes the legacy Bubbletea root models (`internal/tui/model.go` and 
 
 This step extracts the Filters screen into a dedicated component model. Like the file list, the component handles selection + key mapping and emits typed intent messages; the app root remains the single side-effect boundary that mutates the controller, saves the session, and shows toasts.
 
-**Commit (code):** N/A — in progress
+**Commit (code):**
+- 2f211efbf50232948d4333574b65e1537b93c0f6 — "TUI: add filter pane component scaffold"
+- fb6ba9bda75cbb06d1c4042af35b6d7bc973b6d8 — "TUI: wire filter pane component into filters screen"
 
 ### What I did
-- N/A (in progress)
+- Added `internal/tui/components/filterpane` (based on `bubbles/list`) that renders a filter list + selected rule preview and emits typed intents:
+  - `events.RemoveFilterRequested{Index}`
+  - `events.ClearFiltersRequested{}`
+  - `events.AddFilterPresetRequested{PresetID}`
+- Wired the app root to:
+  - render `filterpane.View()` on the filter screen,
+  - handle filter events by mutating the controller (`RemoveFilter`, `ClearFilters`, `AddFilter`) and auto-saving + toasting,
+  - push sizes into the component on resize/help toggle.
+- Added filter-impact UX in the filter header stats (active filters, filtered files, visible files).
 
 ### Why
 - Keeping Filters screen logic in the root model makes it harder to evolve UX (rule previews, impact stats, resize propagation) without touching unrelated app-level orchestration.
 
 ### What worked
-- N/A (in progress)
+- Filters screen behavior is now driven by a child component, matching the Phase 4 pattern (component emits intents; root does side effects).
 
 ### What didn't work
 - N/A (in progress)
 
 ### What was tricky to build
-- N/A (in progress)
+- Keeping the header/body sizing consistent: the filterpane itself is sized to the computed body layout, while the outer screen still renders a fixed header.
 
 ### What warrants a second pair of eyes
 - Confirm the root remains the only place that saves sessions and performs controller mutations (component must stay UI-only).
