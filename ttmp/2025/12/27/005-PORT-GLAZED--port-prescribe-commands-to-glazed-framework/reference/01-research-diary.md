@@ -1044,3 +1044,42 @@ Both commands take an optional positional `[path]`. We verified Glazed supports 
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe session load --help`
   - `cd prescribe && go run ./cmd/prescribe session save --help`
+
+## Step 20: Port `session init` to a Glazed BareCommand (keep `--save/--path`)
+
+This step ports `prescribe session init` from a plain Cobra command (with package-level flag variables) to a Glazed-built `BareCommand`. The goal is to remove the last “Cobra-only” parsing from the `session` command family and keep all session subcommands using ParsedLayers + the shared controller init helper.
+
+We kept the existing CLI flags (`--save` and `--path/-p`) for now to avoid unnecessary churn, even though the ticket doesn’t promise backwards compatibility. This keeps the UX familiar while still adopting the new parsing model.
+
+**Commit (code):** b28b057cf6ebc7921011b063eedcca75894471bf — "prescribe: port session init to glazed"
+
+### What I did
+- Replaced the old `InitCmd = &cobra.Command{...}` implementation with:
+  - `NewSessionInitCommand()` returning a Glazed `cmds.BareCommand`
+  - a dedicated section (`session-init`) defining:
+    - `--save` (bool)
+    - `--path/-p` (string)
+- Updated `InitInitCmd()` to build the Cobra command via `cli.BuildCobraCommand(...)`.
+- Switched controller initialization to `helpers.NewInitializedControllerFromParsedLayers`.
+
+### Why
+- Eliminate global flag variables and direct Cobra flag reading.
+- Standardize session command plumbing, matching the already-ported filter commands.
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed.
+- `prescribe session init --help` shows the Glazed section with `--save` and `--path/-p`.
+
+### What was tricky to build
+- Ensuring the `--path/-p` flag remains a command flag (not a positional arg) and still defaults to `ctrl.GetDefaultSessionPath()` when empty.
+
+### What warrants a second pair of eyes
+- Confirm the flag naming should remain `--save/--path` long-term vs adopting the shared SessionLayer (`session-path`, `auto-save`) for consistency across future ports.
+
+### What should be done in the future
+- If we decide to standardize on SessionLayer, do it in one intentional breaking change across all relevant commands rather than drifting per-command.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/session/init.go`.
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe session init --help`

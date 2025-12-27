@@ -177,3 +177,12 @@ Step 12: Port `session load` and `session save` to Glazed BareCommands (commit a
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/save.go — Glazed BareCommand with optional positional `[path]`
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/session.go — Explicit init wiring for load/save
 
+
+## 2025-12-27
+
+Step 13: Port `session init` to a Glazed BareCommand (commit b28b057)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/init.go — Glazed BareCommand + `session-init` section for `--save/--path`
+

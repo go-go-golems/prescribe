@@ -19,7 +19,7 @@
 - [ ] Phase 3: Port generate command to Glazed (decide BareCommand vs GlazeCommand output contract)
 - [x] Phase 4: Port filter remove command to Glazed BareCommand
 - [x] Phase 4: Port filter clear command to Glazed BareCommand
-- [ ] Phase 4: Port session init command to BareCommand
+- [x] Phase 4: Port session init command to Glazed BareCommand
 - [x] Phase 4: Port session load command to Glazed BareCommand
 - [x] Phase 4: Port session save command to Glazed BareCommand
 - [ ] Phase 4: Port file toggle command to BareCommand
