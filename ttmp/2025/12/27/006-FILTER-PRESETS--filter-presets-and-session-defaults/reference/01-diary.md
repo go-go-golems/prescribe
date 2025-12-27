@@ -11,8 +11,20 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: prescribe/cmd/prescribe/cmds/filter/filter.go
+      Note: Register preset command group under filter (code commit 4880311)
+    - Path: prescribe/cmd/prescribe/cmds/filter/preset.go
+      Note: Defines filter preset command group (code commit 4880311)
+    - Path: prescribe/cmd/prescribe/cmds/filter/preset_apply.go
+      Note: Implements prescribe filter preset apply (code commit 4880311)
+    - Path: prescribe/cmd/prescribe/cmds/filter/preset_list.go
+      Note: Implements prescribe filter preset list (code commit 4880311)
+    - Path: prescribe/cmd/prescribe/cmds/filter/preset_save.go
+      Note: Implements prescribe filter preset save (code commit 4880311)
     - Path: prescribe/internal/controller/repo_defaults.go
-      Note: Load .pr-builder/config.yaml and apply defaults.filter_presets (code commit cc52899)
+      Note: |-
+        Load .pr-builder/config.yaml and apply defaults.filter_presets (code commit cc52899)
+        Exports LoadFilterPresetByID used by defaults and CLI (code commit 4880311)
     - Path: prescribe/internal/tui/app/boot.go
       Note: Apply repo defaults when session.yaml missing (code commit cc52899)
     - Path: prescribe/internal/tui/app/boot_test.go
@@ -27,6 +39,7 @@ LastUpdated: 2025-12-27T16:58:14.979386247-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Diary
@@ -118,3 +131,37 @@ This step wires “defaults for new sessions” into the TUI boot sequence: if t
 - Start in `internal/tui/app/boot.go` and `internal/controller/repo_defaults.go`.
 - Validate with:
   - `cd prescribe && go test ./... -count=1`
+
+## Step 3: Add CLI commands for filter presets (list/save/apply)
+
+This step exposes the new filter preset persistence via a minimal CLI surface under `prescribe filter preset ...`. The intent is to unlock scripting and pave the way for TUI affordances, while keeping session semantics intact (load session if present, then mutate, then save).
+
+**Commit (code):** 48803118333e6d0145e965d97b09045344e644bc — "CLI: add filter preset list/save/apply"
+
+### What I did
+- Added a `filter preset` command group with:
+  - `prescribe filter preset list [--project|--global|--all]`
+  - `prescribe filter preset save --name ... (--project|--global) [--from-filter-index N | --exclude ... --include ...]`
+  - `prescribe filter preset apply PRESET_ID`
+- Exported `(*controller.Controller).LoadFilterPresetByID` so both TUI defaults and CLI can resolve preset IDs consistently.
+
+### Why
+- We need a first-class way to manage presets without editing YAML by hand, and to apply presets into the persisted session workflow.
+
+### What worked
+- `go test ./... -count=1` passes.
+
+### What was tricky to build
+- Keeping CLI repo/target parsing consistent with existing Glazed-based filter commands, while still supporting an arg-based `apply PRESET_ID` subcommand.
+
+### What warrants a second pair of eyes
+- Command UX: confirm the `save` command’s `--from-filter-index` workflow is the right minimum viable interface (vs selecting by name / saving multiple active filters).
+
+### What should be done in the future
+- Add help/docs examples for common recipes (repo defaults authoring, applying multiple presets).
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/filter/preset*.go` and `cmd/prescribe/cmds/filter/filter.go`.
+- Validate with:
+  - `cd prescribe && go test ./... -count=1`
+  - `cd prescribe && go run ./cmd/prescribe --help | grep -n \"filter preset\"`

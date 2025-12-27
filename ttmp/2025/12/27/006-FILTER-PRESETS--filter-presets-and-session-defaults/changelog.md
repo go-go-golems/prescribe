@@ -28,3 +28,15 @@ Step 2: apply repo default filter presets on boot when session missing (code com
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/boot_test.go — Regression test
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/006-FILTER-PRESETS--filter-presets-and-session-defaults/reference/01-diary.md — Recorded Step 2 diary
 
+
+## 2025-12-27
+
+Step 3: add CLI filter preset list/save/apply (code commit 4880311)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/preset_apply.go — Preset apply command
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/preset_list.go — Preset list command
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/preset_save.go — Preset save command
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/006-FILTER-PRESETS--filter-presets-and-session-defaults/reference/01-diary.md — Recorded Step 3 diary
+

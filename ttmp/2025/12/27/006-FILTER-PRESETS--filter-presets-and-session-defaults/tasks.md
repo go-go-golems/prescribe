@@ -24,10 +24,10 @@
 
 - [ ] **Expose preset management via CLI**
   - [ ] Add subcommands:
-    - [ ] `prescribe filter preset list [--project|--global|--all]`
-    - [ ] `prescribe filter preset save --name ... [--project|--global] [--from-active|--exclude/--include ...]`
-    - [ ] `prescribe filter preset apply PRESET_ID`
-  - [ ] Ensure commands do not clobber existing sessions (load default session if exists before mutating)
+- [x] `prescribe filter preset list [--project|--global|--all]`
+- [x] `prescribe filter preset save --name ... [--project|--global] [--from-active|--exclude/--include ...]`
+- [x] `prescribe filter preset apply PRESET_ID`
+- [x] Ensure commands do not clobber existing sessions (load default session if exists before mutating)
 
 - [ ] **TUI integration**
   - [ ] Decide whether “quick presets” remain hardcoded or become data-driven from preset dirs
