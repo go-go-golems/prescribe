@@ -60,6 +60,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.showFullHelp = !m.showFullHelp
 			m.status.SetShowFullHelp(m.showFullHelp)
 
+		case key.Matches(msg, m.keymap.Back):
+			// Global "back" semantics.
+			switch m.mode {
+			case ModeFilters, ModeResult:
+				m.mode = ModeMain
+			}
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
+			m.mode = ModeFilters
+
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.Up):
 			if m.selectedIndex > 0 {
 				m.selectedIndex--
@@ -114,6 +124,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					break
 				}
 			}
+
+		case m.mode == ModeMain && key.Matches(msg, m.keymap.Generate):
+			m.mode = ModeGenerating
+			cmds = append(cmds, generateCmd(m.ctrl))
 		}
 
 	case events.SessionLoadedMsg:
@@ -156,6 +170,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
+
+	case events.DescriptionGeneratedMsg:
+		m.generatedDesc = msg.Text
+		m.err = nil
+		m.mode = ModeResult
+
+	case events.DescriptionGenerationFailedMsg:
+		m.generatedDesc = ""
+		m.err = msg.Err
+		m.mode = ModeResult
 	}
 
 	// Let status model consume messages too (toast expiry, etc.).
@@ -174,6 +198,16 @@ func saveSessionCmd(ctrl *controller.Controller) tea.Cmd {
 			return events.SessionSaveFailedMsg{Path: path, Err: err}
 		}
 		return events.SessionSavedMsg{Path: path}
+	}
+}
+
+func generateCmd(ctrl *controller.Controller) tea.Cmd {
+	return func() tea.Msg {
+		desc, err := ctrl.GenerateDescription()
+		if err != nil {
+			return events.DescriptionGenerationFailedMsg{Err: err}
+		}
+		return events.DescriptionGeneratedMsg{Text: desc}
 	}
 }
 

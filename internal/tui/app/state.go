@@ -28,6 +28,8 @@ type Model struct {
 
 	mode Mode
 
+	err error
+
 	// view flags
 	showFiltered bool
 	showFullHelp bool
@@ -39,6 +41,9 @@ type Model struct {
 	width  int
 	height int
 	layout layout.Layout
+
+	// generation/result
+	generatedDesc string
 
 	// shared UI primitives
 	keymap keys.KeyMap

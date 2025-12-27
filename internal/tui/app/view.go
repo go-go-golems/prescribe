@@ -11,8 +11,13 @@ func (m Model) view() string {
 	switch m.mode {
 	case ModeMain:
 		return m.renderMain()
+	case ModeFilters:
+		return m.renderFilters()
+	case ModeGenerating:
+		return m.renderGenerating()
+	case ModeResult:
+		return m.renderResult()
 	default:
-		// Other modes will be wired in later Phase 2 commits.
 		return m.renderMain()
 	}
 }
@@ -72,6 +77,54 @@ func (m Model) renderMain() string {
 	}
 
 	b.WriteString("\n")
+	b.WriteString(m.status.View())
+	b.WriteString("\n")
+
+	return m.styles.BorderBox.Render(b.String())
+}
+
+func (m Model) renderFilters() string {
+	var b strings.Builder
+
+	title := m.styles.Title.Render("FILTERS (WIP)")
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString("\n\n")
+
+	b.WriteString(m.styles.MutedText.Render("Filter pane will be extracted in Phase 5. Press Esc to go back."))
+	b.WriteString("\n\n")
+	b.WriteString(m.status.View())
+	b.WriteString("\n")
+
+	return m.styles.BorderBox.Render(b.String())
+}
+
+func (m Model) renderGenerating() string {
+	var b strings.Builder
+	title := m.styles.Title.Render("GENERATING")
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString("\n\n")
+	b.WriteString(m.styles.Base.Render("Generating PR description..."))
+	b.WriteString("\n\n")
+	b.WriteString(m.status.View())
+	b.WriteString("\n")
+	return m.styles.BorderBox.Render(b.String())
+}
+
+func (m Model) renderResult() string {
+	var b strings.Builder
+
+	title := m.styles.Title.Render("RESULT")
+	b.WriteString(lipgloss.PlaceHorizontal(max(0, m.width), lipgloss.Center, title))
+	b.WriteString("\n\n")
+
+	if m.err != nil {
+		b.WriteString(m.styles.ErrorText.Render("Error: " + m.err.Error()))
+		b.WriteString("\n\n")
+	} else {
+		b.WriteString(m.styles.Box.Render(m.generatedDesc))
+		b.WriteString("\n\n")
+	}
+
 	b.WriteString(m.status.View())
 	b.WriteString("\n")
 
