@@ -17,6 +17,8 @@ RelatedFiles:
       Note: Primary tutorial for building Glazed commands
     - Path: glazed/pkg/doc/tutorials/custom-layer.md
       Note: Tutorial for creating custom parameter layers
+    - Path: prescribe/cmd/prescribe/cmds/filter/list.go
+      Note: Dual-mode filter list (classic + Glaze structured output) (commit da425db)
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller.go
       Note: Controller pattern used by all commands
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go
@@ -25,12 +27,17 @@ RelatedFiles:
       Note: |-
         Root command structure with persistent flags
         Root command now initializes logging in PersistentPreRunE (commit 90d7951)
+        NewRootCmd/InitRootCmd for deterministic init (commit da425db)
     - Path: prescribe/cmd/prescribe/main.go
-      Note: Glazed logging/help init and loading Prescribe help topics (commit 90d7951)
+      Note: |-
+        Glazed logging/help init and loading Prescribe help topics (commit 90d7951)
+        Explicit command initialization via cmds.InitRootCmd (commit da425db)
     - Path: prescribe/pkg/doc/embed.go
       Note: Embeds Prescribe markdown help sections for Glazed help system (commit 90d7951)
     - Path: prescribe/pkg/doc/topics/01-filters-and-glob-syntax.md
       Note: Prescribe help topic loaded into Glazed help system (commit 90d7951)
+    - Path: prescribe/pkg/layers/existing_cobra_flags_layer.go
+      Note: Wrap schema sections when flags already exist on root (commit da425db)
     - Path: prescribe/pkg/layers/filter.go
       Note: FilterLayer + GetFilterSettings helper (commit cb59b50)
     - Path: prescribe/pkg/layers/generation.go
@@ -45,6 +52,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

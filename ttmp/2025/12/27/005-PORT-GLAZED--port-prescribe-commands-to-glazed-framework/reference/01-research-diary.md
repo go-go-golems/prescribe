@@ -596,3 +596,61 @@ This unlocks the next Phase 2 work (dual-mode commands). We can port a command t
 - Verify imports/aliases and error handling.
 - Run:
   - `cd prescribe && go test ./... -count=1`
+
+## Step 10: Remove init()-based Cobra wiring and port `filter list` to dual-mode Glazed output
+
+This step addresses a real sharp edge we hit: relying on `init()` ordering in Cobra command packages caused a runtime panic when `filter/filter.go` tried to register `ListFiltersCmd` before it had been constructed. To make the migration safe and predictable, I refactored Prescribe’s command wiring to use explicit initialization functions instead of package-level `init()` hooks.
+
+With deterministic initialization in place, I also completed the first Phase 2 port: `prescribe filter list` now supports **dual-mode** execution (classic text output by default, and Glazed structured output when `--with-glaze-output` is provided).
+
+**Commit (code):** da425db88a8e1c0d10eaa9edd4fb0965bfc38924 — "prescribe: explicit cobra init + dual-mode filter list"
+
+### What I did
+- Removed all `init()` functions under `cmd/prescribe/cmds/**` and replaced them with explicit `Init…()` functions:
+  - `cmds.InitRootCmd(rootCmd)` wires global flags and registers command trees
+  - `filter.Init()`, `session.Init()`, `context.Init()`, `file.Init()` set up their subcommands and flag bindings deterministically
+- Refactored `cmd/prescribe/main.go` to:
+  - build `rootCmd := cmds.NewRootCmd()`
+  - initialize Glazed logging/help as before
+  - call `cmds.InitRootCmd(rootCmd)` before execution
+- Ported `filter list` to Glazed dual-mode:
+  - added a Glazed command implementation (`FilterListCommand` implementing `cmds.GlazeCommand`)
+  - wired classic output through `cli.BuildCobraCommandFromCommandAndFunc(..., cli.WithDualMode(true))`
+  - switched both modes to use `helpers.NewInitializedControllerFromParsedLayers`
+- Added `prescribe/pkg/layers/existing_cobra_flags_layer.go` to avoid “flag redefined” errors when a layer’s flags already exist as inherited persistent flags on the root command (eg. `--repo`, `--target`).
+
+### Why
+- `init()` ordering across files is not deterministic; explicit initialization eliminates a whole class of startup/runtime panics.
+- Dual-mode lets us add structured output without breaking existing text-based usage.
+- The “existing flags layer” wrapper allows us to reuse Glazed parsing without duplicating root-level persistent flags.
+
+### What worked
+- `go test ./... -count=1` still passes.
+- `go run ./cmd/prescribe filter list --help` no longer panics.
+
+### What didn't work
+- Before the refactor, `go run ./cmd/prescribe filter list --help` panicked due to a nil subcommand being added during init-time registration.
+
+### What I learned
+- A safe migration path for Cobra→Glazed in an existing app is: **keep Cobra as the container**, but make all Glazed command construction happen explicitly (no init ordering), and treat root persistent flags as “already defined” when building Glazed layers.
+
+### What was tricky to build
+- Avoiding “flag redefined” errors while still allowing Glazed to parse inherited persistent flags (`repo`, `target`) for Glazed commands.
+
+### What warrants a second pair of eyes
+- Review the `ExistingCobraFlagsLayer` wrapper carefully: it intentionally suppresses flag registration but still parses from Cobra, so we need to ensure this doesn’t hide flags unexpectedly or lead to confusing help output in other commands.
+
+### What should be done in the future
+- Consider adding a small unit test for the “existing flags layer” wrapper and for `filter list` glaze output shape (column names + nil handling).
+- Decide whether to move `repo/target` entirely into a Glazed layer on the root command (and remove the current Cobra persistent flags), or keep the current mixed approach.
+
+### Code review instructions
+- Start in:
+  - `cmd/prescribe/cmds/root.go` (`NewRootCmd`, `InitRootCmd`)
+  - `cmd/prescribe/main.go` (initialization ordering)
+  - `cmd/prescribe/cmds/filter/list.go` (dual-mode command wiring)
+  - `pkg/layers/existing_cobra_flags_layer.go` (wrapper semantics)
+- Validate:
+  - `cd prescribe && go test ./... -count=1`
+  - `cd prescribe && go run ./cmd/prescribe filter list --help`
+  - `cd prescribe && go run ./cmd/prescribe filter list --with-glaze-output --output json`

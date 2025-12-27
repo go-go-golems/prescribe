@@ -82,3 +82,13 @@ Step 3: Add controller initialization helper based on Glazed parsed layers (comm
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go — New helper for Glazed command ports
 
+
+## 2025-12-27
+
+Step 4: Remove init()-based Cobra wiring; add explicit Init() funcs + first dual-mode Glazed command (filter list) (commit da425db)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/list.go — Dual-mode Glazed output
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/root.go — Deterministic initialization
+
