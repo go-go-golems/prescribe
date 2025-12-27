@@ -14,10 +14,15 @@ var FileCmd = &cobra.Command{
 }
 
 var initOnce sync.Once
+var initErr error
 
 func Init() error {
 	initOnce.Do(func() {
+		if err := InitToggleFileCmd(); err != nil {
+			initErr = err
+			return
+		}
 		FileCmd.AddCommand(ToggleFileCmd)
 	})
-	return nil
+	return initErr
 }
