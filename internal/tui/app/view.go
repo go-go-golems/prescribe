@@ -74,7 +74,6 @@ func (m Model) renderMain() string {
 	return strings.TrimRight(
 		m.styles.BorderBox.
 			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
-			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -127,7 +126,6 @@ func (m Model) renderFilters() string {
 	return strings.TrimRight(
 		m.styles.BorderBox.
 			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
-			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -144,7 +142,6 @@ func (m Model) renderGenerating() string {
 	return strings.TrimRight(
 		m.styles.BorderBox.
 			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
-			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
 			Render(b.String()),
 		"\n",
 	)
@@ -170,7 +167,6 @@ func (m Model) renderResult() string {
 	return strings.TrimRight(
 		m.styles.BorderBox.
 			Width(max(0, m.width)).MaxWidth(max(0, m.width)).
-			Height(max(0, m.height)).MaxHeight(max(0, m.height)).
 			Render(b.String()),
 		"\n",
 	)

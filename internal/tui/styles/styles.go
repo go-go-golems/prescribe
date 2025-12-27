@@ -51,7 +51,8 @@ func Default() Styles {
 		Border:    lipgloss.Color("238"),
 	}
 
-	s.Base = lipgloss.NewStyle().Padding(0, 1)
+	// Keep Base style width-neutral so it doesn't push content wider than the frame.
+	s.Base = lipgloss.NewStyle()
 
 	s.Title = lipgloss.NewStyle().
 		Bold(true).
