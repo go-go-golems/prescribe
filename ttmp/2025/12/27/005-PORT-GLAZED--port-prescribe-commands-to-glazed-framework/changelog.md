@@ -205,3 +205,12 @@ Step 15: Port `context add` to a Glazed BareCommand (commit 519a959)
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/context/add.go — Glazed BareCommand with `--note` + optional positional `[file-path]` and mutual exclusion validation
 
+
+## 2025-12-27
+
+Step 16: Port `generate` to a Glazed BareCommand (commit 2184c62)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — Glazed BareCommand using GenerationLayer and default-session loading
+

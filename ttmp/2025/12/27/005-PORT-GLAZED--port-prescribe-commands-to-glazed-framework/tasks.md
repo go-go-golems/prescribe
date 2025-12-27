@@ -16,7 +16,7 @@
 - [x] Phase 2: Port filter test command to Glazed output (no dual-mode / no back-compat)
 - [x] Phase 2: Port session show command to Glazed output (no dual-mode / no back-compat)
 - [x] Phase 3: Port filter add command to Glazed BareCommand
-- [ ] Phase 3: Port generate command to Glazed (decide BareCommand vs GlazeCommand output contract)
+- [x] Phase 3: Port generate command to Glazed BareCommand (GenerationLayer; default session is loaded if it exists)
 - [x] Phase 4: Port filter remove command to Glazed BareCommand
 - [x] Phase 4: Port filter clear command to Glazed BareCommand
 - [x] Phase 4: Port session init command to Glazed BareCommand

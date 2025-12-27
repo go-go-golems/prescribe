@@ -1165,3 +1165,43 @@ We modeled the two inputs as:
 - Start in `cmd/prescribe/cmds/context/add.go`.
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe context add --help`
+
+## Step 23: Port `generate` to a Glazed BareCommand (use GenerationLayer)
+
+This step ports the root-level `prescribe generate` command from plain Cobra to a Glazed-built `BareCommand`. The goal is to eliminate another Cobra-only parsing path and to actually start using the already-created `GenerationLayer` (prompt/preset/load-session/output-file).
+
+One intentional behavior tweak: we now load the **default session if it exists** before generating, so `generate` reflects the current session state created/modified by other commands (filters, file toggles, context items). If `--load-session` is provided, it overrides the default session.
+
+**Commit (code):** 2184c6237fe68f647f4d2a78f62407e1867b9a1d — "prescribe: port generate to glazed"
+
+### What I did
+- Converted `cmd/prescribe/cmds/generate.go` into a Glazed `cmds.BareCommand` built with `cli.BuildCobraCommand(...)`.
+- Replaced legacy Cobra flags with the shared `GenerationLayer` fields:
+  - `--prompt/-p`
+  - `--preset`
+  - `--load-session/-s`
+  - `--output-file/-o`
+- Switched controller initialization to `helpers.NewInitializedControllerFromParsedLayers`.
+- Added `helpers.LoadDefaultSessionIfExists(ctrl)` before generation (then override with `--load-session` if set).
+
+### Why
+- Standardize parsing and wiring for root-level commands as well (not just subcommand groups).
+- Reuse the shared generation schema definitions so future tests/docs can treat these flags as a stable contract.
+
+### What worked
+- `cd prescribe && go test ./... -count=1` passed.
+- `prescribe generate --help` shows the Generation layer flags.
+
+### What was tricky to build
+- Choosing whether to preserve the legacy `--session` flag name vs adopting the `GenerationLayer` field name `--load-session`. We went with `GenerationLayer` for consistency.
+
+### What warrants a second pair of eyes
+- Review the behavior change (default session is now loaded if present) to confirm it matches intended UX.
+
+### What should be done in the future
+- Consider adding a short doc section noting the flag rename (`--session` → `--load-session`) since we’re intentionally not preserving backwards compatibility.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/generate.go`.
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe generate --help`
