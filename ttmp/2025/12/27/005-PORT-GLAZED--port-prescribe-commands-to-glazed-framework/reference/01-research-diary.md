@@ -555,3 +555,44 @@ I intentionally kept this to “schema definitions + settings extraction helpers
   - helper error wrapping and nil handling
 - Run:
   - `cd prescribe && go test ./... -count=1`
+
+## Step 9: Add controller initialization helper that consumes Glazed parsed layers
+
+This step creates a small bridge between “Glazed world” and Prescribe’s existing controller architecture: Glazed commands don’t want to read Cobra flags directly, so we need a helper that takes `*layers.ParsedLayers`, extracts the repository settings, and initializes a `*controller.Controller`.
+
+This unlocks the next Phase 2 work (dual-mode commands). We can port a command to Glazed output without rewriting the controller layer or duplicating repo/target parsing logic.
+
+**Commit (code):** 8e294d1b599458921d37cfbf7a8648a09638e6e5 — "prescribe: init controller from parsed layers"
+
+### What I did
+- Added `cmd/prescribe/cmds/helpers/controller_from_layers.go` with:
+  - `NewInitializedControllerFromParsedLayers(parsedLayers *layers.ParsedLayers)`
+  - It calls `prescribe/pkg/layers.GetRepositorySettings` and then `controller.NewController(...)` + `ctrl.Initialize(...)`.
+
+### Why
+- Glazed commands are built around `*layers.ParsedLayers`, so controller initialization must be possible without reading Cobra flags.
+- Centralizing the initialization keeps future command ports consistent and reduces copy/paste.
+
+### What worked
+- `go test ./... -count=1` passed in the `prescribe/` module.
+
+### What didn't work
+- N/A.
+
+### What I learned
+- The “minimal bridge” approach keeps the migration incremental: we can keep Prescribe’s controller stable while we modernize the CLI surface area.
+
+### What was tricky to build
+- Avoiding package name collisions (`glazed/pkg/cmds/layers` vs `prescribe/pkg/layers`) while still keeping the helper readable.
+
+### What warrants a second pair of eyes
+- Confirm error wrapping is consistent with the rest of Prescribe/Glazed and that no important context gets lost.
+
+### What should be done in the future
+- Add unit tests around `NewInitializedControllerFromParsedLayers` using a `layers.ParsedLayers` with repository settings filled in (to lock down expected parsing).
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/helpers/controller_from_layers.go`.
+- Verify imports/aliases and error handling.
+- Run:
+  - `cd prescribe && go test ./... -count=1`

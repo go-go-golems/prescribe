@@ -19,6 +19,8 @@ RelatedFiles:
       Note: Tutorial for creating custom parameter layers
     - Path: prescribe/cmd/prescribe/cmds/helpers/controller.go
       Note: Controller pattern used by all commands
+    - Path: prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go
+      Note: Create+init controller from Glazed parsed layers (commit 8e294d1)
     - Path: prescribe/cmd/prescribe/cmds/root.go
       Note: |-
         Root command structure with persistent flags
@@ -43,6 +45,7 @@ LastUpdated: 2025-12-27T15:08:44.37609457-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 

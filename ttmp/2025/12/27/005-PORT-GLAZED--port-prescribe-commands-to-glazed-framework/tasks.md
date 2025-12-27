@@ -10,7 +10,7 @@
 - [x] Phase 1: Create GenerationLayer in prescribe/pkg/layers/generation.go
 - [x] Phase 1: Create helper functions GetRepositorySettings(), GetSessionSettings(), GetFilterSettings(), GetGenerationSettings() for extracting settings from parsed layers
 - [ ] Phase 1: Update root command to integrate Glazed help system and add layers to root command
-- [ ] Phase 1: Create controller initialization helpers that use layers instead of reading Cobra flags directly
+- [x] Phase 1: Create controller initialization helpers that use layers instead of reading Cobra flags directly
 - [ ] Phase 2: Port filter list command to dual-mode (BareCommand + GlazeCommand) with structured output support
 - [ ] Phase 2: Port filter show command to dual-mode with structured output support
 - [ ] Phase 2: Port filter test command to dual-mode with structured output support

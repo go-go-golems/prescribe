@@ -73,3 +73,12 @@ Step 2: Add Phase 1 Glazed parameter layers package (repository/session/filter/g
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/repository.go — New schema section
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/session.go — New schema section
 
+
+## 2025-12-27
+
+Step 3: Add controller initialization helper based on Glazed parsed layers (commit 8e294d1)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/helpers/controller_from_layers.go — New helper for Glazed command ports
+
