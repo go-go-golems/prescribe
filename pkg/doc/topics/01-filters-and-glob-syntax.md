@@ -129,7 +129,7 @@ prescribe filter preset save --project --name "Exclude tests" \
 prescribe filter preset apply exclude_tests.yaml
 ```
 
-### Repo defaults (TUI “new session” behavior)
+### Repo defaults (applied during `session init`)
 
 Create `<repo>/.pr-builder/config.yaml`:
 
@@ -139,7 +139,7 @@ defaults:
     - exclude_tests.yaml
 ```
 
-When `prescribe tui` starts and `<repo>/.pr-builder/session.yaml` is missing, these defaults are applied (session state still wins when it exists).
+When you run `prescribe session init --save`, `prescribe` will read this file and apply the listed preset(s) into the newly initialized session before saving it.
 
 ## Creating and managing filters (TUI)
 

@@ -115,7 +115,7 @@ Filtering controls what you *see*; inclusion controls what gets sent into the ge
 prescribe tui
 ```
 
-The TUI loads the default session (if it exists) and lets you:
+The TUI requires a saved session (see Step 1). It loads the default session and lets you:
 - toggle included/excluded files,
 - add/remove filters,
 - generate and copy the result.
