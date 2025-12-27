@@ -10,13 +10,18 @@ Topics:
 DocType: index
 Intent: long-term
 Owners: []
-RelatedFiles: []
+RelatedFiles:
+    - Path: ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/03-tui-filters-page-border-layout-debugging-tmux-captures.md
+      Note: Deep dive analysis from ticket 002
+    - Path: ttmp/2025/12/27/002A-FIX-FILTER-VIEW--fix-filter-view/reference/01-bug-report-filters-screen-border-right-edge-regression-tmux-capture.md
+      Note: Bug report for tmux border regression
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T12:26:35.171576257-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 # Fix filter view
 
