@@ -700,3 +700,53 @@ The command is still implemented on top of the existing controller and session m
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe filter show --help`
   - `cd prescribe && go run ./cmd/prescribe filter show --with-glaze-output --output json`
+
+## Step 12: Port `filter test` to dual-mode Glazed output (keep legacy flags)
+
+This step ports `prescribe filter test` to dual-mode structured output while keeping the existing CLI surface. The command still accepts `--name/-n`, `--exclude/-e`, and `--include/-i` exactly as before, and classic output remains the default behavior.
+
+In Glaze mode (`--with-glaze-output`), the command emits one row per file with a boolean indicating whether the file would be visible (matched) or filtered out, plus some convenience counts to make it easy to summarize results in downstream tooling.
+
+**Commit (code):** 3a028b58a1f964045128f2b660a7aa0e96c1ba50 — "prescribe: dual-mode filter test"
+
+### What I did
+- Reworked `cmd/prescribe/cmds/filter/test.go` to build `TestFilterCmd` via the Glazed dual-mode Cobra builder.
+- Added a dedicated layer (`filter-test`) that defines the legacy flags:
+  - `--name/-n` (default `"test"`)
+  - `--exclude/-e` (string list)
+  - `--include/-i` (string list)
+- Implemented Glaze mode output as rows with:
+  - `filter_name`, `file_path`, `matched` (bool)
+  - `total_files`, `matched_files`, `filtered_files`
+
+### Why
+- `filter test` is frequently used as “quick feedback”; structured output makes it scriptable (JSON/YAML/CSV) without rewriting formatting logic.
+- Keeping legacy flags avoids breaking existing usage while we migrate internals.
+
+### What worked
+- `go test ./... -count=1` passed.
+- Smoke test:
+  - `cd prescribe && go run ./cmd/prescribe filter test --exclude '**/*.md'`
+  - `cd prescribe && go run ./cmd/prescribe filter test --exclude '**/*.md' --with-glaze-output --output json`
+
+### What didn't work
+- N/A (the `head` pipe during smoke testing can trigger a broken-pipe exit code; the command output itself is correct).
+
+### What I learned
+- For dual-mode ports that must keep legacy flags, the simplest approach is often a small command-specific layer (rather than forcing reuse of a shared “FilterLayer” with different names).
+
+### What was tricky to build
+- Keeping the classic output identical while switching the parsing source to `*layers.ParsedLayers` (no direct access to `*cobra.Command` in the classic run function).
+
+### What warrants a second pair of eyes
+- Validate the row schema choices (`matched` vs `filtered` naming) and whether counts should be repeated per-row or emitted separately.
+
+### What should be done in the future
+- Consider extracting the “rules builder” into a shared helper once we port more filter commands to reduce duplication.
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/filter/test.go` and review:
+  - legacy flag mapping in the `filter-test` layer
+  - row schema in `RunIntoGlazeProcessor`
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe filter test --exclude '**/*.md' --with-glaze-output --output json`

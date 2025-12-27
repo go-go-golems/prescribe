@@ -101,3 +101,12 @@ Step 5: Port filter show to dual-mode (classic + Glaze structured output) (commi
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/show.go — Dual-mode command wiring + row schema
 
+
+## 2025-12-27
+
+Step 6: Port filter test to dual-mode (classic + Glaze structured output) (commit 3a028b5)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/filter/test.go — Dual-mode command + row schema
+
