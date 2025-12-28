@@ -12,7 +12,9 @@ import (
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
+	papi "github.com/go-go-golems/prescribe/internal/api"
 	pexport "github.com/go-go-golems/prescribe/internal/export"
+	"github.com/go-go-golems/prescribe/internal/tokens"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -28,10 +30,11 @@ type GenerateCommand struct {
 var _ cmds.BareCommand = &GenerateCommand{}
 
 type GenerateExtraSettings struct {
-	ExportContext  bool   `glazed.parameter:"export-context"`
-	ExportRendered bool   `glazed.parameter:"export-rendered"`
-	Stream         bool   `glazed.parameter:"stream"`
-	Separator      string `glazed.parameter:"separator"`
+	ExportContext           bool   `glazed.parameter:"export-context"`
+	ExportRendered          bool   `glazed.parameter:"export-rendered"`
+	PrintRenderedTokenCount bool   `glazed.parameter:"print-rendered-token-count"`
+	Stream                  bool   `glazed.parameter:"stream"`
+	Separator               string `glazed.parameter:"separator"`
 }
 
 func NewGenerateCommand() (*GenerateCommand, error) {
@@ -66,6 +69,12 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		parameters.WithHelp("Print the rendered LLM payload (system+user) and exit (no inference)"),
 		parameters.WithDefault(false),
 	)
+	printRenderedTokenCountFlag := parameters.NewParameterDefinition(
+		"print-rendered-token-count",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("Print token counts for the rendered LLM payload (system+user) to stderr (no inference required)"),
+		parameters.WithDefault(false),
+	)
 	streamFlag := parameters.NewParameterDefinition(
 		"stream",
 		parameters.ParameterTypeBool,
@@ -89,7 +98,7 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		"generate",
 		cmds.WithShort("Generate PR description"),
 		cmds.WithLong("Generate a PR description using AI based on the current session."),
-		cmds.WithFlags(extraFlags, exportRenderedFlag, streamFlag, separatorFlag),
+		cmds.WithFlags(extraFlags, exportRenderedFlag, printRenderedTokenCountFlag, streamFlag, separatorFlag),
 		cmds.WithLayersList(
 			layersList...,
 		),
@@ -144,6 +153,22 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 			return err
 		}
 		sep := pexport.SeparatorType(extra.Separator)
+
+		if extra.PrintRenderedTokenCount {
+			sys, user, err := papi.CompilePrompt(req)
+			if err != nil {
+				return err
+			}
+			sysTokens := tokens.Count(sys)
+			userTokens := tokens.Count(user)
+			fmt.Fprintf(os.Stderr, "Rendered payload token counts (encoding=%s): system=%d user=%d total=%d\n", tokens.EncodingName(), sysTokens, userTokens, sysTokens+userTokens)
+
+			renderedExport, err := pexport.BuildRenderedLLMPayload(req, sep)
+			if err == nil {
+				fmt.Fprintf(os.Stderr, "Rendered payload export token count (separator=%s): %d\n", extra.Separator, tokens.Count(renderedExport))
+			}
+		}
+
 		text := ""
 		if extra.ExportRendered {
 			rendered, err := pexport.BuildRenderedLLMPayload(req, sep)
@@ -167,6 +192,27 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 		}
 		fmt.Print(text)
 		return nil
+	}
+
+	// Optional debug output (no inference required): rendered payload token counts.
+	if extra.PrintRenderedTokenCount {
+		req, err := ctrl.BuildGenerateDescriptionRequest()
+		if err != nil {
+			return err
+		}
+		sep := pexport.SeparatorType(extra.Separator)
+		sys, user, err := papi.CompilePrompt(req)
+		if err != nil {
+			return err
+		}
+		sysTokens := tokens.Count(sys)
+		userTokens := tokens.Count(user)
+		fmt.Fprintf(os.Stderr, "Rendered payload token counts (encoding=%s): system=%d user=%d total=%d\n", tokens.EncodingName(), sysTokens, userTokens, sysTokens+userTokens)
+
+		renderedExport, err := pexport.BuildRenderedLLMPayload(req, sep)
+		if err == nil {
+			fmt.Fprintf(os.Stderr, "Rendered payload export token count (separator=%s): %d\n", extra.Separator, tokens.Count(renderedExport))
+		}
 	}
 
 	// StepSettings parsing happens here (higher up), then injected into API service.
