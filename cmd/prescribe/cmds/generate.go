@@ -374,6 +374,7 @@ func InitGenerateCmd() error {
 			defaultProfileFile,
 			profileFile,
 			profileName,
+			"default",
 			parameters.WithParseStepSource("profiles"),
 			parameters.WithParseStepMetadata(map[string]interface{}{
 				"profileFile": profileFile,
