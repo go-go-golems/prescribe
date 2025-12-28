@@ -13,7 +13,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-28T00:00:00Z
+LastUpdated: 2025-12-27T19:42:13-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -508,3 +508,23 @@ After confirming the implementation exists end-to-end (CLI flag wiring → expor
 
 ### Technical details
 - `--export-rendered` output is built by `internal/export.BuildRenderedLLMPayload`, which calls `internal/api.CompilePrompt` to produce the concrete system/user strings (template rendering when applicable).
+
+## Step 14: Update help docs in `pkg/doc` for export-only modes
+
+This step tightens the user-facing help topic so it matches current CLI behavior: `--export-context` prints the canonical “stored prompt + included files + additional context” blob, while `--export-rendered` prints the rendered `(system,user)` payload that seeds the LLM Turn.
+
+The key nuance is templating: if the stored prompt is pinocchio-style Go templates, `--export-context` will still show the raw template, and `--export-rendered` is the one that shows what the model actually sees. I also made it explicit that `--export-context` and `--export-rendered` are mutually exclusive, and that `--separator` only affects export modes.
+
+**Commit (docs):** `bcab6e1` — "docs: clarify export-context vs export-rendered"
+
+### What I did
+- Updated the `how-to-generate-pr-description` help topic to clarify:
+  - `--export-context` vs `--export-rendered`
+  - mutual exclusion of export flags
+  - `--separator` applies to export modes
+
+### Why
+- Avoid confusion when prompts contain Go template directives: users need a reliable “show me what the model sees” switch.
+
+### Code review instructions
+- Review `pkg/doc/topics/02-how-to-generate-pr-description.md` around the Step 5 export sections.
