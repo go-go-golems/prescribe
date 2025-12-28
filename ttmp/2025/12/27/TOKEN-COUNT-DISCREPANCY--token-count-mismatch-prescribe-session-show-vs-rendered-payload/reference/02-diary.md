@@ -107,4 +107,28 @@ This step added a small but high-signal debug flag to `prescribe generate` that 
 ### What warrants a second pair of eyes
 - Whether we want to always print both “raw system/user” and “export envelope” counts, or gate the envelope count to export modes only (right now it prints best-effort in both paths).
 
+## Step 4: Add `tokens count-xml` post-hoc counter
+
+This step added a best-effort utility command to analyze exported “XML-ish” files (both context export and rendered payload export) and compute token counts per section. The goal is not perfect XML parsing—just enough structure to answer questions like “how many tokens are in `<llm_payload>` vs `<files>`?” and “which `<file>` blocks are the biggest?” using the same tokenizer/encoding as prescribe.
+
+**Commit (code):** 9b796be270ac3352abbeadfbeefae3b02fa1814a — "prescribe: add tokens count-xml utility"
+
+### What I did
+- Added `prescribe tokens count-xml --file /path/to/export.xml` which emits rows for:
+  - entire document total
+  - common top-level-ish sections (`branches`, `commits`, `prompt`, `files`, `context`, `llm_payload`)
+  - `system` / `user` CDATA content (if present)
+  - optional per-`<file>` and per-`<item>` breakdowns (best-effort; enabled by default)
+
+### What worked
+- `go test ./...` passes.
+
+### What was tricky to build
+- Keeping the parsing logic intentionally dumb but still useful (simple tag matching + attribute extraction; no strict XML requirements).
+
+### Code review instructions
+- Start at `cmd/prescribe/cmds/tokens/count_xml.go`.
+- Example usage:
+  - `prescribe tokens count-xml --file /tmp/prescribe-rendered.xml --output json`
+
 
