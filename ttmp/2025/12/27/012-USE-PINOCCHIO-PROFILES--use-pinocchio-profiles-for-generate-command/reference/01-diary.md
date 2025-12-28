@@ -475,3 +475,26 @@ cd /home/manuel/workspaces/2025-12-26/prescribe-import/glazed && go test ./... -
 
 ### Code review instructions
 - Review `glazed/pkg/appconfig/options.go` inside `WithProfile`, then check `glazed/pkg/appconfig/profile_test.go` for the new regression test.
+
+## Step 9: Robustness for prose-wrapped YAML outputs (heuristic salvage)
+
+This step improves resilience when a model (often Gemini-style) wraps the YAML in prose like “Here is the YAML: …”. We already prefer the last fenced ```yaml``` block when available, but when there are no fences and YAML is preceded by prose, a strict YAML unmarshal fails. I added a conservative salvage path: if parsing fails, we look for the last `title:` block and attempt to parse YAML from there.
+
+**Commit (code):** b7e89b03371f76db58e0915dd41966eecd04eb1a — "fix(api): salvage YAML blocks from prose-wrapped outputs"
+
+### What I did
+- Updated `prescribe/internal/api/prdata_parse.go`:
+  - After the fence-stripping fallback fails, try `trySalvageYAMLFromTitleBlock` (regex `(?m)^[ \\t]*title:`) and re-parse from that point.
+- Added a unit test in `prescribe/internal/api/prdata_parse_test.go` covering “Sure — here is the YAML:” + YAML body.
+- Ran formatting + tests:
+
+```bash
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && gofmt -w internal/api/prdata_parse.go internal/api/prdata_parse_test.go
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./... -count=1
+```
+
+### Why
+- We want the structured `GeneratedPRData` view to work even when the model doesn’t follow the YAML-only contract perfectly.
+
+### What warrants a second pair of eyes
+- Confirm the heuristic (last `title:` block) is conservative enough and won’t accidentally parse unrelated YAML-ish snippets in long outputs.

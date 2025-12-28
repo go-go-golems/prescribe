@@ -18,4 +18,4 @@
 - [x] Prompt: Update internal/prompts/assets/create-pull-request.yaml with clearer upfront framing (PR description task + YAML-only contract) and avoid emitting empty 'The description of the pull request is: .' (prescribe commit: fbfb180)
 - [x] Tests: Add/extend unit tests for prompt rendering to assert .title/.description are rendered and no empty description marker is emitted (prescribe commit: fbfb180)
 - [x] Small-repo scripts: Add/extend ticket scripts to set session title/description and export-rendered to verify the exact prompt sent contains them (prescribe commit: c4f7a31)
-- [ ] Gemini robustness: Decide whether to add retry/repair for non-YAML model outputs (detect parse failure; optionally re-ask for YAML-only)
+- [x] Gemini robustness: Decide whether to add retry/repair for non-YAML model outputs (detect parse failure; optionally re-ask for YAML-only) (implemented heuristic salvage; prescribe commit: b7e89b0)

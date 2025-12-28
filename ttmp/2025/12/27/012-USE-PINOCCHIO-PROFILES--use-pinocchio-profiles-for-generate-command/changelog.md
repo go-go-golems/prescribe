@@ -90,3 +90,13 @@ Fixed `appconfig.WithProfile` bootstrap selection to only consult env when env p
 - /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/options.go — Gate bootstrap `UpdateFromEnv` behind env-enabled check
 - /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/profile_test.go — Regression test for env-disabled behavior
 
+
+## 2025-12-28
+
+Improved robustness when models emit prose-wrapped YAML by adding a heuristic salvage parse path (parse from last `title:` block when strict parsing fails). Commit: b7e89b0.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse.go — Heuristic salvage parsing for prose-wrapped YAML
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse_test.go — Test covering prose-wrapped YAML parsing
+
