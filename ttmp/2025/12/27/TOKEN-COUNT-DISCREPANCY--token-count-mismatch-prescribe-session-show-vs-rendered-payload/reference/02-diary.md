@@ -195,5 +195,15 @@ This step validated the strongest hypothesis (template duplication) on a tiny sy
 ### What I learned
 - The prompt “ballooning” is dominated by **template duplication** when `.bracket=true`.
 
+## Step 8: Remove bracket duplication from the default prompt
+
+This step removed the bracket-based “render the main context twice” behavior from prescribe’s default prompt. Concretely, we deleted the `.bracket` flag from the embedded prompt asset and removed the second `{{ template "context" . }}` render. We also stopped setting `"bracket": true` in the template vars map. The small-repo repro now shows the duplication marker count is 1 with the default prompt.
+
+**Commit (code):** 2920913a5eb59afd76bc6e286e909e6170cf4935 — "prescribe: remove bracketed context duplication in default prompt"
+
+### What worked
+- Small-repo repro marker count now stays at 1 for the default prompt:
+  - `"The description of the pull request is:"` default_count=1
+
 
 
