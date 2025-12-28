@@ -41,6 +41,8 @@ run_quiet() {
   } >>"$LOG" 2>&1
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "prescribe generate profiles smoke test" >"$LOG"
 echo "PRESCRIBE_ROOT=${PRESCRIBE_ROOT}" >>"$LOG"
 echo "TEST_REPO_DIR=${TEST_REPO_DIR}" >>"$LOG"
@@ -79,19 +81,12 @@ echo
 echo "Looking for: separator=markdown coming from source=profiles"
 echo
 
-# Display a small excerpt around "separator" for quick human inspection.
-python3 - "$PARSED_TXT" <<'PY'
-import sys, pathlib, re
-p = pathlib.Path(sys.argv[1]).read_text()
-
-# Very lightweight heuristic: find the first block mentioning "separator"
-m = re.search(r"(?is)(^.*separator.*$)(.{0,1200})", p, re.M)
-if not m:
-    print("ERROR: could not find 'separator' in --print-parsed-parameters output")
-    sys.exit(1)
-snippet = (m.group(1) + m.group(2)).strip()
-print(snippet[:1200])
-PY
+# Display a small excerpt around "separator" for quick human inspection (and verify provenance).
+python3 "${SCRIPT_DIR}/extract-parsed-parameter-snippet.py" \
+  --file "$PARSED_TXT" \
+  --param separator \
+  --context 12 \
+  --require-source profiles
 
 echo
 echo "done"
