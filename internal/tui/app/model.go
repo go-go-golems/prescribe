@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -10,12 +11,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/go-go-golems/prescribe/internal/controller"
 	"github.com/go-go-golems/prescribe/internal/domain"
+	pexport "github.com/go-go-golems/prescribe/internal/export"
 	"github.com/go-go-golems/prescribe/internal/tui/components/filelist"
 	"github.com/go-go-golems/prescribe/internal/tui/components/filterpane"
 	"github.com/go-go-golems/prescribe/internal/tui/components/result"
 	"github.com/go-go-golems/prescribe/internal/tui/components/status"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
-	"github.com/go-go-golems/prescribe/internal/tui/export"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
 	"github.com/go-go-golems/prescribe/internal/tui/layout"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
@@ -473,7 +474,7 @@ func saveSessionCmd(ctrl *controller.Controller) tea.Cmd {
 
 func generateCmd(ctrl *controller.Controller) tea.Cmd {
 	return func() tea.Msg {
-		desc, err := ctrl.GenerateDescription()
+		desc, err := ctrl.GenerateDescription(context.Background())
 		if err != nil {
 			return events.DescriptionGenerationFailedMsg{Err: err}
 		}
@@ -488,7 +489,8 @@ func copyContextCmd(ctrl *controller.Controller, deps Deps) tea.Cmd {
 			return events.ClipboardCopyFailedMsg{Err: err}
 		}
 
-		text := export.BuildGenerationContextText(req)
+		// Keep clipboard output markdown-ish for human usability, but reuse the shared exporter.
+		text := pexport.BuildGenerationContext(req, pexport.SeparatorMarkdown)
 		if err := deps.ClipboardWriteAll(text); err != nil {
 			return events.ClipboardCopyFailedMsg{Err: err}
 		}

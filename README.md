@@ -179,7 +179,7 @@ prescribe context add --note "This PR is part of the Q1 security improvements"
 Generate PR description using AI.
 
 ```bash
-prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH]
+prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH] [--export-context] [--separator TYPE]
 ```
 
 Options:
@@ -187,11 +187,16 @@ Options:
 - `--prompt, -p TEXT`: Custom prompt text
 - `--preset ID`: Prompt preset ID (detailed, concise, technical)
 - `--load-session, -s PATH`: Load session file before generating
+- `--export-context`: Print the full generation context (prompt + files + context) and exit (**no inference**)
+- `--separator TYPE`: Separator format for `--export-context`: `xml` (default), `markdown`, `simple`, `begin-end`, `default`
 
 Examples:
 ```bash
 # Generate with default settings
 prescribe generate
+
+# Export the exact context payload (no inference)
+prescribe generate --export-context --separator xml
 
 # Generate with custom prompt
 prescribe generate --prompt "Write a technical PR description focusing on architecture changes"

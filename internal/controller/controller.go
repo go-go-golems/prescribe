@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/prescribe/internal/api"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/git"
@@ -34,6 +36,15 @@ func NewController(repoPath string) (*Controller, error) {
 		apiService: api.NewService(),
 		repoPath:   repoPath,
 	}, nil
+}
+
+// SetStepSettings configures the controller's API service for real inference.
+// Parsing is expected to happen in CLI/TUI layers.
+func (c *Controller) SetStepSettings(stepSettings *gepsettings.StepSettings) {
+	if c == nil || c.apiService == nil {
+		return
+	}
+	c.apiService.SetStepSettings(stepSettings)
 }
 
 // Initialize loads the PR data from git
@@ -334,7 +345,7 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 }
 
 // GenerateDescription generates a PR description using the API
-func (c *Controller) GenerateDescription() (string, error) {
+func (c *Controller) GenerateDescription(ctx context.Context) (string, error) {
 	req, err := c.BuildGenerateDescriptionRequest()
 	if err != nil {
 		return "", err
@@ -346,7 +357,7 @@ func (c *Controller) GenerateDescription() (string, error) {
 	}
 
 	// Generate description
-	resp, err := c.apiService.GenerateDescription(req)
+	resp, err := c.apiService.GenerateDescription(ctx, req)
 	if err != nil {
 		return "", err
 	}

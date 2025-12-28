@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	geppettolayers "github.com/go-go-golems/geppetto/pkg/layers"
+	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
+	pexport "github.com/go-go-golems/prescribe/internal/export"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -21,6 +25,11 @@ type GenerateCommand struct {
 }
 
 var _ cmds.BareCommand = &GenerateCommand{}
+
+type GenerateExtraSettings struct {
+	ExportContext bool   `glazed.parameter:"export-context"`
+	Separator     string `glazed.parameter:"separator"`
+}
 
 func NewGenerateCommand() (*GenerateCommand, error) {
 	repoLayer, err := prescribe_layers.NewRepositoryLayer()
@@ -37,13 +46,37 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		return nil, errors.Wrap(err, "failed to create generation layer")
 	}
 
+	geppettoLayers, err := geppettolayers.CreateGeppettoLayers()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create geppetto parameter layers")
+	}
+
+	extraFlags := parameters.NewParameterDefinition(
+		"export-context",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("Print the full generation context (prompt + files + context) and exit (no inference)"),
+		parameters.WithDefault(false),
+	)
+	separatorFlag := parameters.NewParameterDefinition(
+		"separator",
+		parameters.ParameterTypeString,
+		parameters.WithHelp("Separator format for --export-context: xml (default), markdown, simple, begin-end, default"),
+		parameters.WithDefault("xml"),
+	)
+
+	layersList := []glazed_layers.ParameterLayer{
+		repoLayerExisting,
+		generationLayer,
+	}
+	layersList = append(layersList, geppettoLayers...)
+
 	cmdDesc := cmds.NewCommandDescription(
 		"generate",
 		cmds.WithShort("Generate PR description"),
 		cmds.WithLong("Generate a PR description using AI based on the current session."),
+		cmds.WithFlags(extraFlags, separatorFlag),
 		cmds.WithLayersList(
-			repoLayerExisting,
-			generationLayer,
+			layersList...,
 		),
 	)
 
@@ -51,11 +84,14 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 }
 
 func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
-	_ = ctx
-
 	genSettings, err := prescribe_layers.GetGenerationSettings(parsedLayers)
 	if err != nil {
 		return err
+	}
+
+	extra := &GenerateExtraSettings{}
+	if err := parsedLayers.InitializeStruct(glazed_layers.DefaultSlug, extra); err != nil {
+		return errors.Wrap(err, "failed to decode generate extra settings")
 	}
 
 	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
@@ -83,9 +119,35 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 		}
 	}
 
+	// Export-only path (no inference).
+	if extra.ExportContext {
+		req, err := ctrl.BuildGenerateDescriptionRequest()
+		if err != nil {
+			return err
+		}
+		sep := pexport.SeparatorType(extra.Separator)
+		text := pexport.BuildGenerationContext(req, sep)
+		if genSettings.OutputFile != "" {
+			if err := os.WriteFile(genSettings.OutputFile, []byte(text), 0644); err != nil {
+				return errors.Wrap(err, "failed to write output file")
+			}
+			fmt.Fprintf(os.Stderr, "Context written to %s\n", genSettings.OutputFile)
+			return nil
+		}
+		fmt.Print(text)
+		return nil
+	}
+
+	// StepSettings parsing happens here (higher up), then injected into API service.
+	stepSettings, err := gepsettings.NewStepSettingsFromParsedLayers(parsedLayers)
+	if err != nil {
+		return errors.Wrap(err, "failed to build AI step settings from parsed layers")
+	}
+	ctrl.SetStepSettings(stepSettings)
+
 	// Generate description
 	fmt.Fprintf(os.Stderr, "Generating PR description...\n")
-	description, err := ctrl.GenerateDescription()
+	description, err := ctrl.GenerateDescription(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to generate description")
 	}

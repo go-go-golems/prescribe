@@ -6,6 +6,8 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	geppettolayers "github.com/go-go-golems/geppetto/pkg/layers"
+	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
@@ -34,12 +36,22 @@ func NewTuiCommand() (*TuiCommand, error) {
 		return nil, errors.Wrap(err, "failed to wrap repository layer as existing flags layer")
 	}
 
+	geppettoLayers, err := geppettolayers.CreateGeppettoLayers()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create geppetto parameter layers")
+	}
+
+	layersList := []glazed_layers.ParameterLayer{
+		repoLayerExisting,
+	}
+	layersList = append(layersList, geppettoLayers...)
+
 	cmdDesc := cmds.NewCommandDescription(
 		"tui",
 		cmds.WithShort("Launch interactive TUI"),
 		cmds.WithLong("Launch the interactive Terminal User Interface for building PR descriptions."),
 		cmds.WithLayersList(
-			repoLayerExisting,
+			layersList...,
 		),
 	)
 
@@ -47,12 +59,16 @@ func NewTuiCommand() (*TuiCommand, error) {
 }
 
 func (c *TuiCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
-	_ = ctx
-
 	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
 	if err != nil {
 		return err
 	}
+
+	stepSettings, err := gepsettings.NewStepSettingsFromParsedLayers(parsedLayers)
+	if err != nil {
+		return errors.Wrap(err, "failed to build AI step settings from parsed layers")
+	}
+	ctrl.SetStepSettings(stepSettings)
 
 	// The TUI requires an initialized, persisted session.
 	// This ensures users explicitly capture their working set (filters + included files) before interacting.

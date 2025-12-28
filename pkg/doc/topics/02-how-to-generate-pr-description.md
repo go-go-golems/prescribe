@@ -182,6 +182,25 @@ prescribe generate
 prescribe generate --output-file pr-description.md
 ```
 
+### Export the exact generation context payload (no inference)
+
+This is the “catter-style” export: it prints the **exact text blob** that `prescribe generate` would send to the model (prompt + included files + additional context), without running inference.
+
+```bash
+# Default separator is xml
+prescribe generate --export-context
+
+# Explicit separator selection
+prescribe generate --export-context --separator xml
+prescribe generate --export-context --separator markdown
+prescribe generate --export-context --separator simple
+prescribe generate --export-context --separator begin-end
+prescribe generate --export-context --separator default
+
+# Write export to a file
+prescribe generate --export-context --separator xml --output-file context.xml
+```
+
 ## Troubleshooting
 
 When generation fails, it’s usually a session state issue (no included files, wrong branch session, over-filtering) rather than a “model problem”.
