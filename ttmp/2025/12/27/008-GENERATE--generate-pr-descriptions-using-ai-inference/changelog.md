@@ -74,3 +74,8 @@ Added a detailed analysis doc covering the end-to-end pipeline: render templates
 
 Refined the streaming/templating analysis to explicitly align “concat diffs” with the XML separator exporter boundaries, added references/approach for robust final-output YAML extraction (`parse.ExtractYAMLBlocks` + `parsehelpers`), and split the TUI streaming design into a separate doc. (docs: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`, `analysis/03-analysis-tui-streaming-integration.md`)
 
+
+## 2025-12-28
+
+Split inference work into a dedicated ticket `GENERATE-LLM-INFERENCE` and moved inference-heavy analysis/design docs there (templating/streaming/parsing). Ticket `008-GENERATE` now stays focused on deterministic exporter workflows and export-only CLI functionality.
+

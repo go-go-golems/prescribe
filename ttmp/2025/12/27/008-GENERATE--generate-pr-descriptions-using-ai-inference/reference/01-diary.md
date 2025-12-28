@@ -281,7 +281,7 @@ Document the step-by-step research and analysis process for implementing AI-powe
 - Check implementation plan for feasibility and completeness
 
 ### Technical details
-- Analysis document: `prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/analysis/01-analysis-export-prescribe-diff-data-and-generate-pr-descriptions-with-geppetto-inference.md`
+- Analysis document (moved to inference ticket): `prescribe/ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/analysis/01-analysis-export-prescribe-diff-data-and-generate-pr-descriptions-with-geppetto-inference.md`
 - Document includes: architecture analysis, pseudocode, implementation plan, design decisions, open questions
 - Next steps: resolve open questions, begin Phase 1 implementation
 
@@ -406,7 +406,7 @@ Document the step-by-step research and analysis process for implementing AI-powe
 - We need a concrete blueprint before implementing streaming in the TUI and before locking down a stable output format/parser for PR data.
 
 ### Output
-- `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
+- (moved) `ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
 
 ### Commits (if any)
 - N/A
@@ -430,8 +430,8 @@ Document the step-by-step research and analysis process for implementing AI-powe
 - The near-term deliverable is CLI/stdio streaming output; the TUI wiring can follow later without polluting the core pipeline doc.
 
 ### Output
-- Updated: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
-- Added: `analysis/03-analysis-tui-streaming-integration.md`
+- Updated (moved): `ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
+- Added (moved): `ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/analysis/03-analysis-tui-streaming-integration.md`
 
 ### Commits (if any)
 - N/A

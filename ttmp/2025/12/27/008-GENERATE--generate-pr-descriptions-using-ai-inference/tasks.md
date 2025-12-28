@@ -19,7 +19,9 @@
 
 ## Later (post-export milestone)
 
-- [ ] Use pinocchio-style prompt templating: split “system prompt” vs “user payload”, render template variables (`.diff`, `.code`, `.context`, `.commits`) before inference
-- [ ] Ensure engine output parsing is deterministic (extract last `turns.BlockKindLLMText` assistant text; optionally parse YAML output if prompt demands it)
-- [ ] Add streaming inference path for TUI (Watermill sink + `events.EventRouter`) modeled after `geppetto/cmd/examples/simple-streaming-inference/main.go`
 - [ ] Reconcile commit/branch metadata in exporter (include source/target commit hashes; include commit ref for context files)
+
+## Next
+
+- [ ] Add `prescribe generate --export-rendered` to export the **rendered** (templated) prompt payload as text (no inference), mirroring Pinocchio-style template rendering
+- [ ] Document and test `--export-rendered` (works with `--output-file`; clarify interaction with `--separator` and `--export-context`)
