@@ -1,0 +1,384 @@
+package controller
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+
+	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
+	"github.com/go-go-golems/prescribe/internal/api"
+	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/git"
+	"github.com/go-go-golems/prescribe/internal/presets"
+	"github.com/go-go-golems/prescribe/internal/tokens"
+	"gopkg.in/yaml.v3"
+)
+
+// Controller coordinates between domain data, git, and API services
+type Controller struct {
+	data       *domain.PRData
+	gitService *git.Service
+	apiService *api.Service
+	repoPath   string
+}
+
+// NewController creates a new controller
+func NewController(repoPath string) (*Controller, error) {
+	gitService, err := git.NewService(repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize git service: %w", err)
+	}
+
+	return &Controller{
+		data:       domain.NewPRData(),
+		gitService: gitService,
+		apiService: api.NewService(),
+		repoPath:   repoPath,
+	}, nil
+}
+
+// SetStepSettings configures the controller's API service for real inference.
+// Parsing is expected to happen in CLI/TUI layers.
+func (c *Controller) SetStepSettings(stepSettings *gepsettings.StepSettings) {
+	if c == nil || c.apiService == nil {
+		return
+	}
+	c.apiService.SetStepSettings(stepSettings)
+}
+
+// Initialize loads the PR data from git
+func (c *Controller) Initialize(targetBranch string) error {
+	// Get current branch
+	sourceBranch, err := c.gitService.GetCurrentBranch()
+	if err != nil {
+		return fmt.Errorf("failed to get current branch: %w", err)
+	}
+
+	// If no target branch specified, use default
+	if targetBranch == "" {
+		targetBranch, err = c.gitService.GetDefaultBranch()
+		if err != nil {
+			return fmt.Errorf("failed to get default branch: %w", err)
+		}
+	}
+
+	c.data.SourceBranch = sourceBranch
+	c.data.TargetBranch = targetBranch
+
+	// Get changed files
+	files, err := c.gitService.GetChangedFiles(sourceBranch, targetBranch)
+	if err != nil {
+		return fmt.Errorf("failed to get changed files: %w", err)
+	}
+
+	c.data.ChangedFiles = files
+
+	return nil
+}
+
+// GetData returns the current domain data
+func (c *Controller) GetData() *domain.PRData {
+	return c.data
+}
+
+// ToggleFileInclusion toggles file inclusion
+func (c *Controller) ToggleFileInclusion(index int) error {
+	return c.data.ToggleFileInclusion(index)
+}
+
+// SetFileIncludedByPath sets file inclusion for a stable file path.
+func (c *Controller) SetFileIncludedByPath(path string, included bool) error {
+	for i := range c.data.ChangedFiles {
+		if c.data.ChangedFiles[i].Path == path {
+			c.data.ChangedFiles[i].Included = included
+			return nil
+		}
+	}
+	return fmt.Errorf("file not found: %s", path)
+}
+
+// SetAllVisibleIncluded sets inclusion for all visible files (i.e. files that pass active filters).
+// Returns the number of visible files affected.
+func (c *Controller) SetAllVisibleIncluded(included bool) (int, error) {
+	visible := c.data.GetVisibleFiles()
+	for _, f := range visible {
+		if err := c.SetFileIncludedByPath(f.Path, included); err != nil {
+			return 0, err
+		}
+	}
+	return len(visible), nil
+}
+
+// ReplaceWithFullFile replaces a file's diff with full content
+func (c *Controller) ReplaceWithFullFile(index int, version domain.FileVersion) error {
+	return c.data.ReplaceWithFullFile(index, version)
+}
+
+// RestoreToDiff restores a file to diff view
+func (c *Controller) RestoreToDiff(index int) error {
+	return c.data.RestoreToDiff(index)
+}
+
+// AddFilter adds a filter
+func (c *Controller) AddFilter(filter domain.Filter) {
+	c.data.AddFilter(filter)
+}
+
+// RemoveFilter removes a filter
+func (c *Controller) RemoveFilter(index int) error {
+	return c.data.RemoveFilter(index)
+}
+
+// AddContextFile adds a file from the repository as context
+func (c *Controller) AddContextFile(path string) error {
+	// Get file content from current branch
+	content, err := c.gitService.GetFileContent(c.data.SourceBranch, path)
+	if err != nil {
+		return fmt.Errorf("failed to get file content: %w", err)
+	}
+
+	tokens_ := tokens.Count(content)
+
+	c.data.AddContextItem(domain.ContextItem{
+		Type:    domain.ContextTypeFile,
+		Path:    path,
+		Content: content,
+		Tokens:  tokens_,
+	})
+
+	return nil
+}
+
+// AddContextNote adds a text note as context
+func (c *Controller) AddContextNote(content string) {
+	tokens_ := tokens.Count(content)
+
+	c.data.AddContextItem(domain.ContextItem{
+		Type:    domain.ContextTypeNote,
+		Content: content,
+		Tokens:  tokens_,
+	})
+}
+
+// RemoveContextItem removes a context item
+func (c *Controller) RemoveContextItem(index int) error {
+	return c.data.RemoveContextItem(index)
+}
+
+// SetPrompt sets the current prompt
+func (c *Controller) SetPrompt(prompt string, preset *domain.PromptPreset) {
+	c.data.SetPrompt(prompt, preset)
+}
+
+// LoadPromptPreset loads a prompt preset
+func (c *Controller) LoadPromptPreset(presetID string) error {
+	preset, err := presets.ResolvePromptPreset(presetID, c.repoPath)
+	if err != nil {
+		return err
+	}
+	c.data.SetPrompt(preset.Template, preset)
+	return nil
+}
+
+// LoadProjectPresets loads presets from project directory
+func (c *Controller) LoadProjectPresets() ([]domain.PromptPreset, error) {
+	return presets.LoadProjectPresets(c.repoPath)
+}
+
+// LoadGlobalPresets loads presets from global directory
+func (c *Controller) LoadGlobalPresets() ([]domain.PromptPreset, error) {
+	return presets.LoadGlobalPresets()
+}
+
+// SavePromptPreset saves a prompt preset
+func (c *Controller) SavePromptPreset(name, description, template string, location domain.PresetLocation) error {
+	var dir string
+
+	if location == domain.PresetLocationProject {
+		dir = filepath.Join(c.repoPath, ".pr-builder", "prompts")
+	} else {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		dir = filepath.Join(homeDir, ".pr-builder", "prompts")
+	}
+
+	// Create directory if it doesn't exist
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	// Create filename from name
+	filename := strings.ToLower(strings.ReplaceAll(name, " ", "_")) + ".yaml"
+	filePath := filepath.Join(dir, filename)
+
+	// Create preset data
+	preset := struct {
+		Name        string `yaml:"name"`
+		Description string `yaml:"description"`
+		Template    string `yaml:"template"`
+	}{
+		Name:        name,
+		Description: description,
+		Template:    template,
+	}
+
+	// Marshal to YAML
+	data, err := yaml.Marshal(preset)
+	if err != nil {
+		return err
+	}
+
+	// Write to file
+	return os.WriteFile(filePath, data, 0644)
+}
+
+// BuildGenerateDescriptionRequest builds the canonical API request for generating a PR description.
+// This is intended to be the single source of truth for which inputs are used (visible+included files, prompt, context).
+func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionRequest, error) {
+	// Validate we have content to generate from
+	visibleFiles := c.data.GetVisibleFiles()
+	includedFiles := make([]domain.FileChange, 0)
+	for _, file := range visibleFiles {
+		if file.Included {
+			includedFiles = append(includedFiles, file)
+		}
+	}
+
+	if len(includedFiles) == 0 {
+		return api.GenerateDescriptionRequest{}, fmt.Errorf("no files included for generation")
+	}
+
+	sourceCommit := ""
+	targetCommit := ""
+	if c.gitService != nil {
+		var err error
+		sourceCommit, err = c.gitService.ResolveCommit(c.data.SourceBranch)
+		if err != nil {
+			return api.GenerateDescriptionRequest{}, fmt.Errorf("failed to resolve source commit for %q: %w", c.data.SourceBranch, err)
+		}
+		targetCommit, err = c.gitService.ResolveCommit(c.data.TargetBranch)
+		if err != nil {
+			return api.GenerateDescriptionRequest{}, fmt.Errorf("failed to resolve target commit for %q: %w", c.data.TargetBranch, err)
+		}
+	}
+
+	return api.GenerateDescriptionRequest{
+		SourceBranch:      c.data.SourceBranch,
+		TargetBranch:      c.data.TargetBranch,
+		SourceCommit:      sourceCommit,
+		TargetCommit:      targetCommit,
+		Title:             c.data.Title,
+		Description:       c.data.Description,
+		Files:             includedFiles,
+		AdditionalContext: c.data.AdditionalContext,
+		Prompt:            c.data.CurrentPrompt,
+	}, nil
+}
+
+// GenerateDescription generates a PR description using the API
+func (c *Controller) GenerateDescription(ctx context.Context) (string, error) {
+	req, err := c.BuildGenerateDescriptionRequest()
+	if err != nil {
+		return "", err
+	}
+
+	// Validate request
+	if err := c.apiService.ValidateRequest(req); err != nil {
+		return "", err
+	}
+
+	// Generate description
+	resp, err := c.apiService.GenerateDescription(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	c.data.GeneratedDescription = resp.Description
+	c.data.GeneratedPRData = resp.Parsed
+	c.data.GeneratedPRDataParseError = resp.ParseError
+	return resp.Description, nil
+}
+
+// GenerateDescriptionStreaming runs inference with stdio streaming enabled and returns the final description.
+// Streaming output is written to w as events arrive.
+func (c *Controller) GenerateDescriptionStreaming(ctx context.Context, w io.Writer) (string, error) {
+	req, err := c.BuildGenerateDescriptionRequest()
+	if err != nil {
+		return "", err
+	}
+
+	if err := c.apiService.ValidateRequest(req); err != nil {
+		return "", err
+	}
+
+	resp, err := c.apiService.GenerateDescriptionStreaming(ctx, req, w)
+	if err != nil {
+		return "", err
+	}
+
+	c.data.GeneratedDescription = resp.Description
+	c.data.GeneratedPRData = resp.Parsed
+	c.data.GeneratedPRDataParseError = resp.ParseError
+	return resp.Description, nil
+}
+
+// GetRepoFiles returns all files in the repository
+func (c *Controller) GetRepoFiles() ([]string, error) {
+	return c.gitService.ListFiles(c.data.SourceBranch)
+}
+
+// GetFilters returns all active filters
+func (c *Controller) GetFilters() []domain.Filter {
+	return c.data.ActiveFilters
+}
+
+// ClearFilters removes all active filters
+func (c *Controller) ClearFilters() {
+	c.data.ActiveFilters = make([]domain.Filter, 0)
+}
+
+// TestFilter tests a filter pattern against files without applying it
+func (c *Controller) TestFilter(filter domain.Filter) ([]string, []string) {
+	matched := make([]string, 0)
+	unmatched := make([]string, 0)
+
+	for _, file := range c.data.ChangedFiles {
+		passes := true
+		for _, rule := range filter.Rules {
+			// Test pattern matching
+			matches := domain.TestPattern(file.Path, rule.Pattern)
+
+			if rule.Type == domain.FilterTypeExclude && matches {
+				passes = false
+				break
+			}
+			if rule.Type == domain.FilterTypeInclude && !matches {
+				passes = false
+				break
+			}
+		}
+
+		if passes {
+			matched = append(matched, file.Path)
+		} else {
+			unmatched = append(unmatched, file.Path)
+		}
+	}
+
+	return matched, unmatched
+}
+
+// GetFilteredFiles returns files that are filtered out
+func (c *Controller) GetFilteredFiles() []domain.FileChange {
+	return c.data.GetFilteredFiles()
+}
+
+// GetVisibleFiles returns files that pass filters
+func (c *Controller) GetVisibleFiles() []domain.FileChange {
+	return c.data.GetVisibleFiles()
+}

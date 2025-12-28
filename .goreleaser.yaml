@@ -1,5 +1,5 @@
 version: 2
-project_name: XXX
+project_name: prescribe
 
 before:
   hooks:
@@ -10,8 +10,8 @@ before:
 builds:
   - env:
       - CGO_ENABLED=0
-    main: ./cmd/XXX
-    binary: XXX
+    main: ./cmd/prescribe
+    binary: prescribe
     goos:
       - linux
 # I am not able to test windows at the time
@@ -22,8 +22,15 @@ builds:
       - arm64
 checksum:
   name_template: 'checksums.txt'
+
+signs:
+  - artifacts: checksum
+    # setup for github actions according to https://goreleaser.com/ci/actions/
+    args: [ "--batch", "-u", "{{ .Env.GPG_FINGERPRINT }}", "--output", "${signature}", "--detach-sign", "${artifact}" ]
+
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
@@ -31,19 +38,14 @@ changelog:
       - '^docs:'
       - '^test:'
 
-signs:
-  - artifacts: checksum
-    # setup for github actions according to https://goreleaser.com/ci/actions/
-    args: [ "--batch", "-u", "{{ .Env.GPG_FINGERPRINT }}", "--output", "${signature}", "--detach-sign", "${artifact}" ]
-
 brews:
-  - name: XXX
-    description: "XXX is a tool"
-    homepage: "https://github.com/go-go-golems/XXX"
-    repository:
-      owner: go-go-golems
-      name: homebrew-go-go-go
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+- name: prescribe
+  description: "Prescribe is a CLI/TUI application for generating pull request descriptions using AI"
+  homepage: "https://github.com/go-go-golems/prescribe"
+  repository:
+    owner: go-go-golems
+    name: homebrew-go-go-go
+    token: "{{ .Env.TAP_GITHUB_TOKEN }}"
 
 nfpms:
   -
@@ -54,7 +56,7 @@ nfpms:
     maintainer: Manuel Odendahl <wesen@ruinwesen.com>
 
     description: |-
-      XXX is a tool
+      Prescribe is a CLI/TUI application for generating pull request descriptions using AI.
 
     license: MIT
 
@@ -82,6 +84,8 @@ nfpms:
 
 publishers:
   - name: fury.io
+    env:
+      - FURY_TOKEN={{ .Env.FURY_TOKEN }}
     # by specifying `packages` id here goreleaser will only use this publisher
     # with artifacts identified by this id
     ids:

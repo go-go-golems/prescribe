@@ -1,0 +1,59 @@
+# Tasks
+
+## TODO
+
+- [ ] Adapt `prescribe` TUI to general Bubbletea + bobatea style (message flow, component composition, keymaps, help)
+- [x] Add “help bubble” for transient status (e.g. “Copied”, “Saved”, “N files selected”) with display time
+- [ ] Properly handle resize events (`tea.WindowSizeMsg`) across all TUI components/layouts
+- [x] Add select-all / unselect-all interactions for file list
+- [x] Export current context to clipboard (diff/prompt/context output)
+- [x] Write/maintain go-go-golems Bubbletea developer guide (based on bobatea patterns)
+
+- [x] [Phase 1 / scaffolding] Create `internal/tui/events` package with shared typed messages (intent/result/toast/boot)
+- [x] [Phase 1 / scaffolding] Create `internal/tui/layout` with `Layout` struct + `Compute()` helper and invariants
+- [x] [Phase 1 / scaffolding] Create `internal/tui/keys` with centralized keymap implementing `bubbles/help.KeyMap`
+- [x] [Phase 1 / scaffolding] Create `internal/tui/styles` with `Styles` struct (stop adding new global lipgloss vars)
+- [x] [Phase 1 / scaffolding] Create `internal/tui/components/status` (help + toast rendering)
+- [x] [Phase 1 / scaffolding] Implement toast state machine: show toast + tick + expire (ID-safe)
+- [x] [Phase 1 / scaffolding] Add minimal unit tests for toast expiry / ID safety (new package tests)
+- [x] [Phase 1 / scaffolding] Add minimal unit tests for `layout.Compute()` edge cases (small terminal sizes)
+- [x] [Phase 2 / app root] Create `internal/tui/app` skeleton files: state/deps/model/view/commands/boot
+- [x] [Phase 2 / app root] Implement `Deps` (time + clipboard) and a real default implementation
+- [x] [Phase 2 / app root] Implement boot-time session load cmd: ignore missing file; toast on other errors
+- [x] [Phase 2 / app root] Implement Mode state machine (Main/Filters/Generating/Result) matching current EnhancedModel
+- [x] [Phase 2 / app root] Wire `cmd/prescribe/cmds/tui.go` to launch new app model (replacing `NewEnhancedModel`)
+- [x] [Phase 2 / app root] Preserve existing key contract (q, j/k, arrows, space, f, v, g, esc) end-to-end
+- [x] [Phase 2 / app root] Move session save to a `tea.Cmd` + surface save failures via toast
+- [x] [Phase 2 / app root] Move generation to a `tea.Cmd` + explicit Generating mode + error toast/result
+- [x] [Phase 2 / app root] Remove hard-coded widths from root rendering (no `PlaceHorizontal(80)` / `Repeat(78)`)
+- [x] [Phase 2 / app root] Ensure resize handling recomputes layout and pushes sizes into child models
+- [x] [Phase 2 / app root] Add quick smoke test doc snippet for running TUI under `script` + `timeout`
+- [x] [Phase 3 / controller APIs] Add `Controller.SetFileIncludedByPath(path, included)` helper
+- [x] [Phase 3 / controller APIs] Add `Controller.SetAllVisibleIncluded(included)` helper for select-all/unselect-all
+- [x] [Phase 3 / controller APIs] Add `Controller.BuildGenerateDescriptionRequest()` (single source of truth for generation inputs)
+- [x] [Phase 3 / controller APIs] Update `Controller.GenerateDescription()` to call `BuildGenerateDescriptionRequest()`
+- [x] [Phase 3 / controller APIs] Add unit tests for new controller helpers (path lookup, bulk include, empty visible)
+- [x] [Phase 4 / file list component] Create `internal/tui/components/filelist` using `bubbles/list`
+- [x] [Phase 4 / file list component] Define file list item struct (stable ID = file path) + list delegate rendering
+- [x] [Phase 4 / file list component] Implement filelist key handling (up/down, space toggle) emitting `events.ToggleFileIncludedRequested`
+- [x] [Phase 4 / file list component] Implement select-all/unselect-all keys in filelist emitting `events.SetAllVisibleIncludedRequested`
+- [x] [Phase 4 / file list component] Root: build list items from `ctrl.GetVisibleFiles()` and apply mutations via controller helpers
+- [x] [Phase 4 / file list component] Root: support toggling view between visible vs filtered list (`showFiltered` flag)
+- [x] [Phase 5 / filter pane component] Create `internal/tui/components/filterpane` (list filters + rule preview)
+- [x] [Phase 5 / filter pane component] Implement filterpane key handling (delete, clear, presets) emitting `events.*Filter*Requested`
+- [x] [Phase 5 / filter pane component] Define preset IDs + map to concrete `domain.Filter` definitions (with correct doublestar patterns)
+- [x] [Phase 5 / filter pane component] Root: handle filter events with `ctrl.RemoveFilter`, `ctrl.ClearFilters`, `ctrl.AddFilter` + save + toast
+- [x] [Phase 5 / filter pane component] Add UX: show filter impact (visible/filtered counts) on filter screen
+- [x] [Phase 6 / result component] Create `internal/tui/components/result` using `viewport.Model`
+- [x] [Phase 6 / result component] Implement scrolling + dynamic resize + key handling (esc back, q quit)
+- [x] [Phase 6 / result component] Root: wire successful generation to set viewport content and enter Result mode
+- [x] [Phase 7 / ticket features] Implement toast messages for: session loaded/failed, saved/failed, generated/failed, copied/failed
+- [x] [Phase 7 / ticket features] Implement clipboard export: `internal/tui/export/BuildGenerationContextText(req)`
+- [x] [Phase 7 / ticket features] Wire `CopyContextRequested` to build text via `BuildGenerateDescriptionRequest()` and copy via `Deps`
+- [x] [Phase 7 / ticket features] Add toast showing bytes copied for clipboard export
+- [x] [Phase 8 / cleanup] Remove/retire legacy `internal/tui/model.go` if unused (keep history, no behavior regressions)
+- [ ] [Phase 8 / cleanup] Consolidate remaining lipgloss globals into `styles.Styles` and pass through app/components
+- [ ] [Phase 8 / cleanup] Decide/document fate of `internal/model` vs `internal/domain` duplication (plan removal or justification)
+- [ ] [Testing] Update `prescribe/test-scripts/*.sh` from old flat verbs to hierarchical verbs (session/filter/file/context)
+- [ ] [Testing] Add a short manual TUI validation checklist to the ticket playbook (keys, resize, generate, back)
+- [x] [Testing/TUI] Add tmux-based harness scripts under ticket scripts/ to run scenarios and capture panes automatically

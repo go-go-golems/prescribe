@@ -19,3 +19,9 @@ dist/
 .env
 .envrc
 .history
+
+# local app state / sessions
+.pr-builder/
+
+# local build artifacts
+/prescribe

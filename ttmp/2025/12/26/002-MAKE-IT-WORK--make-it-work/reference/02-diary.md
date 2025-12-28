@@ -1,0 +1,661 @@
+---
+Title: Diary
+Ticket: 002-MAKE-IT-WORK
+Status: active
+Topics:
+    - tui
+    - bubbletea
+    - ux
+    - refactoring
+DocType: reference
+Intent: long-term
+Owners: []
+RelatedFiles: []
+ExternalSources: []
+Summary: ""
+LastUpdated: 2025-12-26T19:05:06.273846214-05:00
+WhatFor: ""
+WhenToUse: ""
+---
+
+# Diary
+
+## Goal
+
+Track the step-by-step work for ticket `002-MAKE-IT-WORK`, focusing on:
+
+- adapting `prescribe`’s TUI to bobatea-style Bubbletea architecture,
+- capturing the decision process and UX tradeoffs,
+- recording failures and “gotchas” as we iterate.
+
+## Context
+
+This ticket builds on the initial import and CLI regrouping. We’re now focusing on making the TUI robust and consistent:
+
+- correct resize behavior
+- better keymap/help patterns
+- bulk selection helpers (select all / unselect all)
+- clipboard export of generated PR context
+- transient “help bubble”/toast UX feedback
+
+---
+
+## Step 1: Start a thorough prescribe TUI structure analysis (models, messages, state, control flow)
+
+This step creates a concrete map of the current `prescribe/internal/tui` implementation: what models exist, how they are wired from the CLI, what messages drive control flow, and what state each screen owns. The intent is to make later refactors (bobatea-style keymaps, resize propagation, toasts, bulk selection, clipboard export) safe and reviewable because we’ll know exactly what the current semantics are.
+
+**Commit (code):** N/A — analysis/documentation phase
+
+### What I did
+- Created ticket documents:
+  - `reference/02-diary.md` (this diary)
+  - `analysis/01-prescribe-tui-structure-models-messages-and-control-flow.md` (the deep dive)
+- Read the current wiring: `cmd/prescribe/cmds/tui.go` constructs the Bubbletea program with `tui.NewEnhancedModel(ctrl)`.
+- Read current models:
+  - `internal/tui/model_enhanced.go` (the model used by the CLI)
+  - `internal/tui/model.go` (legacy/simple model, not currently used by `prescribe tui`)
+  - `internal/tui/styles.go` (central style variables used by both models)
+- Read controller boundaries used by the UI:
+  - `internal/controller/controller.go`
+  - `internal/controller/session.go`
+
+### Why
+- We need a faithful snapshot of the current TUI behavior before changing it.
+- Many requested features (resize handling, help bubble, clipboard export, select all/unselect all) are cross-cutting; a baseline map prevents “fix one thing, break another”.
+
+### What worked
+- Found a very small message set (mostly `tea.KeyMsg`, `tea.WindowSizeMsg`, and one internal completion message), which makes the current control flow easy to reason about.
+
+### What was tricky to build
+- The current rendering uses fixed widths (e.g. `PlaceHorizontal(80, ...)`) and fixed separators; this will interact with resize changes and needs careful refactoring planning.
+
+### What warrants a second pair of eyes
+- Whether we should preserve the current “auto-save on toggle/filter change” semantics exactly, or introduce an explicit save action with a toast.
+
+### What should be done in the future
+- Extend the analysis doc with a "behavioral contract" section: what exactly happens on each key in each screen, and what controller mutations occur.
+- Use the analysis doc to plan the bobatea-style component decomposition (list component, footer/help component, toast component).
+
+---
+
+## Step 2: Write a modularization proposal (bobatea-style models + typed messages + layout system)
+
+This step turns the raw “what exists today” analysis into an actionable architecture proposal. The goal is to make the upcoming feature work (resize correctness, help bubble/toast, select-all/unselect-all, clipboard export) low-risk by introducing clear boundaries: a root orchestrator model, child component models, typed messages, and a single side-effect boundary.
+
+**Commit (code):** N/A — design phase
+
+### What I did
+- Read the domain and session structures to ground the proposal in real invariants:
+  - `internal/domain/domain.go` (file identity, filters, context items)
+  - `internal/session/session.go` (session YAML schema and apply semantics)
+- Wrote the design doc:
+  - `design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md`
+  - Clarified that the modular app keeps a single long-lived `*controller.Controller` for the whole TUI run and loads the default session once at boot (no repeated `LoadDefaultSessionIfExists` style calls).
+
+### Why
+- The current monolithic model makes cross-cutting features brittle.
+- A typed-message + component-model architecture aligns with bobatea patterns and enables better testing and UI responsiveness.
+
+### What was tricky to build
+- Preserving behavior while changing structure: the proposal explicitly stages the migration so we can keep existing semantics (especially auto-save) until we decide otherwise.
+
+### What warrants a second pair of eyes
+- Where we draw the side-effect boundary: the proposal puts persistence/clipboard/generation in the root model; confirm this matches long-term go-go-golems style for small apps like prescribe.
+
+### What should be done in the future
+- Convert the proposal phases into implementation tasks and start Phase 1 (new root model + layout plumbing).
+
+---
+
+## Step 3: Start a deep-dive on the core architecture (Controller, domain model, git/session/api)
+
+This step shifts focus from UI to the “engine room”: the Controller and the subsystems it orchestrates. The intent is to produce a didactic core-architecture document that explains the nouns (PRData, filters, context, presets, session YAML), the verbs (initialize, mutate, persist, generate), and the failure modes. This becomes the foundation for refactoring the TUI without breaking correctness or persistence semantics.
+
+**Commit (code):** N/A — analysis/documentation phase
+
+### What I did
+- Created a new analysis doc in ticket 002:
+  - `analysis/02-core-architecture-controller-domain-model-git-session-api-subsystems.md`
+- Read core packages to map real control/data flow:
+  - `internal/controller/controller.go` + `internal/controller/session.go`
+  - `internal/domain/domain.go`
+  - `internal/session/session.go`
+  - `internal/git/git.go`
+  - `internal/api/api.go` (currently a mock/simulated API)
+
+### Why
+- The TUI modularization proposal assumes a clear side-effect boundary and stable IDs; both are determined by core code (paths, session schema, branch checks, etc.).
+- The next feature work (export context to clipboard) needs an explicit definition of “context for generation”, which currently spans files, filters, additional context items, and prompt state.
+
+### What worked
+- The system is intentionally simple and synchronous: controller orchestrates plain functions; PRData is a single struct; the session schema is straightforward.
+
+### What was tricky to build
+- Some boundaries are still “in progress” from the import: there is duplicate `internal/model` that mirrors parts of `internal/domain`, and the prompt preset storage still uses the legacy `.pr-builder` directory name. These will need explicit decisions during modernization.
+
+### What warrants a second pair of eyes
+- Whether we should rename `.pr-builder/` to `.prescribe/` as part of ticket 002 (breaking change) or defer it (and document it as legacy).
+
+---
+
+## Step 4: Create CLI Testing Playbook and Validate Commands
+
+This step creates a comprehensive testing playbook for first-time users and validates that all CLI commands work correctly with the hierarchical verb structure introduced in ticket 001. The goal is to ensure the program is testable and usable, documenting any issues or gaps found during systematic testing.
+
+**Commit (code):** N/A — testing and documentation phase
+
+### What I did
+- Created comprehensive playbook: `playbooks/01-cli-testing-playbook.md`
+  - Step-by-step instructions for all command groups
+  - Phase-by-phase testing approach (Session → File → Filter → Context → Generate → TUI)
+  - Error handling and edge case tests
+  - Integration workflow examples
+- Built the binary: `go build -o ./dist/prescribe ./cmd/prescribe`
+- Set up test repository: `/tmp/pr-builder-test-repo` (via `test-scripts/setup-test-repo.sh`)
+- Tested core commands systematically:
+  - `session init --save`: ✓ Works, creates `.pr-builder/session.yaml`
+  - `session show`: ✓ Works, displays human-readable session state
+  - `filter list`: ✓ Works, shows "No active filters" initially
+  - `filter add`: ✓ Works, adds filter and auto-saves
+  - `file toggle`: ✓ Works, toggles inclusion and auto-saves
+  - `context add --note`: ✓ Works, adds note and updates token count
+  - `generate --output`: ✓ Works, generates PR description (mock API)
+  - `filter show`: ✓ Works, shows filtered file status
+  - `tui` smoke test: ✓ UI launches (non-interactive, ran under `script` + `timeout`)
+
+### What didn't work
+- Test script references `master` branch but creates `main` branch (minor inconsistency, doesn't break functionality)
+- Filter pattern `*test*` doesn't match `tests/auth.test.ts` - glob patterns match against filename only, not full path. Need to use `tests/*` or `**/*test*` to match paths.
+
+### What I learned
+- The hierarchical command structure is intuitive: `prescribe session init` is clearer than `prescribe init`
+- Token counting works and updates dynamically
+- **Glob pattern matching**: Patterns like `*test*` match against filename only, not full path. To match paths, use `tests/*` or `**/*test*` (doublestar supports `**` for recursive matching).
+
+### What should be done in the future
+- Update test scripts (`test-scripts/*.sh`) to use hierarchical commands (`filter add` instead of `add-filter`)
+- Test `prescribe tui` interactively (tmux) beyond the basic launch smoke test
+- Decide whether to rename `.pr-builder/` to `.prescribe/` or document as legacy
+
+---
+
+## Step 5: Deepen and sharpen the TUI modularization design doc
+
+This step revisits the original bobatea-style modularization proposal and makes it much more concrete: exact package boundaries, a shared message vocabulary to avoid import cycles, explicit layout structs, and an implementation order that can be executed incrementally with tight “exit criteria” per phase. The goal is to turn the doc into an implementation-ready blueprint rather than just a directional architecture note.
+
+**Commit (code):** N/A — documentation/design phase
+
+### What I did
+- Updated `design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md` to include:
+  - a more precise proposed package layout (including `events/`, `layout/`, `export/`)
+  - explicit package boundary rules (app = side-effect boundary; components = UI-only)
+  - a concrete `AppModel` state sketch (Mode, flags, caches, child models)
+  - a concrete `Deps` interface for clipboard/time
+  - a shared typed message taxonomy (`events.*`) including boot/session + toasts
+  - a concrete `layout.Layout` + `Compute()` API
+  - proposed controller helpers to enable “select all” and clipboard export without UI hacks
+  - a detailed phased implementation plan with checklists and exit criteria
+
+### What I learned
+- The current `EnhancedModel` already illustrates the right orchestration pattern, but the design needs to explicitly address:
+  - stable IDs (paths) vs. index-based mutation APIs
+  - cycle-free message typing (`events` package)
+  - session-load error handling semantics (ignore missing file, surface mismatch)
+
+### What warrants a second pair of eyes
+- Whether `Deps` should be an interface (as proposed) or a small struct of functions (common in go-go-golems code)
+- Whether we should add controller helpers (`SetAllVisibleIncluded`, `BuildGenerateDescriptionRequest`) as early as Phase 3, or keep them as UI-local helpers initially
+
+---
+
+## Step 6: Phase 1 scaffolding (events/layout/keys/styles/status)
+
+This step starts implementing Phase 1 of the refactor as described in the modularization design doc: introduce the scaffolding packages that make later UI decomposition safe (cycle-free messages, layout helpers, centralized keymap, and status/toast plumbing). The goal is to land these as small, compiling commits that don’t change behavior yet.
+
+**Commit (code):** 3678d89cbd4c1e377e8b7e82f7001f8c78d07e27 — "TUI: add shared events message vocabulary"
+
+### What I did
+- Added `internal/tui/events` with the shared typed message vocabulary used to avoid import cycles between app and components.
+
+### Why
+- We need typed intents/results/toasts that both root and components can share without cyclic imports.
+
+### What worked
+- `go test ./...` passes after adding the new package.
+
+### What warrants a second pair of eyes
+- Whether the message taxonomy should be even smaller initially (to keep churn down), or if this set is the right “minimum viable vocabulary”.
+
+**Commit (code):** 9be853f73a63a0afef9695ecd23cd879875653be — "TUI: add layout helper and basic tests"
+
+### What I did (cont.)
+- Added `internal/tui/layout` with a small `Layout` struct and a `Compute()` helper.
+- Added unit tests ensuring `BodyH` never goes negative and the basic dimension math is correct.
+
+**Commit (code):** 59832093273a55de0f4f9e013d9abf305bf56f23 — "TUI: add centralized keymap (bubbles/help)"
+
+### What I did (cont.)
+- Added `internal/tui/keys` with a centralized `KeyMap` (based on `bubbles/key`) and `ShortHelp`/`FullHelp` groupings.
+- Added `github.com/charmbracelet/bubbles` dependency (needed later for `bubbles/help.Model`).
+
+**Commit (code):** 422837be3baebcddc196ac9151b62aa8c1b6420d — "TUI: introduce Styles struct"
+
+### What I did (cont.)
+- Added `internal/tui/styles` with a `Styles` struct and `Default()` constructor to start migrating away from global style variables.
+
+**Commit (code):** 11871ff0473ff4591c52026259437f434fbb863c — "TUI: add status component with toast state machine"
+
+### What I did (cont.)
+- Added `internal/tui/components/status` with:
+  - a `ToastState` that is ID-safe against stale timers,
+  - a small footer `Model` that renders `bubbles/help` plus the current toast,
+  - a unit test that verifies old IDs don’t clear newer toasts.
+
+---
+
+## Step 7: Phase 2 app root scaffolding (create app package)
+
+This step begins Phase 2 by creating the `internal/tui/app` package, which will become the root Bubbletea model orchestrating the new modular TUI. The goal in this first sub-step is purely structural: create the package + core types so we can wire behavior incrementally without breaking compilation.
+
+**Commit (code):** 7fa24ec9bcd87c82cbb05b586590564e78959099 — "TUI: add app root model skeleton"
+
+### What I did
+- Added `internal/tui/app` skeleton:
+  - `state.go` (Mode + root Model fields)
+  - `deps.go` (Deps interface for side-effects)
+  - `model.go` (constructor + placeholder Init/Update/View)
+  - `view.go` (placeholder root view that renders footer help/toast)
+
+### Why
+- We need a stable root package to grow into a real orchestrator (boot/session load, layout, components) while keeping changes reviewable and compiling.
+
+### What worked
+- `go test ./...` passes after introducing the package.
+
+**Commit (code):** 04d0ccfe37ac7fc0414e03988b0eefab8bf48a4a — "TUI: app boot cmd for default session load"
+
+### What I did (cont.)
+- Implemented boot-time default session load command (`bootCmd`) in `internal/tui/app`:
+  - ignores missing session file (`errors.Is(err, os.ErrNotExist)`)
+  - emits typed messages (`events.SessionLoadedMsg`, `events.SessionLoadSkippedMsg`, `events.SessionLoadFailedMsg`)
+- Wired `app.Model.Init()` to run `bootCmd(m.ctrl)` (behavior will be surfaced via toasts once app Update handles these messages).
+
+**Commit (code):** fbfbb13424dc132c736a4fd15ff1fb252ee794e7 — "TUI: app handles resize/help + session load toast"
+
+### What I did (cont.)
+- Grew `app.Model.Update` to handle:
+  - `tea.WindowSizeMsg` (track width/height and pass width to status/help)
+  - global quit/help keys via centralized keymap (`q`/`ctrl+c`, `?`)
+  - session load result messages by emitting a toast (success/warning)
+
+**Commit (code):** 43149ccb3c450eb44f2648bb6c22bee935930478 — "TUI: add DefaultDeps (clipboard/time)"
+
+### What I did (cont.)
+- Added `internal/tui/app/DefaultDeps` implementing `Deps` using:
+  - `time.Now()` for time
+  - `github.com/atotto/clipboard` for clipboard writes (errors will be surfaced as toasts once copy is wired)
+
+**Commit (code):** bf458884e0de5593427a41d799e5be1e543fec7a — "TUI: app main screen rendering + navigation"
+
+### What I did (cont.)
+- Implemented a first-pass `ModeMain` UI in the app root:
+  - dynamic-width main screen rendering (no fixed `PlaceHorizontal(80)` constants)
+  - up/down navigation (j/k + arrows via keymap)
+  - toggle included (space) + auto-save via `tea.Cmd` emitting `events.SessionSavedMsg` / `events.SessionSaveFailedMsg`
+  - toggle filtered view (v) as a read-only list view for now
+
+**Commit (code):** c3c9a12e9e08fb0910c2bb7516887f8254bb7ffc — "TUI: app modes (filters/generating/result)"
+
+### What I did (cont.)
+- Added minimal mode transitions in the app root:
+  - `f` enters a stub Filters screen (Phase 5 will replace it)
+  - `g` enters Generating mode and runs `Controller.GenerateDescription()` via `tea.Cmd`
+  - result screen shows generated markdown (or error) and supports `Esc` back
+
+**Commit (code):** b5c6f3b9e7f8076600e348cb46db8174d2b8172e — "TUI: app filter management (ModeFilters)"
+
+### What I did (cont.)
+- Replaced the stub Filters screen with functional filter management (parity with the old TUI):
+  - navigate filter list (j/k)
+  - delete selected filter (d/x)
+  - clear all filters (c)
+  - add presets (1/2/3)
+  - auto-save after mutations via `tea.Cmd` (`SessionSavedMsg` / `SessionSaveFailedMsg`)
+
+**Commit (code):** 8132d67caa71f223624cdb9d3598bd53778d3769 — "CLI: switch tui to app root model"
+
+### What I did (cont.)
+- Switched `prescribe tui` to launch the new app root model (`internal/tui/app`) instead of `internal/tui/EnhancedModel`.
+- Ran a quick pseudo-tty smoke test (`script` + `timeout`) to confirm the UI renders and doesn’t crash.
+
+**Commit (code):** 0fa1b980d62f4f9f29fb3fd5bfa02cfcd6a5bff2 — "TUI: compute layout on resize/help"
+
+### What I did (cont.)
+- Wired the app to recompute `layout.Layout` on resize and on help toggle (uses footer height from `status.View()`).
+
+**Commit (code):** f961325fd262fba0fa5409c2254ccdb98720227c — "Scripts: add tmux harness for TUI scenarios"
+
+### What I did (cont.)
+- Added a tmux-based harness script under the ticket `scripts/` directory:
+  - start/stop the TUI in a named tmux session
+  - run a basic smoke scenario (filters → preset → generate → result) and capture panes to files
+  - high-level actions for common operations (filters, toggle, generate, back, quit)
+
+---
+
+## Step 8: tmux harness “blank capture” bug hunt (backfill)
+
+This step was a small but surprisingly tricky debugging detour: we tried to generate “screenshots” as tmux `capture-pane` text dumps so we can keep UI regression snapshots in the ticket. The first attempts produced **blank capture files**, even though the TUI clearly rendered when run manually. The goal became: make capturing reliable enough that we can automate smoke scenarios and embed the results into docs.
+
+**Commit (code):** N/A — investigation + script iteration
+
+### What I did
+- Added `scripts/tui-tmux.sh` harness (start/stop, scenario smoke, capture).
+- Ran the smoke scenario and noticed captures like `tui-00-start-*.txt` were mostly empty/whitespace.
+- Tried tmux alt-screen capture (`tmux capture-pane -a -p`) and saw `no alternate screen` in some runs.
+- Verified `tmux capture-pane` itself works by starting a tiny session that just prints a marker:
+  - `tmux new-session ... "echo HELLO_FROM_TMUX; sleep 5"` and then `tmux capture-pane ...`
+  - This produced the expected output, proving the toolchain works.
+- Debugged with a manual tmux session that runs the TUI and captures after a fixed delay:
+  - `tmux new-session ... "./dist/prescribe ... tui" && sleep 2 && tmux capture-pane ...`
+  - This produced the expected box-drawn UI, proving the TUI is capturable in principle.
+
+### What didn’t work (and why)
+- **Capturing too early**: the harness initially waited only ~0.2s on start and ~0.12s between actions; this is too aggressive, especially when using `go run` (compile + startup).
+- **Alt-screen capture semantics**: even when `tmux capture-pane -a -p` succeeds, the alt buffer can be empty for a moment, leading to “successful but blank” captures.
+- **Generate timing**: the generate flow often takes a few seconds. Capturing the “result” frame after ~0.4–1.2s frequently still showed “GENERATING”.
+
+### What worked (fixes)
+- Switched harness default `CMD` to `./dist/prescribe` (fast startup), and added a `build` command to rebuild it.
+- Increased waits and made them configurable via env vars:
+  - `START_WAIT`, `ACTION_WAIT`, `CAPTURE_WAIT`, `CAPTURE_RETRIES`, `GENERATE_WAIT`
+- Made capture smarter:
+  - try alt-screen capture, but if it’s empty/whitespace fall back to normal capture
+  - wait for a non-empty render before writing the capture
+- Increased smoke scenario’s post-generate wait so that `05-after-generate` reliably captures the PR description (not just “GENERATING”).
+
+### What I learned
+- In tmux + Bubbletea, “capture success” ≠ “useful capture”; you need a content check and a fallback strategy.
+- For repeatable UI snapshots, always prefer a built binary over `go run` to avoid timing flakiness.
+- Generation latency needs an explicit wait or a “wait until text matches” rule.
+
+### What should be done in the future
+- Add a `wait-until <regex>` helper to the harness (instead of fixed sleeps) for “wait until result screen shows `# Pull Request:`”.
+- Add a separate “capture only” command that writes to a stable filename (optional), and keep the default as timestamped.
+
+
+---
+
+## Step 9: Phase 3 controller helpers + wire select-all/unselect-all (WIP)
+
+This step starts Phase 3 of the refactor: move the remaining “index-based” mutations out of the TUI and into controller helper APIs keyed by stable IDs (file paths). The immediate payoff is enabling select-all/unselect-all in a way that is correct under filters and doesn’t require the UI to scan `ChangedFiles` manually.
+
+**Commit (code):**
+- a893d13fc84e8e9b359487c1277bad4f9bf2321c — "Controller: add path-based inclusion + request builder"
+- f233c0d5c64b0a470d6112ca4f4d34d6d67ff736 — "TUI: wire select-all/unselect-all in app"
+
+### What I did
+- Loaded the ticket task list and verified the current `internal/tui/app` state (Phase 2 app root is active; keymap already has `a`/`A` bindings but app Update does not handle them yet).
+- Verified `go test ./...` is green before starting Phase 3 work.
+- Implemented controller helpers:
+  - `Controller.SetFileIncludedByPath(path, included)`
+  - `Controller.SetAllVisibleIncluded(included)` (respects filters)
+  - `Controller.BuildGenerateDescriptionRequest()` (canonical generation inputs)
+- Updated `Controller.GenerateDescription()` to use `BuildGenerateDescriptionRequest()` (single source of truth).
+- Added unit tests in `internal/controller/controller_test.go` covering path lookup, bulk include with filters, and request building.
+- Wired `internal/tui/app` to use controller helpers:
+  - Space toggle now uses `SetFileIncludedByPath` (no UI-local scan of `ChangedFiles`)
+  - `a` selects all visible files (respects filters) + auto-saves + toast
+  - `A` unselects all visible files + auto-saves + toast
+  - filtered view remains read-only (select-all/unselect-all shows an info toast)
+
+### Why
+- The current app root still does a brittle path→index scan in the UI to toggle inclusion. Phase 3 makes the Controller the single place that knows how to mutate files by stable path IDs.
+
+### What worked
+- Controller-level unit tests now cover the “visible + included” contract, which unblocks wiring select-all/unselect-all in the TUI without UI-local hacks.
+- The new keys are visible in help (`keys.KeyMap`) and now produce immediate feedback via toasts.
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- The scaffolding is already in place for these features: `keys.KeyMap` includes select-all/unselect-all and `events` already defines `SetAllVisibleIncludedRequested`.
+- `Controller` methods are easy to unit test without a git repo by constructing `&Controller{data: ...}` in-package.
+
+### What was tricky to build
+- Keeping semantics consistent across list modes: select-all/unselect-all must operate on *visible* files, while the “filtered view” is explicitly read-only for now.
+
+### What warrants a second pair of eyes
+- Ensuring “visible” semantics (post-filters) are consistent across: select-all/unselect-all, generation input, and the token count.
+
+### What should be done in the future
+- Now that inclusion mutations are path-based, start Phase 4 by extracting the file list into a dedicated component model (stable ID = path).
+
+---
+
+## Step 10: Clipboard export of generation context (WIP)
+
+This step wires the “copy context” workflow end-to-end: build the canonical generation request, format it into a human-readable text blob, and copy it to the system clipboard with toast feedback. The key goal is to make it trivial to paste the exact context into another tool (or into an LLM UI) without re-running generation.
+
+**Commit (code):**
+- 10cf5fd38b2fe54b1022dc55a8da2c68efae922d — "TUI: add generation context export formatter"
+- 9502e96567cae71d31f708ca3c5938d360c5de7a — "TUI: copy generation context to clipboard"
+
+### What I did
+- Added `internal/tui/export` with `export.BuildGenerationContextText(req)` and a small unit test.
+- Wired `y` (`keys.KeyMap.CopyContext`) in `internal/tui/app` (Main + Result modes):
+  - builds the canonical request via `Controller.BuildGenerateDescriptionRequest()`
+  - formats it via `export.BuildGenerationContextText`
+  - copies to clipboard via `Deps.ClipboardWriteAll`
+  - shows a toast on success/failure
+
+### Why
+- “Copy context” is a key UX primitive for this tool: it enables fast iteration and easy handoff without requiring the built-in mock generator.
+
+### What worked
+- Copying context is now end-to-end and uses the same canonical request builder as generation (single source of truth for included inputs).
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- The existing `events.ClipboardCopiedMsg` / `events.ClipboardCopyFailedMsg` were already the right abstraction for this wiring.
+
+### What was tricky to build
+- Handling “no files included” as a user-facing warning (vs. a scary clipboard error) so the UX nudges the user to select files first.
+
+### What warrants a second pair of eyes
+- Making sure the exported text matches the exact inputs used by `Controller.GenerateDescription()` (same included files, same prompt, same additional context).
+
+### What should be done in the future
+- Consider adding a second copy mode for “copy generated result” (separate key) once the Result screen moves to a viewport component.
+
+---
+
+## Step 11: Result viewport component + resize propagation (WIP)
+
+This step introduces a proper Result screen component using `bubbles/viewport` so long PR descriptions are scrollable and resize correctly. It also establishes the pattern for size propagation: the app root computes layout on `tea.WindowSizeMsg` and then pushes the content area size into child models.
+
+**Commit (code):** 816d355ebfb86879155b85abb6623937435dc490 — "TUI: add scrollable result viewport component"
+
+### What I did
+- Added `internal/tui/components/result` backed by `bubbles/viewport` (scrollable content).
+- Wired `internal/tui/app` to:
+  - compute layout with a small Result header height,
+  - push `layout.BodyW/BodyH` into the result viewport on resize/help toggle,
+  - forward key messages to the viewport only in `ModeResult` (prevents key stealing in Main/Filters).
+
+### Why
+- The current Result view renders a boxed blob with no scrolling; it truncates badly and makes resize correctness hard to reason about.
+
+### What worked
+- Result output is now scrollable and resizes correctly (viewport width/height derived from computed body layout).
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- N/A (in progress)
+
+### What was tricky to build
+- The root model still renders most screens as “monolithic strings”, so we introduced a minimal `headerHeight()` just for Result to keep the viewport size aligned with the non-scrollable header.
+
+### What warrants a second pair of eyes
+- Making sure the viewport size is based on the *body* layout area (excluding the footer/status) and that resize updates keep the cursor/scroll offset stable enough.
+
+### What should be done in the future
+- Apply the same pattern to Phase 4/5 components: file list + filter pane should be true child models with explicit `SetSize()`.
+
+---
+
+## Step 12: Phase 4 file list component (WIP)
+
+This step begins Phase 4 by extracting the Main screen file list into a dedicated component model based on `bubbles/list`. The core goal is to move selection/navigation/toggle intents into a child model, and let the app root only orchestrate controller mutations and persistence.
+
+**Commit (code):**
+- eb6fc06daaba8252eb92965578067391f0a03801 — "TUI: add filelist component scaffold"
+- 5023d132154b8e7770ffc97976d86be2d1016bcb — "TUI: filelist model supports Update()"
+- 0af2bf5d37fb661d739b222d79ff93f67dc2bc61 — "TUI: filelist emits typed intents"
+- 48cef4c8d006ccbfcb8d8be42fb4ccddc8c6bd82 — "TUI: wire filelist component into main screen"
+- f2b193a4f7959893400a8a6edc1319c608b4b542 — "TUI: make file list single-line per item"
+
+### What I did
+- Added `internal/tui/components/filelist` (based on `bubbles/list`) with stable IDs (file path).
+- Implemented filelist key handling to emit typed intents:
+  - `events.ToggleFileIncludedRequested{Path}`
+  - `events.SetAllVisibleIncludedRequested{Included}`
+- Wired the app root to render the list on the Main screen and handle those intents via controller helpers + autosave + toast.
+- Switched the file list rendering to a custom single-line delegate so each file consumes **one row** (no title+description two-liner).
+
+### Why
+- The root model currently owns selection indices and manual list rendering, which makes later features (select-all, better list UX, resize correctness) harder to evolve safely.
+
+### What worked
+- Main screen selection/navigation/toggles now go through the filelist component instead of manual index math and string rendering.
+- The file list is compact again (one line per file), avoiding excessive vertical usage.
+
+### What didn't work
+- N/A (in progress)
+
+### What I learned
+- N/A (in progress)
+
+### What was tricky to build
+- Preserving “filtered view is read-only” semantics even though the component emits toggle intents: the root is still the side-effect boundary that enforces this.
+
+### What warrants a second pair of eyes
+- Ensuring the component emits stable-ID messages (`Path`) and the root remains the single side-effect boundary (save/toast/controller).
+
+### What should be done in the future
+- Once the file list is componentized, repeat the same process for the filter screen (Phase 5 filter pane component).
+
+---
+
+## Step 13: Remove legacy TUI root models (Phase 8 cleanup) (WIP)
+
+This step removes the legacy Bubbletea root models (`internal/tui/model.go` and `internal/tui/model_enhanced.go`) now that the CLI entrypoint launches the new app root (`internal/tui/app`). Keeping both around creates confusion during refactors and invites accidental regressions via stale codepaths.
+
+**Commit (code):** ea28ff710fbd7d21d0bac9299488ca9bf6d22a84 — "TUI: remove legacy root models"
+
+### What I did
+- Verified `cmd/prescribe/cmds/tui.go` launches `internal/tui/app` (not `internal/tui.NewEnhancedModel`).
+- Deleted dead code:
+  - `internal/tui/model.go`
+  - `internal/tui/model_enhanced.go`
+  - `internal/tui/styles.go` (legacy global style vars only used by the deleted models)
+
+### Why
+- `prescribe tui` now launches `internal/tui/app`, so the old models are dead code. Deleting them reduces cognitive load and avoids accidentally debugging the wrong codepath.
+
+### What was tricky to build
+- Ensuring no other packages imported `github.com/go-go-golems/prescribe/internal/tui` directly before deleting the package’s last `.go` files.
+
+### What warrants a second pair of eyes
+- Sanity check `go test ./...` still passes and `prescribe tui` starts (the CLI entrypoint now only has one root model option).
+
+---
+
+## Step 14: Phase 5 filter pane component (WIP)
+
+This step extracts the Filters screen into a dedicated component model. Like the file list, the component handles selection + key mapping and emits typed intent messages; the app root remains the single side-effect boundary that mutates the controller, saves the session, and shows toasts.
+
+**Commit (code):**
+- 2f211efbf50232948d4333574b65e1537b93c0f6 — "TUI: add filter pane component scaffold"
+- fb6ba9bda75cbb06d1c4042af35b6d7bc973b6d8 — "TUI: wire filter pane component into filters screen"
+
+### What I did
+- Added `internal/tui/components/filterpane` (based on `bubbles/list`) that renders a filter list + selected rule preview and emits typed intents:
+  - `events.RemoveFilterRequested{Index}`
+  - `events.ClearFiltersRequested{}`
+  - `events.AddFilterPresetRequested{PresetID}`
+- Wired the app root to:
+  - render `filterpane.View()` on the filter screen,
+  - handle filter events by mutating the controller (`RemoveFilter`, `ClearFilters`, `AddFilter`) and auto-saving + toasting,
+  - push sizes into the component on resize/help toggle.
+- Added filter-impact UX in the filter header stats (active filters, filtered files, visible files).
+
+### Why
+- Keeping Filters screen logic in the root model makes it harder to evolve UX (rule previews, impact stats, resize propagation) without touching unrelated app-level orchestration.
+
+### What worked
+- Filters screen behavior is now driven by a child component, matching the Phase 4 pattern (component emits intents; root does side effects).
+
+### What didn't work
+- N/A (in progress)
+
+### What was tricky to build
+- Keeping the header/body sizing consistent: the filterpane itself is sized to the computed body layout, while the outer screen still renders a fixed header.
+
+### What warrants a second pair of eyes
+- Confirm the root remains the only place that saves sessions and performs controller mutations (component must stay UI-only).
+
+---
+
+## Step 15: Border/layout bug hunt (tmux capture) + frame sizing fixes (WIP)
+
+This step investigates and fixes a nasty UI regression: in tmux captures the app appeared to “lose” the top and right borders, most noticeable on the filter pane. The important realization was that this wasn’t a cosmetic border rendering issue—it was **layout overflow** (height/width) causing the terminal buffer to scroll/clip, which makes borders look missing.
+
+**Commit (code):**
+- fd69714e9816d3aeeab18f34c2ba711b85b40509 — "TUI: fix border/layout overflow (frame-aware sizing)"
+- d86ea732f7843cc623610218e62c5afc319c626b — "TUI: bound filterpane height to avoid scrolling"
+- ac4ad8e622093e8e4a267a3e40110eba42fa56e2 — "TUI: fix filter screen overflow (account presets/footer)"
+- cd4eb22dd83f8d6576b49ec3ab0a6be0ae89f804 — "TUI: fix border overflow (status width + toast-aware layout)"
+- 0eb5dcf694ac3de9f2231272d630a0da15755a2c — "TUI: render full borders (styles.BorderBox)"
+- 37eee14ac49ce9e4bc9110f68fc0407efeeff003 — "TUI: clamp frame size to terminal (max width/height)"
+- b18bcb35580cf9779b422e50091bd9ae61250e6c — "TUI: make layout frame-size aware (tmux-safe)"
+- 3f164a0996f9d06471ab0939817cc55f97ae66f4 — "TUI: prevent scroll by trimming trailing newline"
+- a4bc17fe57945639214eae48f37e6c0496556d9d — "TUI: add 1-col slack to keep right border visible"
+- 9619ea39200ad53c1b9a63e0e3ab13bce2decf82 — "TUI: keep frame within tmux width (no Base padding)"
+- 83ffcbf2882d13a594894a83d6ee485ebbf98b9a — "TUI: size BorderBox to terminal (account border size)"
+- fdb45f1e6e858b9e4fddfc30ce16f4ce9fe6220a — "TUI: add 1-row slack to keep top border visible"
+
+### What I did
+- Used the ticket tmux harness (`scripts/tui-tmux.sh`) to reproduce the issue and capture frames to text files.
+- Observed that captures showed only left border glyphs (`│`) and bottom-left (`╰`), but the title/top border often scrolled off in the capture.
+- Implemented a series of fixes to make sizing frame-aware and to reduce accidental overflow:
+  - compute layout sizes against the inner frame (not the raw terminal size)
+  - account for fixed footer blocks (e.g. filter “quick presets”) and toast/help footer height
+  - clamp frame rendering to prevent terminal scrolling
+  - updated the tmux harness usage: remember to rebuild `./dist/prescribe` because tmux runs the binary by default
+
+### Why
+- Border “missing” symptoms are usually caused by:
+  - writing more lines than the terminal height (scrolls the buffer, top border disappears), and/or
+  - writing more columns than the terminal width (right border clipped off-screen).
+
+### What worked
+- Re-running the tmux harness after each compiling commit made it easy to validate changes.
+- After rebuilding the binary and re-running with `TMUX_COLS=120`, tmux captures contain `╭`, `╮`, and `╯` again (top/right/bottom borders visible).
+
+### What didn't work
+- Initially, the tmux capture method (`capture-pane -p` vs `-a -p`) was confusing: alt-screen captures were empty in some runs, while normal captures showed content but looked “cropped”. This turned out to be an interaction of Bubbletea alt-screen drawing and overflow.
+
+### What I learned
+- In lipgloss, `Style.Width()` / `Height()` apply **before** margins/borders, so setting `BorderBox.Width(m.width)` can easily overshoot the terminal width once borders/padding/margins are applied.
+
+### What was tricky to build
+- The filter screen has a fixed-height “Quick Add Presets” block plus the status footer; the body component must be sized against what is actually left, otherwise you silently overflow and “lose” the top border in captures.
+
+### What warrants a second pair of eyes
+- Confirm the width/height math in the root model is correct across all modes and that we never overflow the tmux pane size.

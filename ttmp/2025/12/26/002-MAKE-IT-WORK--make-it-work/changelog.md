@@ -1,0 +1,162 @@
+# Changelog
+
+## 2025-12-26
+
+- Initial workspace created
+
+
+## 2025-12-26
+
+Seeded ticket tasks and wrote go-go-golems Bubbletea developer guide (bobatea-derived patterns for resize, selection, clipboard, help/toasts).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/01-go-go-golems-bubbletea-application-guide.md — Developer guide (bobatea/go-go-golems style)
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md — Initial task list for requested TUI features
+
+
+## 2025-12-26
+
+Docs: add thorough prescribe TUI structure analysis (models/screens/messages/state/controller side-effects) + start ticket diary
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/01-prescribe-tui-structure-models-messages-and-control-flow.md — New analysis doc
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Ticket 002 diary
+
+
+## 2025-12-26
+
+Design: propose modular bobatea-style prescribe TUI (root orchestrator + child models + typed messages + layout propagation + side-effect boundary)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — New modularization design proposal
+
+
+## 2025-12-26
+
+Docs: add didactic deep-dive of core architecture (Controller + domain + git/session/api flows, invariants, failure modes)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/02-core-architecture-controller-domain-model-git-session-api-subsystems.md — New core-architecture analysis doc
+
+
+## 2025-12-26
+
+Design: clarify controller lifetime (single long-lived controller per TUI run; default session load once at boot)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — Added explicit controller lifetime + session boot-load section
+
+
+## 2025-12-26
+
+Created comprehensive CLI testing playbook and validated all commands work correctly with hierarchical structure. Documented glob pattern behavior (filename vs path matching).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/01-cli-testing-playbook.md — Testing playbook
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Diary entry documenting testing
+
+
+## 2025-12-26
+
+Refined TUI modularization proposal: added explicit package boundaries, shared events message taxonomy, layout API, Deps interface, controller helper suggestions, and a phased implementation plan with exit criteria.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/design-doc/01-prescribe-tui-modularization-proposal-bobatea-style.md — Updated design doc
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Diary Step 5
+
+
+## 2025-12-26
+
+Smoke-tested  launch under a pseudo-tty (timeout); UI renders main screen without crashing.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Updated Step 4 with TUI smoke test
+
+
+## 2025-12-26
+
+Expanded refactor work into a detailed phased task breakdown (scaffolding → app root → controller helpers → components → features → cleanup + testing). Marked Bubbletea guide task complete.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/tasks.md — Added detailed tasks
+
+
+## 2025-12-26
+
+Phase 1 scaffolding started: added shared events, layout helper + tests, centralized keymap, Styles struct, and status/toast component with ID-safe expiry.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/components/status/model.go — Status footer model
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/events/events.go — Shared typed messages
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/keys/keymap.go — Central keymap
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/layout/layout.go — Layout Compute()
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/styles/styles.go — Styles struct
+
+
+## 2025-12-26
+
+Phase 2 started: added internal/tui/app root skeleton, boot-time session load cmd (emits events), basic Update loop for resize/help/toast, and DefaultDeps (clipboard/time).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/boot.go — Boot session load
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/default_deps.go — Deps implementation
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app/model.go — App root model
+
+
+## 2025-12-26
+
+Phase 2 progress: implemented app root main/filters/generating/result modes with key handling, autosave + generate via tea.Cmd, session-load/save toasts, and switched  to the new app root.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/tui.go — Now launches app root
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/tui/app — model + views
+
+
+## 2025-12-26
+
+Added tmux harness script for automated TUI scenario runs + pane capture (ticket scripts/).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/scripts/tui-tmux.sh — Automated tmux TUI harness
+
+
+## 2025-12-26
+
+Added ticket doc with tmux-captured TUI screenshots (smoke scenario) and documented tmux capture bug hunt in diary.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/02-diary.md — Step 8 tmux capture investigation
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/reference/03-tui-screenshots-smoke-scenario.md — TUI screenshot doc
+
+
+## 2025-12-26
+
+Added playbook: how to record Bubbletea TUIs with tmux (reliable start sizing, waits, alt-screen capture fallback, and wait-for-text patterns).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/02-recording-bubbletea-with-tmux.md — New playbook
+
+
+## 2025-12-27
+
+Docs: add analysis of Filters screen border/layout regression (tmux capture reproduction, root-cause hypotheses, and validation checklist)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/03-tui-filters-page-border-layout-debugging-tmux-captures.md — New analysis doc
+
