@@ -50,8 +50,8 @@ echo "TARGET_BRANCH=${TARGET_BRANCH}" >>"$LOG"
 echo "PROFILE_NAME=${PROFILE_NAME}" >>"$LOG"
 echo "BASE=${BASE}" >>"$LOG"
 
-# 1) Create tiny repo
-run_quiet "setup small test repo" bash "${PRESCRIBE_ROOT}/test-scripts/setup-test-repo.sh"
+# 1) Create tiny repo (ensure TEST_REPO_DIR is propagated to the helper script)
+run_quiet "setup small test repo" env TEST_REPO_DIR="$TEST_REPO_DIR" bash "${PRESCRIBE_ROOT}/test-scripts/setup-test-repo.sh"
 
 # 2) Create a tiny profiles.yaml that sets a generate default-layer param:
 # GenerateExtraSettings.Separator lives in the default layer as `separator`.
