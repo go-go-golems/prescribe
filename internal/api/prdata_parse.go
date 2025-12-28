@@ -64,6 +64,9 @@ func parseGeneratedPRDataYAML(b []byte) (*domain.GeneratedPRData, error) {
 	if body == "" {
 		return nil, errors.New("empty YAML body")
 	}
+	// Common model failure mode: emits a key without ":" (e.g. "body" instead of "body: |").
+	// Try a minimal repair before unmarshalling.
+	body = repairCommonYAMLFormatting(body)
 	var out domain.GeneratedPRData
 	if err := yaml.Unmarshal([]byte(body), &out); err != nil {
 		return nil, errors.Wrap(err, "failed to parse PR YAML")
@@ -72,6 +75,7 @@ func parseGeneratedPRDataYAML(b []byte) (*domain.GeneratedPRData, error) {
 }
 
 var reYAMLTitleStart = regexp.MustCompile(`(?m)^[ \t]*title:[ \t]*`)
+var reBareKeyLine = regexp.MustCompile(`(?m)^(body|changelog|release_notes|release-notes)[ \t]*$`)
 
 func isGeneratedPRDataValid(d *domain.GeneratedPRData) bool {
 	if d == nil {
@@ -81,6 +85,17 @@ func isGeneratedPRDataValid(d *domain.GeneratedPRData) bool {
 	// (changelog/release_notes are contractually expected, but we keep validation permissive
 	// to avoid rejecting partial-yet-useful outputs.)
 	return strings.TrimSpace(d.Title) != "" && strings.TrimSpace(d.Body) != ""
+}
+
+func repairCommonYAMLFormatting(s string) string {
+	// Replace bare key lines like:
+	//   body
+	// with a minimal placeholder that remains valid YAML:
+	//   body: ""
+	//
+	// This lets us parse partial outputs and surface a clearer follow-up path
+	// (and avoids hard parse failures on trivial formatting mistakes).
+	return reBareKeyLine.ReplaceAllString(s, `$1: ""`)
 }
 
 func trySalvageYAMLFromTitleBlock(s string) (string, bool) {

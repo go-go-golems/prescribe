@@ -75,3 +75,15 @@ func TestParseGeneratedPRDataFromAssistantText_prefersLastValidYAMLBlock(t *test
 		t.Fatalf("expected title=good (last valid), got %q", got.Title)
 	}
 }
+
+func TestParseGeneratedPRDataFromAssistantText_repairsBareBodyKey(t *testing.T) {
+	in := "title: ok\nbody\nchangelog: |\n  c\n"
+	got, err := ParseGeneratedPRDataFromAssistantText(in)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if got.Title != "ok" {
+		t.Fatalf("expected title=ok, got %q", got.Title)
+	}
+	// We repair `body` -> `body: \"\"` so parsing succeeds (body stays empty).
+}
