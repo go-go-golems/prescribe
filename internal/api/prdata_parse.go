@@ -25,14 +25,25 @@ func ParseGeneratedPRDataFromAssistantText(assistantText string) (*domain.Genera
 
 	blocks, err := geppettoparse.ExtractYAMLBlocks(raw)
 	if err == nil && len(blocks) > 0 {
-		candidate := strings.TrimSpace(blocks[len(blocks)-1])
-		if candidate != "" {
-			return parseGeneratedPRDataYAML([]byte(candidate))
+		// Pinocchio-style robustness: scan from the end and pick the first candidate
+		// that parses AND satisfies our expected schema constraints.
+		for i := len(blocks) - 1; i >= 0; i-- {
+			candidate := strings.TrimSpace(blocks[i])
+			if candidate == "" {
+				continue
+			}
+			out, err := parseGeneratedPRDataYAML([]byte(candidate))
+			if err != nil {
+				continue
+			}
+			if isGeneratedPRDataValid(out) {
+				return out, nil
+			}
 		}
 	}
 
 	_, body := parsehelpers.StripCodeFenceBytes([]byte(raw))
-	if out, err := parseGeneratedPRDataYAML(body); err == nil {
+	if out, err := parseGeneratedPRDataYAML(body); err == nil && isGeneratedPRDataValid(out) {
 		return out, nil
 	}
 
@@ -40,7 +51,9 @@ func ParseGeneratedPRDataFromAssistantText(assistantText string) (*domain.Genera
 	// attempt to parse from the last "title:" block to the end.
 	salvaged, ok := trySalvageYAMLFromTitleBlock(string(body))
 	if ok {
-		return parseGeneratedPRDataYAML([]byte(salvaged))
+		if out, err := parseGeneratedPRDataYAML([]byte(salvaged)); err == nil && isGeneratedPRDataValid(out) {
+			return out, nil
+		}
 	}
 
 	return parseGeneratedPRDataYAML(body)
@@ -59,6 +72,16 @@ func parseGeneratedPRDataYAML(b []byte) (*domain.GeneratedPRData, error) {
 }
 
 var reYAMLTitleStart = regexp.MustCompile(`(?m)^[ \t]*title:[ \t]*`)
+
+func isGeneratedPRDataValid(d *domain.GeneratedPRData) bool {
+	if d == nil {
+		return false
+	}
+	// Minimal schema check: at least title + body should be present.
+	// (changelog/release_notes are contractually expected, but we keep validation permissive
+	// to avoid rejecting partial-yet-useful outputs.)
+	return strings.TrimSpace(d.Title) != "" && strings.TrimSpace(d.Body) != ""
+}
 
 func trySalvageYAMLFromTitleBlock(s string) (string, bool) {
 	raw := strings.TrimSpace(s)

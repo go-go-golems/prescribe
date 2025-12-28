@@ -51,3 +51,27 @@ func TestParseGeneratedPRDataFromAssistantText_salvagesYAMLFromTitleBlock(t *tes
 		t.Fatalf("expected release_notes.title=rn, got %#v", got.ReleaseNotes)
 	}
 }
+
+func TestParseGeneratedPRDataFromAssistantText_prefersLastValidYAMLBlock(t *testing.T) {
+	in := "```yaml\n" +
+		"title: good\n" +
+		"body: |\n" +
+		"  ok\n" +
+		"changelog: |\n" +
+		"  c\n" +
+		"```\n\n" +
+		"```yaml\n" +
+		"# example but invalid for our schema (missing body)\n" +
+		"title: example\n" +
+		"changelog: |\n" +
+		"  c\n" +
+		"```\n"
+
+	got, err := ParseGeneratedPRDataFromAssistantText(in)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if got.Title != "good" {
+		t.Fatalf("expected title=good (last valid), got %q", got.Title)
+	}
+}
