@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
+	"github.com/go-go-golems/prescribe/internal/presets"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	"gopkg.in/yaml.v3"
 )
@@ -144,7 +145,8 @@ func NewSession(data *domain.PRData) *Session {
 }
 
 // ApplyToData applies the session configuration to PR data
-func (s *Session) ApplyToData(data *domain.PRData) error {
+// repoPath is required to resolve project presets
+func (s *Session) ApplyToData(data *domain.PRData, repoPath string) error {
 	// Apply PR metadata
 	data.Title = s.Title
 	data.Description = s.Description
@@ -228,14 +230,13 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 
 	// Apply prompt
 	if s.Prompt.Preset != "" {
-		// Find and apply preset
-		builtins := domain.GetBuiltinPresets()
-		for _, preset := range builtins {
-			if preset.ID == s.Prompt.Preset {
-				data.SetPrompt(preset.Template, &preset)
-				return nil
-			}
+		// Find and apply preset (checks builtin, project, and global presets)
+		preset, err := presets.ResolvePromptPreset(s.Prompt.Preset, repoPath)
+		if err == nil {
+			data.SetPrompt(preset.Template, preset)
+			return nil
 		}
+		// If preset not found, fall through to template if available
 	}
 
 	if s.Prompt.Template != "" {

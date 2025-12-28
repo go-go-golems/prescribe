@@ -12,6 +12,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/api"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/git"
+	"github.com/go-go-golems/prescribe/internal/presets"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	"gopkg.in/yaml.v3"
 )
@@ -174,106 +175,22 @@ func (c *Controller) SetPrompt(prompt string, preset *domain.PromptPreset) {
 
 // LoadPromptPreset loads a prompt preset
 func (c *Controller) LoadPromptPreset(presetID string) error {
-	// Check built-in presets
-	builtins := domain.GetBuiltinPresets()
-	for _, preset := range builtins {
-		if preset.ID == presetID {
-			c.data.SetPrompt(preset.Template, &preset)
-			return nil
-		}
+	preset, err := presets.ResolvePromptPreset(presetID, c.repoPath)
+	if err != nil {
+		return err
 	}
-
-	// Check project presets
-	projectPresets, err := c.LoadProjectPresets()
-	if err == nil {
-		for _, preset := range projectPresets {
-			if preset.ID == presetID {
-				c.data.SetPrompt(preset.Template, &preset)
-				return nil
-			}
-		}
-	}
-
-	// Check global presets
-	globalPresets, err := c.LoadGlobalPresets()
-	if err == nil {
-		for _, preset := range globalPresets {
-			if preset.ID == presetID {
-				c.data.SetPrompt(preset.Template, &preset)
-				return nil
-			}
-		}
-	}
-
-	return fmt.Errorf("preset not found: %s", presetID)
+	c.data.SetPrompt(preset.Template, preset)
+	return nil
 }
 
 // LoadProjectPresets loads presets from project directory
 func (c *Controller) LoadProjectPresets() ([]domain.PromptPreset, error) {
-	presetDir := filepath.Join(c.repoPath, ".pr-builder", "prompts")
-	return c.loadPresetsFromDir(presetDir, domain.PresetLocationProject)
+	return presets.LoadProjectPresets(c.repoPath)
 }
 
 // LoadGlobalPresets loads presets from global directory
 func (c *Controller) LoadGlobalPresets() ([]domain.PromptPreset, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return nil, err
-	}
-	presetDir := filepath.Join(homeDir, ".pr-builder", "prompts")
-	return c.loadPresetsFromDir(presetDir, domain.PresetLocationGlobal)
-}
-
-// loadPresetsFromDir loads presets from a directory
-func (c *Controller) loadPresetsFromDir(dir string, location domain.PresetLocation) ([]domain.PromptPreset, error) {
-	presets := make([]domain.PromptPreset, 0)
-
-	// Check if directory exists
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return presets, nil
-	}
-
-	// Read all YAML files
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		if filepath.Ext(entry.Name()) != ".yaml" && filepath.Ext(entry.Name()) != ".yml" {
-			continue
-		}
-
-		filePath := filepath.Join(dir, entry.Name())
-		data, err := os.ReadFile(filePath)
-		if err != nil {
-			continue
-		}
-
-		var preset struct {
-			Name        string `yaml:"name"`
-			Description string `yaml:"description"`
-			Template    string `yaml:"template"`
-		}
-
-		if err := yaml.Unmarshal(data, &preset); err != nil {
-			continue
-		}
-
-		presets = append(presets, domain.PromptPreset{
-			ID:          entry.Name(),
-			Name:        preset.Name,
-			Description: preset.Description,
-			Template:    preset.Template,
-			Location:    location,
-		})
-	}
-
-	return presets, nil
+	return presets.LoadGlobalPresets()
 }
 
 // SavePromptPreset saves a prompt preset

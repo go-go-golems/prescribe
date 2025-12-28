@@ -26,7 +26,7 @@ func (c *Controller) LoadSession(path string) error {
 	}
 
 	// Apply session to data
-	if err := sess.ApplyToData(c.data); err != nil {
+	if err := sess.ApplyToData(c.data, c.repoPath); err != nil {
 		return fmt.Errorf("failed to apply session: %w", err)
 	}
 
