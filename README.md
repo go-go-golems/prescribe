@@ -179,7 +179,7 @@ prescribe context add --note "This PR is part of the Q1 security improvements"
 Generate PR description using AI.
 
 ```bash
-prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH] [--export-context] [--export-rendered] [--separator TYPE]
+prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH] [--export-context] [--export-rendered] [--stream] [--separator TYPE]
 ```
 
 Options:
@@ -189,7 +189,8 @@ Options:
 - `--load-session, -s PATH`: Load session file before generating
 - `--export-context`: Print the full generation context (prompt + files + context) and exit (**no inference**)
 - `--export-rendered`: Print the rendered LLM payload (system+user) and exit (**no inference**)
-- `--separator TYPE`: Separator format for `--export-context`: `xml` (default), `markdown`, `simple`, `begin-end`, `default`
+- `--stream`: Stream inference output/events to stderr while still producing a final result
+- `--separator TYPE`: Separator format for export flags: `xml` (default), `markdown`, `simple`, `begin-end`, `default`
 
 Examples:
 ```bash
@@ -201,6 +202,9 @@ prescribe generate --export-context --separator xml
 
 # Export the rendered LLM payload (no inference)
 prescribe generate --export-rendered --separator xml
+
+# Stream output/events to stderr (still prints final result, and a parsed PR-data summary at the end)
+prescribe generate --stream
 
 # Generate with custom prompt
 prescribe generate --prompt "Write a technical PR description focusing on architecture changes"

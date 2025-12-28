@@ -33,4 +33,14 @@ Improved streaming UX by printing a final parsed PR-data summary (YAML) to stder
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — End-of-run parsed summary printing for `--stream`
 
+## 2025-12-28
+
+Updated user-facing documentation for the new `generate` options (including `--stream`) and added a playbook for writing a strong PR description from scratch in a Go repo with many commits.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md — Document `--stream` semantics
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/README.md — Update generate usage/options
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/playbook/01-playbook-write-a-great-pr-description-from-scratch-go-repo-many-commits.md — New playbook
+
 

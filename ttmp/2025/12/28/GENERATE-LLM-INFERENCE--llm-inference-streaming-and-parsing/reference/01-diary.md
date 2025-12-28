@@ -14,7 +14,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T20:18:36-05:00
+LastUpdated: 2025-12-27T20:22:10-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -126,4 +126,22 @@ This keeps stdout semantics stable (final description output still goes to stdou
 
 ### Code review instructions
 - Review `cmd/prescribe/cmds/generate.go` streaming branch for the stderr summary printing.
+
+## Step 6: Update docs for generate options + add PR-writing playbook
+
+This step updates user-facing docs to reflect the current `generate` behavior (especially the newer inference-focused flags) and adds a practical playbook for writing a strong PR description in a Go repo with many commits.
+
+The playbook is intentionally “from scratch”: it starts from `git log`/`git diff`/`go test`, then layers in `prescribe` session/init, filters, inclusion, export-only inspection, and finally generation (streaming or non-streaming), followed by a human editing pass.
+
+**Commit (docs):** N/A — docs updates in progress
+
+### What I did
+- Updated documentation to cover:
+  - `prescribe generate --stream` semantics (stderr streaming + final parsed summary)
+  - updated generate usage line and flag descriptions
+- Added a new ticket playbook document:
+  - `playbook/01-playbook-write-a-great-pr-description-from-scratch-go-repo-many-commits.md`
+
+### Why
+- Keeping docs aligned with the CLI prevents “tribal knowledge” drift, especially as inference options evolve quickly.
 

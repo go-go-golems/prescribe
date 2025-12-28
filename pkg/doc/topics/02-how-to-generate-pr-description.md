@@ -176,6 +176,16 @@ Generation uses the current session state (filters + included files + context) t
 prescribe generate
 ```
 
+### Stream generation to the terminal (stdio)
+
+If you want to see output as it’s produced, use `--stream`. This streams inference events (partial completions, etc.) to **stderr**, while stdout still gets the final description (or you can use `--output-file`).
+
+At the end of a streaming run, `prescribe` also prints a **parsed PR-data summary** (YAML) to stderr if it can successfully parse the model’s YAML output.
+
+```bash
+prescribe generate --stream
+```
+
 ### Generate to a file
 
 ```bash
