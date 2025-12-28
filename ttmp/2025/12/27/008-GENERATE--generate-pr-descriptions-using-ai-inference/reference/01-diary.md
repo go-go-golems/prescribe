@@ -410,3 +410,28 @@ Document the step-by-step research and analysis process for implementing AI-powe
 
 ### Commits (if any)
 - N/A
+
+## Step 11: Refine analysis docs (XML diff boundaries, robust final parse, split TUI doc)
+
+**Commit (code):** N/A — Documentation/analysis
+
+### What I did
+- Updated the streaming/template/render/parsing analysis doc to:
+  - make it explicit that “concat all diffs” means using the **XML separator exporter style** (per-file `<file><diff>...</diff></file>` boundaries) rather than naive string joins,
+  - incorporate robust final-output normalization using existing Geppetto helpers:
+    - `geppetto/pkg/steps/parse.ExtractYAMLBlocks` (multi-block fenced YAML extraction), and
+    - `geppetto/pkg/events/structuredsink/parsehelpers` (fence stripping + YAML parsing helpers),
+  - focus “streaming” on **stdio terminal output** for the current milestone.
+- Split the TUI streaming design notes into a separate document for later implementation.
+
+### Why
+- The exporter already gives us a deterministic boundary format (XML default); the analysis should reflect that to avoid drift.
+- We want robust extraction from the final Turn even without structured sinks (which mainly help with streaming).
+- The near-term deliverable is CLI/stdio streaming output; the TUI wiring can follow later without polluting the core pipeline doc.
+
+### Output
+- Updated: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
+- Added: `analysis/03-analysis-tui-streaming-integration.md`
+
+### Commits (if any)
+- N/A

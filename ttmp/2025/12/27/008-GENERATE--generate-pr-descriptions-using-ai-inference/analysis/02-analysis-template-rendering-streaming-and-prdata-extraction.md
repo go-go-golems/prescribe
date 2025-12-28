@@ -1,5 +1,5 @@
 ---
-Title: 'Analysis: Template rendering, streaming inference, and structured PR data extraction'
+Title: 'Analysis: Template rendering, stdio streaming inference, and structured PR data extraction'
 Ticket: 008-GENERATE
 Status: active
 Topics:
@@ -16,11 +16,11 @@ RelatedFiles: []
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-28T00:00:00.000000000Z
-WhatFor: "Detailed blueprint for: render prompt templates → run inference (streaming) → extract structured PR output."
-WhenToUse: "When implementing streaming generation in TUI/CLI and parsing the model output into structured PR fields."
+WhatFor: "Detailed blueprint for: render prompt templates → run inference (stdio streaming) → extract structured PR output."
+WhenToUse: "When implementing terminal (stdio) streaming output and robust extraction/parsing of PR output from the final Turn."
 ---
 
-# Analysis: Template rendering, streaming inference, and structured PR data extraction
+# Analysis: Template rendering, stdio streaming inference, and structured PR data extraction
 
 ## Executive Summary
 
@@ -28,7 +28,7 @@ This document describes an end-to-end “inference pipeline” for `prescribe`:
 
 1. **Render the prompt template** using Glazed’s templating helpers (sprig + `TemplateFuncs`), following Pinocchio’s pattern.
 2. **Build a seed Turn** (system/user blocks) and run the Geppetto engine.
-3. **Stream inference events** into the TUI using Watermill sinks + `events.EventRouter`.
+3. **Stream inference events** to the terminal (stdio) using Watermill sinks + `events.EventRouter`.
 4. **Extract deterministic result data** from the assistant output:
    - minimal path: “last assistant LLMText block” → parse YAML into PR fields
    - advanced path: structured streaming extraction using Geppetto’s tag-only `FilteringSink` + YAML extractor.
@@ -36,7 +36,7 @@ This document describes an end-to-end “inference pipeline” for `prescribe`:
 The goal is to make the pipeline:
 - deterministic (clear boundaries, stable parsing),
 - debuggable (export-context, printable final Turn, structured event logs),
-- stream-friendly (partial updates in the UI without blocking),
+- stream-friendly (partial updates in the terminal without blocking),
 - provider-agnostic (StepSettings chooses engine/provider).
 
 ## Current code state (as of 2025-12-28)
@@ -111,7 +111,10 @@ The pinocchio prompt expects (subset):
 - plus other optional vars (`.commits`, `.issue`, `.title`, `.additional_system`, `.additional`, ...)
 
 Mapping rules (recommended):
-- `diff`: concatenate all `FileTypeDiff` diffs (already filtered to included files by the controller)
+- `diff`: **do not** naively concatenate diffs; instead, reuse the same **separator/exporter approach** we implemented for `prescribe generate --export-context`:
+  - for the XML default, represent each diff as a `<file ...><diff>...</diff></file>` fragment (per included file)
+  - “concat all diffs” means “concatenate *well-delimited per-file diff fragments*”, not “smash unified diffs together without boundaries”
+  - implementation detail: produce this via a dedicated helper in `internal/export` (preferred) so the `.diff` formatting stays consistent with `BuildGenerationContext(..., SeparatorXML)`
 - `code`: include any `FileTypeFull` content (prefer FullAfter/FullBefore then fallback to Diff)
 - `context`: include `ContextTypeFile` items (path + content)
 - `description`: concatenate `ContextTypeNote` items (newline-separated)
@@ -135,6 +138,7 @@ Non-streaming path is:
 ### Stage E: Run inference (streaming)
 
 Streaming requires attaching a sink, and running an event router in parallel.
+For the current milestone, we focus on **stdio streaming output** (not the TUI).
 
 **Reference implementation**:
 `geppetto/cmd/examples/simple-streaming-inference/main.go`
@@ -143,7 +147,9 @@ Canonical pattern:
 - `router, _ := events.NewEventRouter(...)`
 - `sink := middleware.NewWatermillSink(router.Publisher, "chat")`
 - `engine := factory.NewEngineFromParsedLayers(..., engine.WithSink(sink))`
-- add router handlers to print/forward events
+- add a router handler to print events to stdout/stderr (examples):
+  - `events.StepPrinterFunc("", os.Stdout)` (human-friendly streaming)
+  - `events.NewStructuredPrinter(os.Stdout, events.PrinterOptions{Format: "json"|"yaml"|"text", ...})` (structured event stream)
 - run `router.Run(ctx)` and `engine.RunInference(ctx, seed)` concurrently in an `errgroup`
 
 ### Stage F: Extract deterministic “PR data”
@@ -156,12 +162,14 @@ Two options:
 - Prefer: last `turns.BlockKindLLMText` where `RoleAssistant`
 - Fallback: if empty, treat as error and keep raw
 
-2) Normalize for parsing:
-- strip code fences like:
-  - ```yaml ... ```
-  - ``` ... ```
-- trim whitespace
-- optionally: take the last YAML-ish document if multiple are present
+2) Normalize + select a parse target (robust final extraction):
+- Prefer extracting fenced YAML blocks from the assistant text using:
+  - `geppetto/pkg/steps/parse.ExtractYAMLBlocks(markdownText)` (Goldmark-based; handles multiple fenced YAML blocks)
+- If multiple YAML blocks are present, **parse the last one** (nearest to the end) to reduce “analysis + final” ambiguity.
+- If no fenced YAML blocks exist, fall back to:
+  - `geppetto/pkg/events/structuredsink/parsehelpers.StripCodeFenceBytes([]byte(raw))` (best-effort single fence stripping),
+  - or parse the entire raw text as YAML as a last resort (often fails, but harmless if handled).
+- Always trim whitespace before parsing and keep the original `raw` for debugging.
 
 3) Parse YAML into a Go struct (proposed):
 
@@ -209,45 +217,12 @@ title: ...
   - typed `prdata-update` / `prdata-completed` events with parsed YAML, even before completion (snapshots)
 - Parsing is deterministic and robust across partial boundaries.
 
-## Streaming into the Prescribe TUI (design)
+## Prescribe TUI streaming (later)
 
-### Requirements
-- TUI should show live partial output on the Result screen while generation is running.
-- TUI should remain responsive (scroll/quit/back).
-- Cancellation should stop both router and inference.
+The design for wiring the streaming event router into Bubble Tea (forwarding partial deltas and final structured parse results into the UI)
+is intentionally separated into its own ticket document:
 
-### Proposed message/event flow (Bubble Tea)
-
-1) `GenerateRequested` triggers a “start streaming generation” cmd:
-- creates router, sink, engine
-- installs a handler that forwards events into a channel
-- runs router + inference in goroutines
-
-2) The cmd emits Bubble Tea messages:
-- `GenerationStartedMsg`
-- `GenerationDeltaMsg{Delta string}` on partial completions
-- `GenerationCompletedMsg{FinalText string, Parsed PRData?}` when done
-- `GenerationFailedMsg{Err error}`
-
-3) The Result model consumes these:
-- append deltas to viewport
-- on completed: show final parsed summary + allow copy/export
-
-### Mapping Watermill events to UI messages
-
-From the Watermill sink, you’ll receive Geppetto events (serialized).
-A handler can:
-- parse JSON via `events.NewEventFromJson` (or helper)
-- switch on type:
-  - partial delta events → `GenerationDeltaMsg`
-  - final event → `GenerationCompletedMsg`
-  - errors → `GenerationFailedMsg`
-
-If using structuredsink + extractor, you’ll also receive typed events:
-- `prdata-update` (structured snapshots)
-- `prdata-completed` (final parsed object)
-
-Those can update a “structured preview” pane in the TUI (optional).
+- `analysis/03-analysis-tui-streaming-integration.md`
 
 ## Deterministic output parsing (YAML → PR fields)
 
@@ -268,9 +243,8 @@ Proposed schema:
 ### Parsing algorithm (minimal path)
 
 1) `raw := assistantText`
-2) `lang, body := parsehelpers.StripCodeFenceBytes([]byte(raw))`
-3) if `lang` is empty or not yaml:
-   - still try YAML parse on `body` (best-effort)
+2) `blocks, _ := parse.ExtractYAMLBlocks(raw)`; if `len(blocks) > 0`, set `body := []byte(blocks[len(blocks)-1])`
+3) else `_, body := parsehelpers.StripCodeFenceBytes([]byte(raw))`
 4) `yaml.Unmarshal(body, &result)`
 5) validate required fields (at least `body` or `title`)
 6) on failure: keep raw text
@@ -302,7 +276,7 @@ Emit typed events with:
   - partial completion events
   - final event with known YAML payload
 - Assert:
-  - UI receives deltas in correct order
+  - terminal printer receives deltas in correct order
   - final parsed PR result matches expected
 
 ## Open questions / decisions to make
@@ -322,6 +296,10 @@ Emit typed events with:
   - `pinocchio/pkg/cmds/cmd.go` (`renderTemplateString(...)`)
 - Streaming reference:
   - `geppetto/cmd/examples/simple-streaming-inference/main.go`
+- YAML block extraction helper (robust final parsing):
+  - `geppetto/pkg/steps/parse/yaml_blocks.go` (`parse.ExtractYAMLBlocks`)
+- Fence stripping + debounced YAML parsing helper (usable for final parsing too):
+  - `geppetto/pkg/events/structuredsink/parsehelpers/helpers.go`
 - Structured streaming extraction:
   - `geppetto/pkg/doc/topics/11-structured-data-event-sinks.md`
 - Prescribe prompt pack:

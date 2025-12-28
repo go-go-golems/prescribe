@@ -35,18 +35,24 @@ RelatedFiles:
       Note: Controller injects StepSettings into API service; GenerateDescription now takes context
     - Path: internal/export/context.go
       Note: Catter-style exporter for full generation context (xml default)
-    - Path: internal/tui/export/export.go
-      Note: Current export format for PR generation context
+    - Path: internal/tui/app/model.go
+      Note: TUI copy-context path uses the shared exporter (SeparatorMarkdown) and clipboard deps
     - Path: pkg/doc/topics/02-how-to-generate-pr-description.md
       Note: Document export-only context generation flags
     - Path: ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/01-cli-testing-playbook.md
       Note: Standard CLI playbook now includes export-context
     - Path: analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md
-      Note: End-to-end blueprint: Glazed templating + streaming inference + structured PR data parsing/extraction
+      Note: End-to-end blueprint: Glazed templating + stdio streaming inference + robust final PR data parsing/extraction
+    - Path: analysis/03-analysis-tui-streaming-integration.md
+      Note: TUI-only design notes for wiring Watermill/EventRouter streaming into Bubble Tea (later milestone)
     - Path: internal/api/prompt.go
       Note: Current prompt compiler (split+render pinocchio-style prompt using glazed templating)
     - Path: ../../../../../../geppetto/pkg/doc/topics/11-structured-data-event-sinks.md
       Note: Tag-only structured sink + extractor-owned parsing for robust streaming structured extraction
+    - Path: ../../../../../../geppetto/pkg/steps/parse/yaml_blocks.go
+      Note: Robust fenced-yaml extraction helper for final assistant output normalization
+    - Path: ../../../../../../geppetto/pkg/events/structuredsink/parsehelpers/helpers.go
+      Note: Fence stripping + debounced YAML parsing helpers (usable for streaming and final parse)
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T18:17:03.937288008-05:00

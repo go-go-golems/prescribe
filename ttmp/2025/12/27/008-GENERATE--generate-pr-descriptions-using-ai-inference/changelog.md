@@ -69,3 +69,8 @@ Implemented Pinocchio-style prompt templating for inference using Glazed’s tem
 
 Added a detailed analysis doc covering the end-to-end pipeline: render templates via Glazed helpers, run inference in streaming mode (Watermill sink + EventRouter), and extract/parse structured PR YAML output (including an optional structured-tag + extractor approach). (doc: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`)
 
+
+## 2025-12-28
+
+Refined the streaming/templating analysis to explicitly align “concat diffs” with the XML separator exporter boundaries, added references/approach for robust final-output YAML extraction (`parse.ExtractYAMLBlocks` + `parsehelpers`), and split the TUI streaming design into a separate doc. (docs: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`, `analysis/03-analysis-tui-streaming-integration.md`)
+
