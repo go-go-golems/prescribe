@@ -379,6 +379,8 @@ func (c *Controller) GenerateDescription(ctx context.Context) (string, error) {
 	}
 
 	c.data.GeneratedDescription = resp.Description
+	c.data.GeneratedPRData = resp.Parsed
+	c.data.GeneratedPRDataParseError = resp.ParseError
 	return resp.Description, nil
 }
 

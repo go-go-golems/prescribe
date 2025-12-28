@@ -43,6 +43,8 @@ type GenerateDescriptionRequest struct {
 // GenerateDescriptionResponse contains the generated PR description
 type GenerateDescriptionResponse struct {
 	Description string
+	Parsed      *domain.GeneratedPRData
+	ParseError  string
 	TokensUsed  int
 	Model       string
 }
@@ -81,6 +83,14 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 		description = "<no assistant text produced>"
 	}
 
+	var parsed *domain.GeneratedPRData
+	parseErrStr := ""
+	if p, err := ParseGeneratedPRDataFromAssistantText(description); err == nil {
+		parsed = p
+	} else {
+		parseErrStr = err.Error()
+	}
+
 	// Best-effort token usage (provider usage might be in Turn.Metadata; we can wire later).
 	tokensUsed := tokens.Count(description)
 
@@ -95,6 +105,8 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 
 	return &GenerateDescriptionResponse{
 		Description: description,
+		Parsed:      parsed,
+		ParseError:  parseErrStr,
 		TokensUsed:  tokensUsed,
 		Model:       model,
 	}, nil

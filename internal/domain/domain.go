@@ -120,6 +120,24 @@ type PRData struct {
 
 	// Generated description
 	GeneratedDescription string
+
+	// Parsed structured PR data (best-effort, not persisted in session.yaml)
+	GeneratedPRData           *GeneratedPRData
+	GeneratedPRDataParseError string
+}
+
+// GeneratedPRData represents the structured PR output format we ask the LLM to produce (YAML).
+// This mirrors the default prompt contract (title/body/changelog/release_notes).
+type GeneratedPRData struct {
+	Title        string             `yaml:"title" json:"title"`
+	Body         string             `yaml:"body" json:"body"`
+	Changelog    string             `yaml:"changelog" json:"changelog"`
+	ReleaseNotes *GeneratedPRDataRN `yaml:"release_notes,omitempty" json:"release_notes,omitempty"`
+}
+
+type GeneratedPRDataRN struct {
+	Title string `yaml:"title" json:"title"`
+	Body  string `yaml:"body" json:"body"`
 }
 
 // NewPRData creates a new PR data instance

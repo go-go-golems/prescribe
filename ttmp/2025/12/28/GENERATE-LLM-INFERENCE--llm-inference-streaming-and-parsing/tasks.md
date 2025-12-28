@@ -7,10 +7,10 @@
 - [ ] Ensure streaming mode still returns a final result (and exit code) and prints the final parsed PR data summary (or raw output) at the end
 
 ### Robust final extraction / parsing (non-streaming too)
-- [ ] Parse assistant output YAML into structured PR result (title/body/changelog/release_notes) using:
+- [x] Parse assistant output YAML into structured PR result (title/body/changelog/release_notes) using:
   - `geppetto/pkg/steps/parse.ExtractYAMLBlocks` (prefer last fenced YAML block)
   - fallback: `geppetto/pkg/events/structuredsink/parsehelpers.StripCodeFenceBytes`
-- [ ] Decide where structured PR fields live (extend `domain.PRData` vs parallel result type)
+- [x] Decide where structured PR fields live (extend `domain.PRData` vs parallel result type)
 
 ### Structured streaming extraction (optional, later)
 - [ ] Update prompt to optionally emit a tagged block (e.g. `<prescribe:prdata:v1>...`) for structuredsink extraction
