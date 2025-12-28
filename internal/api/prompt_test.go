@@ -112,3 +112,32 @@ func TestCompilePrompt_pinocchioStyleCombinedPrompt_omitsEmptyDescriptionBlock(t
 		t.Fatalf("expected prompt to avoid empty description marker, got:\n%s", user)
 	}
 }
+
+func TestCompilePrompt_pinocchioStyleCombinedPrompt_rendersTitleAndDescriptionVars(t *testing.T) {
+	req := GenerateDescriptionRequest{
+		SourceBranch: "feature",
+		TargetBranch: "main",
+		Title:        "Provided title",
+		Description:  "Provided description",
+		Prompt:       prompts.DefaultPrompt(),
+		Files: []domain.FileChange{
+			{
+				Path:     "a.go",
+				Type:     domain.FileTypeDiff,
+				Included: true,
+				Diff:     "diff --git a/a.go b/a.go\n+added\n",
+			},
+		},
+	}
+
+	_, user, err := compilePrompt(req)
+	if err != nil {
+		t.Fatalf("compilePrompt error: %v", err)
+	}
+	if !strings.Contains(user, "Provided title") {
+		t.Fatalf("expected rendered prompt to contain provided title, got:\n%s", user)
+	}
+	if !strings.Contains(user, "Provided description") {
+		t.Fatalf("expected rendered prompt to contain provided description, got:\n%s", user)
+	}
+}

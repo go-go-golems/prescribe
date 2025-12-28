@@ -74,6 +74,8 @@ func TestController_BuildGenerateDescriptionRequest(t *testing.T) {
 		data: &domain.PRData{
 			SourceBranch: "feature",
 			TargetBranch: "main",
+			Title:        "My PR title",
+			Description:  "My PR description",
 			ChangedFiles: []domain.FileChange{
 				{Path: "a.go", Included: true},
 				{Path: "b.go", Included: false},
@@ -92,6 +94,12 @@ func TestController_BuildGenerateDescriptionRequest(t *testing.T) {
 
 	if req.SourceBranch != "feature" || req.TargetBranch != "main" {
 		t.Fatalf("unexpected branches: %#v", req)
+	}
+	if req.Title != "My PR title" {
+		t.Fatalf("expected title to be set, got %q", req.Title)
+	}
+	if req.Description != "My PR description" {
+		t.Fatalf("expected description to be set, got %q", req.Description)
 	}
 	if req.Prompt != "prompt" {
 		t.Fatalf("expected prompt to be set")

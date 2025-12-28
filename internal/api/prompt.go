@@ -83,8 +83,17 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 		}
 	}
 
-	description := strings.TrimSpace(strings.Join(noteParts, "\n"))
+	notes := strings.TrimSpace(strings.Join(noteParts, "\n"))
+	descParts := make([]string, 0, 2)
+	if strings.TrimSpace(req.Description) != "" {
+		descParts = append(descParts, strings.TrimSpace(req.Description))
+	}
+	if notes != "" {
+		descParts = append(descParts, notes)
+	}
+	description := strings.TrimSpace(strings.Join(descParts, "\n\n"))
 	diff := strings.TrimSpace(strings.Join(diffParts, "\n\n"))
+	title := strings.TrimSpace(req.Title)
 
 	return map[string]any{
 		// Pinocchio-style prompt variables (subset)
@@ -92,7 +101,7 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 		"code":              codeFiles,
 		"context":           contextFiles,
 		"description":       description,
-		"title":             "",
+		"title":             title,
 		"issue":             "",
 		"commits":           "",
 		"additional_system": "",

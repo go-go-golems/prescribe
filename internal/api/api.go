@@ -40,6 +40,8 @@ type GenerateDescriptionRequest struct {
 	TargetBranch      string
 	SourceCommit      string
 	TargetCommit      string
+	Title             string
+	Description       string
 	Files             []domain.FileChange
 	AdditionalContext []domain.ContextItem
 	Prompt            string
@@ -248,6 +250,18 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 	b.WriteString("## Branches\n\n")
 	b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
 	b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
+
+	if strings.TrimSpace(req.Title) != "" {
+		b.WriteString("## Proposed PR title\n\n")
+		b.WriteString(strings.TrimSpace(req.Title))
+		b.WriteString("\n\n")
+	}
+
+	if strings.TrimSpace(req.Description) != "" {
+		b.WriteString("## PR description / notes\n\n")
+		b.WriteString(strings.TrimSpace(req.Description))
+		b.WriteString("\n\n")
+	}
 
 	if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
 		b.WriteString("## Commits\n\n")

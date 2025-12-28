@@ -355,6 +355,8 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		TargetBranch:      c.data.TargetBranch,
 		SourceCommit:      sourceCommit,
 		TargetCommit:      targetCommit,
+		Title:             c.data.Title,
+		Description:       c.data.Description,
 		Files:             includedFiles,
 		AdditionalContext: c.data.AdditionalContext,
 		Prompt:            c.data.CurrentPrompt,

@@ -19,6 +19,10 @@ type Session struct {
 	SourceBranch string `yaml:"source_branch"`
 	TargetBranch string `yaml:"target_branch"`
 
+	// Optional PR metadata
+	Title       string `yaml:"title,omitempty"`
+	Description string `yaml:"description,omitempty"`
+
 	// File configuration
 	Files []FileConfig `yaml:"files"`
 
@@ -71,6 +75,8 @@ func NewSession(data *domain.PRData) *Session {
 		Version:      "1.0",
 		SourceBranch: data.SourceBranch,
 		TargetBranch: data.TargetBranch,
+		Title:        data.Title,
+		Description:  data.Description,
 		Files:        make([]FileConfig, 0),
 		Filters:      make([]FilterConfig, 0),
 		Context:      make([]ContextConfig, 0),
@@ -139,6 +145,10 @@ func NewSession(data *domain.PRData) *Session {
 
 // ApplyToData applies the session configuration to PR data
 func (s *Session) ApplyToData(data *domain.PRData) error {
+	// Apply PR metadata
+	data.Title = s.Title
+	data.Description = s.Description
+
 	// Apply file configurations
 	fileMap := make(map[string]FileConfig)
 	for _, fc := range s.Files {

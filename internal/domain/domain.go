@@ -107,6 +107,10 @@ type PRData struct {
 	SourceBranch string
 	TargetBranch string
 
+	// Optional PR metadata (can be persisted in session.yaml and overridden by CLI flags)
+	Title       string
+	Description string
+
 	// Files
 	ChangedFiles      []FileChange
 	AdditionalContext []ContextItem
