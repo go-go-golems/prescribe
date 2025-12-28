@@ -1,5 +1,9 @@
 # Changelog
 
+## 2025-12-28
+
+Closed ticket `012-USE-PINOCCHIO-PROFILES` (profiles wired into `prescribe generate`, prompt updated, smoke scripts added, and parsing robustness improvements landed). Follow-up work for Gemini-specific YAML issues continues in `013-FIX-GEMINI-YAML-INFERENCE`.
+
 ## 2025-12-27
 
 - Initial workspace created

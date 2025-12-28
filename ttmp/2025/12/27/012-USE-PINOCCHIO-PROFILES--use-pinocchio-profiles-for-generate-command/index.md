@@ -1,7 +1,7 @@
 ---
 Title: Use Pinocchio Profiles for Generate Command
 Ticket: 012-USE-PINOCCHIO-PROFILES
-Status: active
+Status: closed
 Topics:
     - configuration
     - profiles
@@ -64,7 +64,7 @@ This ticket implements Pinocchio profile support (`~/.config/pinocchio/profiles.
 
 ## Status
 
-Current status: **active**
+Current status: **closed**
 
 ## Topics
 
