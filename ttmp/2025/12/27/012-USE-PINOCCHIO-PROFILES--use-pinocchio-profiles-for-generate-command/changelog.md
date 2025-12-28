@@ -45,3 +45,28 @@ Tightened the embedded `create-pull-request` prompt contract to be YAML-only and
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/prompts/assets/create-pull-request.yaml — Conditional description rendering + YAML-only output instructions
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prompt_test.go — Regression test for empty-description rendering
 
+
+## 2025-12-28
+
+Made PR title/description first-class session state and plumbed them into request building and prompt template variables. Commit: da26af2.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/domain/domain.go — Add `PRData.Title` / `PRData.Description`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/session/session.go — Persist `title`/`description` in session.yaml
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/controller/controller.go — Thread into `GenerateDescriptionRequest`
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prompt.go — Map `.title` / `.description` template vars
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prompt_test.go — Tests for title/description rendering
+
+
+## 2025-12-28
+
+Added `generate --title/--description` overrides and `session init --title/--description` for persisting the fields during session creation. Also exposed `title` and `description_preview` in `session show`. Commit: 46a2c0f.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/layers/generation.go — Add `title`/`description` flags to Generation layer
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — Apply flag overrides after session load
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/init.go — Persist title/description when initializing + saving
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/show.go — Show title + description preview
+

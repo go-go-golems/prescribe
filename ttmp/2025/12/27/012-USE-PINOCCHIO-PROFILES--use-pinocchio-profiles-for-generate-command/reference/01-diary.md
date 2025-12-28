@@ -346,3 +346,61 @@ cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./..
 ### Code review instructions
 - Start with `internal/prompts/assets/create-pull-request.yaml` (look for the conditional description block and YAML-only output rules).
 - Then review `internal/api/prompt_test.go` for the regression test.
+
+## Step 5: Persist PR title/description in session.yaml and plumb into prompt rendering
+
+This step added explicit PR `title` and `description` fields to the core domain model and to `session.yaml`, then threaded them through the controller request builder and the prompt template variables. The practical outcome: `prescribe generate` can now render `.title` / `.description` even when the description isn’t coming from “note” context.
+
+**Commit (code):** da26af267e4f0687adef932fb7e1ad99c9b9e0a7 — "feat: plumb PR title/description into session and prompt vars"
+
+### What I did
+- Added `Title`/`Description` to `internal/domain.PRData`
+- Persisted them in `internal/session.Session` (`title`, `description`)
+- Extended `internal/api.GenerateDescriptionRequest` and `Controller.BuildGenerateDescriptionRequest`
+- Updated `internal/api/prompt.go` variable mapping:
+  - `.title` now comes from `req.Title`
+  - `.description` now comes from `req.Description` + appended note-context (if present)
+- Added/updated unit tests for request building and prompt rendering
+- Ran formatting + tests:
+
+```bash
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && gofmt -w internal/domain/domain.go internal/session/session.go internal/api/api.go internal/api/prompt.go internal/api/prompt_test.go internal/controller/controller.go internal/controller/controller_test.go
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./... -count=1
+```
+
+### Why
+- We want PR title/description to be first-class session state (persisted and controllable), not an accidental byproduct of “note” context concatenation.
+
+### What warrants a second pair of eyes
+- The decision to append note-context onto `req.Description` for `.description` (keeps backward-compat, but mixes semantics).
+
+### Code review instructions
+- Start at `internal/domain/domain.go`, then `internal/session/session.go`, then `internal/api/prompt.go`.
+- Validate with `go test ./... -count=1`.
+
+## Step 6: Add `generate --title/--description` and `session init --title/--description`
+
+This step added CLI flags so users can override the session’s title/description at generation time, and set/persist them when initializing a session. I also surfaced the values in `session show` (as `title` and `description_preview`) for quick inspection.
+
+**Commit (code):** 46a2c0f0018399a8e53e66c4e4196ae42a908117 — "feat: add --title/--description flags for generate and session init"
+
+### What I did
+- Extended `pkg/layers.GenerationSettings` with `title` and `description`
+- In `generate`, applied the flags as overrides after loading session.yaml
+- In `session init`, added flags and persisted them when `--save` is used
+- In `session show`, added `title` + `description_preview` to the output row
+- Ran formatting + tests:
+
+```bash
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && gofmt -w pkg/layers/generation.go cmd/prescribe/cmds/generate.go cmd/prescribe/cmds/session/init.go cmd/prescribe/cmds/session/show.go
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./... -count=1
+```
+
+### Why
+- These fields need to be easy to set without manually editing session.yaml, and `generate` needs a clean “flags override session” contract.
+
+### What warrants a second pair of eyes
+- Flag naming/UX and whether we want short flags (`-t`, etc.) given potential collisions across commands.
+
+### Code review instructions
+- Start at `pkg/layers/generation.go` to see the flag definitions, then review `cmd/prescribe/cmds/generate.go` and `cmd/prescribe/cmds/session/init.go`.
