@@ -34,12 +34,17 @@ func Init() error {
 			initErr = err
 			return
 		}
+		if err := InitTokenCountCmd(); err != nil {
+			initErr = err
+			return
+		}
 
 		SessionCmd.AddCommand(
 			InitCmd,
 			SaveCmd,
 			LoadCmd,
 			ShowCmd,
+			TokenCountCmd,
 		)
 	})
 	return initErr
