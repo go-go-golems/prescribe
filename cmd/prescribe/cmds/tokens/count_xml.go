@@ -139,14 +139,14 @@ func findCDATAContent(s, tag string) (string, bool) {
 	// Matches patterns emitted by BuildRenderedLLMPayload:
 	// <system><![CDATA[ ... ]]></system>
 	open := "<" + tag + "><![CDATA["
-	close := "]]></" + tag + ">"
+	closeTag := "]]></" + tag + ">"
 
 	i := strings.Index(s, open)
 	if i < 0 {
 		return "", false
 	}
 	i += len(open)
-	j := strings.Index(s[i:], close)
+	j := strings.Index(s[i:], closeTag)
 	if j < 0 {
 		return "", false
 	}

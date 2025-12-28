@@ -414,18 +414,18 @@ func debugLogAssistantText(t *turns.Turn, assistantText string) {
 	e.Msg("api: assistant raw output (last assistant text block)")
 }
 
-func summarizeForDebug(s string, max int) string {
+func summarizeForDebug(s string, maxLen int) string {
 	const ellipsis = "\n...\n"
-	if max <= 0 {
+	if maxLen <= 0 {
 		return ""
 	}
 	ss := strings.TrimSpace(s)
-	if len(ss) <= max {
+	if len(ss) <= maxLen {
 		return ss
 	}
 	// Keep a prefix and suffix to help detect truncation/format issues.
-	prefixLen := max * 2 / 3
-	suffixLen := max - prefixLen - len(ellipsis)
+	prefixLen := maxLen * 2 / 3
+	suffixLen := maxLen - prefixLen - len(ellipsis)
 	if suffixLen < 0 {
 		suffixLen = 0
 	}
