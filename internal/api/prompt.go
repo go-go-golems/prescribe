@@ -43,15 +43,35 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 	for _, f := range req.Files {
 		switch f.Type {
 		case domain.FileTypeFull:
-			content := f.FullAfter
-			if content == "" {
-				content = f.FullBefore
-			}
-			if content == "" {
-				content = f.Diff
-			}
-			if strings.TrimSpace(content) != "" {
-				codeFiles = append(codeFiles, templateFile{Path: f.Path, Content: strings.TrimRight(content, "\n")})
+			if f.Version == domain.FileVersionBoth {
+				// Include both versions when FileVersionBoth is set
+				if strings.TrimSpace(f.FullBefore) != "" {
+					codeFiles = append(codeFiles, templateFile{
+						Path:    f.Path + ":before",
+						Content: strings.TrimRight(f.FullBefore, "\n"),
+					})
+				}
+				if strings.TrimSpace(f.FullAfter) != "" {
+					codeFiles = append(codeFiles, templateFile{
+						Path:    f.Path + ":after",
+						Content: strings.TrimRight(f.FullAfter, "\n"),
+					})
+				}
+			} else {
+				// Single version logic (existing behavior)
+				content := f.FullAfter
+				if f.Version == domain.FileVersionBefore || content == "" {
+					content = f.FullBefore
+				}
+				if content == "" {
+					content = f.Diff
+				}
+				if strings.TrimSpace(content) != "" {
+					codeFiles = append(codeFiles, templateFile{
+						Path:    f.Path,
+						Content: strings.TrimRight(content, "\n"),
+					})
+				}
 			}
 		case domain.FileTypeDiff:
 			if strings.TrimSpace(f.Diff) != "" {
