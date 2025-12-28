@@ -32,5 +32,3 @@ func TestToastState_ExpireIsIdSafe(t *testing.T) {
 		t.Fatalf("expected toast to be cleared")
 	}
 }
-
-

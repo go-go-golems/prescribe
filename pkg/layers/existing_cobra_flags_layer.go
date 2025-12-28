@@ -45,5 +45,3 @@ func WrapAsExistingCobraFlagsLayer(section schema.Section) (*ExistingCobraFlagsL
 	}
 	return &ExistingCobraFlagsLayer{SectionImpl: impl}, nil
 }
-
-

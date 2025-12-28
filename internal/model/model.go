@@ -10,16 +10,16 @@ import (
 
 // FileChange represents a changed file in the PR
 type FileChange struct {
-	Path      string
-	Included  bool
-	Additions int
-	Deletions int
-	Tokens    int
-	Type      FileType
-	Version   FileVersion
-	Diff      string
+	Path       string
+	Included   bool
+	Additions  int
+	Deletions  int
+	Tokens     int
+	Type       FileType
+	Version    FileVersion
+	Diff       string
 	FullBefore string
-	FullAfter string
+	FullAfter  string
 }
 
 type FileType string
@@ -95,18 +95,18 @@ type PRBuilderModel struct {
 	// Git information
 	SourceBranch string
 	TargetBranch string
-	
+
 	// Files
-	ChangedFiles []FileChange
+	ChangedFiles      []FileChange
 	AdditionalContext []ContextItem
-	
+
 	// Filters
 	ActiveFilters []Filter
-	
+
 	// Prompt
 	CurrentPrompt string
 	CurrentPreset *PromptPreset
-	
+
 	// Generated description
 	GeneratedDescription string
 }
@@ -114,10 +114,10 @@ type PRBuilderModel struct {
 // NewPRBuilderModel creates a new model
 func NewPRBuilderModel() *PRBuilderModel {
 	return &PRBuilderModel{
-		ChangedFiles: make([]FileChange, 0),
+		ChangedFiles:      make([]FileChange, 0),
 		AdditionalContext: make([]ContextItem, 0),
-		ActiveFilters: make([]Filter, 0),
-		CurrentPrompt: GetDefaultPrompt(),
+		ActiveFilters:     make([]Filter, 0),
+		CurrentPrompt:     GetDefaultPrompt(),
 	}
 }
 
@@ -131,7 +131,7 @@ func (m *PRBuilderModel) GetVisibleFiles() []FileChange {
 	if len(m.ActiveFilters) == 0 {
 		return m.ChangedFiles
 	}
-	
+
 	visible := make([]FileChange, 0)
 	for _, file := range m.ChangedFiles {
 		if m.passesFilters(file.Path) {
@@ -146,7 +146,7 @@ func (m *PRBuilderModel) GetFilteredFiles() []FileChange {
 	if len(m.ActiveFilters) == 0 {
 		return []FileChange{}
 	}
-	
+
 	filtered := make([]FileChange, 0)
 	for _, file := range m.ChangedFiles {
 		if !m.passesFilters(file.Path) {
@@ -162,12 +162,12 @@ func (m *PRBuilderModel) passesFilters(path string) bool {
 	if len(m.ActiveFilters) == 0 {
 		return true
 	}
-	
+
 	// Apply each filter's rules
 	for _, filter := range m.ActiveFilters {
 		for _, rule := range filter.Rules {
 			matches := matchesPattern(path, rule.Pattern)
-			
+
 			if rule.Type == FilterTypeExclude && matches {
 				return false
 			}
@@ -176,7 +176,7 @@ func (m *PRBuilderModel) passesFilters(path string) bool {
 			}
 		}
 	}
-	
+
 	return true
 }
 
@@ -199,19 +199,19 @@ func matchesPattern(path, pattern string) bool {
 // GetTotalTokens calculates total tokens for all included content
 func (m *PRBuilderModel) GetTotalTokens() int {
 	total := 0
-	
+
 	// Count visible files
 	for _, file := range m.GetVisibleFiles() {
 		if file.Included {
 			total += file.Tokens
 		}
 	}
-	
+
 	// Count additional context
 	for _, ctx := range m.AdditionalContext {
 		total += ctx.Tokens
 	}
-	
+
 	return total
 }
 
@@ -229,11 +229,11 @@ func (m *PRBuilderModel) ReplaceWithFullFile(index int, version FileVersion) err
 	if index < 0 || index >= len(m.ChangedFiles) {
 		return fmt.Errorf("invalid file index: %d", index)
 	}
-	
+
 	file := &m.ChangedFiles[index]
 	file.Type = FileTypeFull
 	file.Version = version
-	
+
 	// Recalculate tokens based on version
 	switch version {
 	case FileVersionBefore:
@@ -243,7 +243,7 @@ func (m *PRBuilderModel) ReplaceWithFullFile(index int, version FileVersion) err
 	case FileVersionBoth:
 		file.Tokens = tokens.Count(file.FullBefore) + tokens.Count(file.FullAfter)
 	}
-	
+
 	return nil
 }
 
@@ -252,12 +252,12 @@ func (m *PRBuilderModel) RestoreToDiff(index int) error {
 	if index < 0 || index >= len(m.ChangedFiles) {
 		return fmt.Errorf("invalid file index: %d", index)
 	}
-	
+
 	file := &m.ChangedFiles[index]
 	file.Type = FileTypeDiff
 	file.Version = ""
 	file.Tokens = tokens.Count(file.Diff)
-	
+
 	return nil
 }
 

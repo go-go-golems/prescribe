@@ -1,9 +1,9 @@
 package layers
 
 import (
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
 	"github.com/go-go-golems/glazed/pkg/cmds/schema"
-	"github.com/go-go-golems/glazed/pkg/cmds/fields"
 	"github.com/pkg/errors"
 )
 
@@ -64,5 +64,3 @@ func GetGenerationSettings(parsedLayers *glazed_layers.ParsedLayers) (*Generatio
 
 	return settings, nil
 }
-
-

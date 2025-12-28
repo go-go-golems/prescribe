@@ -18,14 +18,14 @@ type KeyMap struct {
 	Down key.Binding
 
 	// Main screen actions
-	ToggleIncluded      key.Binding
-	ToggleFilteredView  key.Binding
-	OpenFilters         key.Binding
-	Generate            key.Binding
-	Back                key.Binding
-	SelectAllVisible    key.Binding
-	UnselectAllVisible  key.Binding
-	CopyContext         key.Binding
+	ToggleIncluded     key.Binding
+	ToggleFilteredView key.Binding
+	OpenFilters        key.Binding
+	Generate           key.Binding
+	Back               key.Binding
+	SelectAllVisible   key.Binding
+	UnselectAllVisible key.Binding
+	CopyContext        key.Binding
 
 	// Filter screen actions
 	DeleteFilter key.Binding
@@ -129,5 +129,3 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 		{k.Help, k.Quit},
 	}
 }
-
-

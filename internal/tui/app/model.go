@@ -47,9 +47,8 @@ func New(ctrl *controller.Controller, deps Deps) Model {
 	}
 }
 
-func statusModel(km keys.KeyMap, st styles.Styles) (m status.Model) {
-	m = status.New(km, st)
-	return m
+func statusModel(km keys.KeyMap, st styles.Styles) status.Model {
+	return status.New(km, st)
 }
 
 func (m Model) Init() tea.Cmd {
@@ -59,17 +58,17 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
-func (m Model) contentWH() (w, h int) {
+func (m Model) contentWH() (int, int) {
 	frameW, frameH := m.styles.BorderBox.GetFrameSize()
 
 	// Content size is the terminal size minus the border+padding frame.
 	// This is the size we should pass to child components and PlaceHorizontal() calls.
 	// Keep a 1-row slack to prevent terminal scrolling when something accidentally
 	// over-produces a line (tmux captures then “lose” the top border).
-	return max(0, m.width-frameW), max(0, m.height-frameH-1)
+	return maxInt(0, m.width-frameW), maxInt(0, m.height-frameH-1)
 }
 
-func (m Model) boxWH() (w, h int) {
+func (m Model) boxWH() (int, int) {
 	// BorderBox.Width/Height apply to the content block *before* the border is drawn.
 	// So to make the overall rendered box fit the terminal:
 	//   boxW = terminalW - borderW
@@ -90,7 +89,7 @@ func (m Model) boxWH() (w, h int) {
 		borderH += b.GetBottomSize()
 	}
 	// Keep a 1-row slack to avoid scrolling in tmux captures.
-	return max(0, m.width-borderW), max(0, m.height-borderH-1)
+	return maxInt(0, m.width-borderW), maxInt(0, m.height-borderH-1)
 }
 
 func (m *Model) footerHeight() int {
@@ -107,9 +106,10 @@ func (m *Model) footerHeight() int {
 		// - blank line (1)
 		const presetsBlockH = 5
 		return presetsBlockH + base
-	default:
+	case ModeMain, ModeGenerating, ModeResult:
 		return base
 	}
+	return base
 }
 
 func (m *Model) recomputeLayout() {
@@ -151,6 +151,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case ModeFilters, ModeResult:
 				m.mode = ModeMain
 				m.recomputeLayout()
+			case ModeMain, ModeGenerating:
+				// no-op
 			}
 
 		case m.mode == ModeMain && key.Matches(msg, m.keymap.OpenFilters):
@@ -519,6 +521,9 @@ func (m Model) headerHeight() int {
 	case ModeResult:
 		// renderResult writes: title line + "\n\n" (=> 3 lines total before the viewport)
 		return 3
+	case ModeGenerating:
+		// renderGenerating uses the same overall structure as main for now.
+		return 8
 	default:
 		return 0
 	}

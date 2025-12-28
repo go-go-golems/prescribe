@@ -18,18 +18,18 @@ func (c *Controller) LoadSession(path string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load session: %w", err)
 	}
-	
+
 	// Verify branches match
 	if sess.SourceBranch != c.data.SourceBranch {
-		return fmt.Errorf("session source branch (%s) doesn't match current branch (%s)", 
+		return fmt.Errorf("session source branch (%s) doesn't match current branch (%s)",
 			sess.SourceBranch, c.data.SourceBranch)
 	}
-	
+
 	// Apply session to data
 	if err := sess.ApplyToData(c.data); err != nil {
 		return fmt.Errorf("failed to apply session: %w", err)
 	}
-	
+
 	return nil
 }
 

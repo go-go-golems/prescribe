@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
@@ -112,10 +113,18 @@ func (s *Service) GetChangedFiles(sourceBranch, targetBranch string) ([]domain.F
 
 		// Parse additions and deletions
 		if parts[0] != "-" {
-			fmt.Sscanf(parts[0], "%d", &additions)
+			v, err := strconv.Atoi(parts[0])
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse additions for %s: %q", path, parts[0])
+			}
+			additions = v
 		}
 		if parts[1] != "-" {
-			fmt.Sscanf(parts[1], "%d", &deletions)
+			v, err := strconv.Atoi(parts[1])
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to parse deletions for %s: %q", path, parts[1])
+			}
+			deletions = v
 		}
 
 		// Get the diff for this file

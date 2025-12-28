@@ -44,5 +44,3 @@ func (s *ToastState) Expire(id int64) bool {
 	s.current = nil
 	return true
 }
-
-

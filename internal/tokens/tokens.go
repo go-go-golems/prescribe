@@ -77,5 +77,3 @@ func getCodecAndName() (tokenizer.Codec, string) {
 	})
 	return codec, codecName
 }
-
-

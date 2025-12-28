@@ -53,7 +53,7 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 			if strings.TrimSpace(content) != "" {
 				codeFiles = append(codeFiles, templateFile{Path: f.Path, Content: strings.TrimRight(content, "\n")})
 			}
-		default:
+		case domain.FileTypeDiff:
 			if strings.TrimSpace(f.Diff) != "" {
 				// Keep diffs well-delimited per file to avoid “smashed together” ambiguity.
 				// We mirror the XML-ish boundary style used in the export-context separator approach.
@@ -88,13 +88,13 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 
 	return map[string]any{
 		// Pinocchio-style prompt variables (subset)
-		"diff":             diff,
-		"code":             codeFiles,
-		"context":          contextFiles,
-		"description":      description,
-		"title":            "",
-		"issue":            "",
-		"commits":          "",
+		"diff":              diff,
+		"code":              codeFiles,
+		"context":           contextFiles,
+		"description":       description,
+		"title":             "",
+		"issue":             "",
+		"commits":           "",
 		"additional_system": "",
 		"additional":        []string{},
 
@@ -109,11 +109,11 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 
 // CompilePrompt is an exported wrapper to compile the prompt into the exact (system,user) strings
 // that will be used to seed a Turn. This is useful for CLI export-only workflows.
-func CompilePrompt(req GenerateDescriptionRequest) (systemPrompt string, userPrompt string, err error) {
+func CompilePrompt(req GenerateDescriptionRequest) (string, string, error) {
 	return compilePrompt(req)
 }
 
-func splitCombinedPinocchioPrompt(prompt string) (systemTemplate string, userTemplate string, ok bool) {
+func splitCombinedPinocchioPrompt(prompt string) (string, string, bool) {
 	// prescribe stores a single "combined" string. Our default prompt is derived from pinocchio's
 	// create-pull-request prompt pack, which defines a "context" template. We treat the text before
 	// that definition as system prompt, and the remainder as the user prompt template to render.
@@ -128,7 +128,7 @@ func splitCombinedPinocchioPrompt(prompt string) (systemTemplate string, userTem
 	return strings.TrimSpace(p[:idx]), strings.TrimSpace(p[idx:]), true
 }
 
-func compilePrompt(req GenerateDescriptionRequest) (systemPrompt string, userPrompt string, err error) {
+func compilePrompt(req GenerateDescriptionRequest) (string, string, error) {
 	combined := strings.TrimSpace(req.Prompt)
 	if combined == "" {
 		return "", buildUserContext(req), nil
@@ -160,5 +160,3 @@ func xmlEscapeAttr(s string) string {
 	s = strings.ReplaceAll(s, "\"", "&quot;")
 	return s
 }
-
-

@@ -3,8 +3,8 @@ package status
 import (
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/bubbles/help"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-go-golems/prescribe/internal/tui/events"
 	"github.com/go-go-golems/prescribe/internal/tui/keys"
 	"github.com/go-go-golems/prescribe/internal/tui/styles"
@@ -36,11 +36,11 @@ func New(km keys.KeyMap, st styles.Styles) Model {
 
 func (m Model) Init() tea.Cmd { return nil }
 
-func (m Model) SetSize(width int) {
+func (m *Model) SetSize(width int) {
 	m.width = width
 }
 
-func (m Model) SetShowFullHelp(v bool) {
+func (m *Model) SetShowFullHelp(v bool) {
 	m.showFullHelp = v
 }
 
@@ -95,5 +95,3 @@ func (m Model) renderToast(t Toast) string {
 		return m.styles.MutedText.Render(t.Text)
 	}
 }
-
-

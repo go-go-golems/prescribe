@@ -74,5 +74,3 @@ func TestCompilePrompt_plainPrompt_fallsBackToUserContext(t *testing.T) {
 		t.Fatalf("expected fallback user context output, got:\n%s", user)
 	}
 }
-
-

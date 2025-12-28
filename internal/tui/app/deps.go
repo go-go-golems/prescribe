@@ -10,5 +10,3 @@ type Deps interface {
 	Now() time.Time
 	ClipboardWriteAll(text string) error
 }
-
-

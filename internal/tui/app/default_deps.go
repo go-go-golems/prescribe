@@ -17,5 +17,3 @@ func (DefaultDeps) Now() time.Time { return time.Now() }
 func (DefaultDeps) ClipboardWriteAll(text string) error {
 	return clipboard.WriteAll(text)
 }
-
-

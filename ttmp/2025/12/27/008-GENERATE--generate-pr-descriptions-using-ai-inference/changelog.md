@@ -102,3 +102,8 @@ Reconciled branch refs with resolved commit SHAs in export payloads. Export outp
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-cli.sh — Assert commit tags exist in XML export outputs
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-all.sh — Assert commit tags exist in XML export outputs
 
+
+## 2025-12-27
+
+Closed: export-only generation workflows complete (export-context, export-rendered, commit SHAs).
+

@@ -93,15 +93,19 @@ func (c *Controller) loadFilterPresetsFromDir(dir string, location domain.Preset
 // SaveFilterPreset saves a filter preset under either the project or global preset directory.
 func (c *Controller) SaveFilterPreset(name, description string, rules []domain.FilterRule, location domain.PresetLocation) error {
 	var dir string
-	if location == domain.PresetLocationProject {
+	switch location {
+	case domain.PresetLocationProject:
 		dir = filepath.Join(c.repoPath, ".pr-builder", "filters")
-	} else if location == domain.PresetLocationGlobal {
+	case domain.PresetLocationGlobal:
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
 		dir = filepath.Join(homeDir, ".pr-builder", "filters")
-	} else {
+	case domain.PresetLocationBuiltin:
+		// Builtin presets are shipped with the binary and cannot be saved to.
+		return fmt.Errorf("unsupported preset location: %s", location)
+	default:
 		return fmt.Errorf("unsupported preset location: %s", location)
 	}
 

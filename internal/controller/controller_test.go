@@ -3,7 +3,6 @@ package controller
 import (
 	"testing"
 
-	"github.com/go-go-golems/prescribe/internal/api"
 	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
@@ -103,9 +102,6 @@ func TestController_BuildGenerateDescriptionRequest(t *testing.T) {
 	if len(req.Files) != 1 || req.Files[0].Path != "a.go" {
 		t.Fatalf("expected only included files in request, got %#v", req.Files)
 	}
-
-	// Sanity check that the request type matches the API expectation.
-	var _ api.GenerateDescriptionRequest = req
 }
 
 func TestController_BuildGenerateDescriptionRequest_requiresIncludedFiles(t *testing.T) {

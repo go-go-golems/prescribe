@@ -51,5 +51,3 @@ func get() loaded {
 	})
 	return cached
 }
-
-

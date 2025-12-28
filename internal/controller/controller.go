@@ -398,9 +398,9 @@ func (c *Controller) ClearFilters() {
 }
 
 // TestFilter tests a filter pattern against files without applying it
-func (c *Controller) TestFilter(filter domain.Filter) (matched []string, unmatched []string) {
-	matched = make([]string, 0)
-	unmatched = make([]string, 0)
+func (c *Controller) TestFilter(filter domain.Filter) ([]string, []string) {
+	matched := make([]string, 0)
+	unmatched := make([]string, 0)
 
 	for _, file := range c.data.ChangedFiles {
 		passes := true

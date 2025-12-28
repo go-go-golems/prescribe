@@ -29,5 +29,3 @@ func NewInitializedControllerFromParsedLayers(parsedLayers *layers.ParsedLayers)
 
 	return ctrl, nil
 }
-
-

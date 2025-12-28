@@ -21,5 +21,3 @@ func TestCompute_PreservesDimensions(t *testing.T) {
 		t.Fatalf("expected BodyH=40, got %d", l.BodyH)
 	}
 }
-
-

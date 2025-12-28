@@ -6,21 +6,15 @@ import (
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
+	"github.com/go-go-golems/glazed/pkg/middlewares"
+	"github.com/go-go-golems/glazed/pkg/types"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
-	"github.com/go-go-golems/glazed/pkg/cmds/schema"
-	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
-	"github.com/go-go-golems/glazed/pkg/middlewares"
-	"github.com/go-go-golems/glazed/pkg/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-)
-
-var (
-	testFilterName      string
-	testExcludePatterns []string
-	testIncludePatterns []string
 )
 
 func InitTestFilterCmd() error {

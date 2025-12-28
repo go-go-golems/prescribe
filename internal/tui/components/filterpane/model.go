@@ -71,7 +71,7 @@ func (m Model) View() string {
 			b.WriteString(m.styles.Header.Render("RULES"))
 			b.WriteString("\n")
 
-			rulesShown := min(len(f.Rules), m.maxRulesToShow())
+			rulesShown := minInt(len(f.Rules), m.maxRulesToShow())
 			for i := 0; i < rulesShown; i++ {
 				r := f.Rules[i]
 				b.WriteString(m.styles.MutedText.Render(fmt.Sprintf("  %s: %s", r.Type, r.Pattern)))
@@ -156,7 +156,7 @@ func (m *Model) SetSelectedIndex(i int) {
 func (m Model) SelectedIndex() int { return m.list.Index() }
 
 func (m Model) recomputeLayout() Model {
-	listH := max(0, m.height-m.previewHeight())
+	listH := maxInt(0, m.height-m.previewHeight())
 	m.list.SetSize(m.width, listH)
 	return m
 }
@@ -171,7 +171,7 @@ func (m Model) previewHeight() int {
 	}
 
 	// 1 blank + 1 header + rules (bounded) + optional "…"
-	rulesShown := min(len(f.Rules), m.maxRulesToShow())
+	rulesShown := minInt(len(f.Rules), m.maxRulesToShow())
 	h := 1 + 1 + rulesShown
 	if rulesShown < len(f.Rules) {
 		h++
@@ -193,14 +193,14 @@ func (m Model) maxRulesToShow() int {
 	return available
 }
 
-func min(a, b int) int {
+func minInt(a, b int) int {
 	if a < b {
 		return a
 	}
 	return b
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}

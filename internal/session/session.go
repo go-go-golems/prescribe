@@ -14,20 +14,20 @@ import (
 type Session struct {
 	// Metadata
 	Version string `yaml:"version"`
-	
+
 	// Git info
 	SourceBranch string `yaml:"source_branch"`
 	TargetBranch string `yaml:"target_branch"`
-	
+
 	// File configuration
 	Files []FileConfig `yaml:"files"`
-	
+
 	// Filters
 	Filters []FilterConfig `yaml:"filters,omitempty"`
-	
+
 	// Additional context
 	Context []ContextConfig `yaml:"context,omitempty"`
-	
+
 	// Prompt
 	Prompt PromptConfig `yaml:"prompt"`
 }
@@ -75,7 +75,7 @@ func NewSession(data *domain.PRData) *Session {
 		Filters:      make([]FilterConfig, 0),
 		Context:      make([]ContextConfig, 0),
 	}
-	
+
 	// Convert files
 	for _, file := range data.ChangedFiles {
 		mode := "diff"
@@ -89,14 +89,14 @@ func NewSession(data *domain.PRData) *Session {
 				mode = "full_both"
 			}
 		}
-		
+
 		session.Files = append(session.Files, FileConfig{
 			Path:     file.Path,
 			Included: file.Included,
 			Mode:     mode,
 		})
 	}
-	
+
 	// Convert filters
 	for _, filter := range data.ActiveFilters {
 		rules := make([]FilterRule, 0)
@@ -106,14 +106,14 @@ func NewSession(data *domain.PRData) *Session {
 				Pattern: rule.Pattern,
 			})
 		}
-		
+
 		session.Filters = append(session.Filters, FilterConfig{
 			Name:        filter.Name,
 			Description: filter.Description,
 			Rules:       rules,
 		})
 	}
-	
+
 	// Convert context
 	for _, ctx := range data.AdditionalContext {
 		session.Context = append(session.Context, ContextConfig{
@@ -122,7 +122,7 @@ func NewSession(data *domain.PRData) *Session {
 			Content: ctx.Content,
 		})
 	}
-	
+
 	// Convert prompt
 	if data.CurrentPreset != nil {
 		session.Prompt = PromptConfig{
@@ -133,7 +133,7 @@ func NewSession(data *domain.PRData) *Session {
 			Template: data.CurrentPrompt,
 		}
 	}
-	
+
 	return session
 }
 
@@ -144,12 +144,12 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 	for _, fc := range s.Files {
 		fileMap[fc.Path] = fc
 	}
-	
+
 	for i := range data.ChangedFiles {
 		file := &data.ChangedFiles[i]
 		if fc, ok := fileMap[file.Path]; ok {
 			file.Included = fc.Included
-			
+
 			// Apply mode
 			switch fc.Mode {
 			case "diff":
@@ -185,7 +185,7 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 			}
 		}
 	}
-	
+
 	// Apply filters
 	data.ActiveFilters = make([]domain.Filter, 0)
 	for _, fc := range s.Filters {
@@ -196,14 +196,14 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 				Pattern: rule.Pattern,
 			})
 		}
-		
+
 		data.ActiveFilters = append(data.ActiveFilters, domain.Filter{
 			Name:        fc.Name,
 			Description: fc.Description,
 			Rules:       rules,
 		})
 	}
-	
+
 	// Apply context
 	data.AdditionalContext = make([]domain.ContextItem, 0)
 	for _, cc := range s.Context {
@@ -215,7 +215,7 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 			Tokens:  tokens_,
 		})
 	}
-	
+
 	// Apply prompt
 	if s.Prompt.Preset != "" {
 		// Find and apply preset
@@ -227,11 +227,11 @@ func (s *Session) ApplyToData(data *domain.PRData) error {
 			}
 		}
 	}
-	
+
 	if s.Prompt.Template != "" {
 		data.SetPrompt(s.Prompt.Template, nil)
 	}
-	
+
 	return nil
 }
 
@@ -242,18 +242,18 @@ func (s *Session) Save(path string) error {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
-	
+
 	// Marshal to YAML
 	data, err := yaml.Marshal(s)
 	if err != nil {
 		return fmt.Errorf("failed to marshal session: %w", err)
 	}
-	
+
 	// Write to file
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("failed to write session file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -263,12 +263,12 @@ func Load(path string) (*Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read session file: %w", err)
 	}
-	
+
 	var session Session
 	if err := yaml.Unmarshal(data, &session); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal session: %w", err)
 	}
-	
+
 	return &session, nil
 }
 

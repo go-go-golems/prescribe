@@ -67,7 +67,7 @@ func (d singleLineDelegate) Render(w io.Writer, m list.Model, index int, listIte
 	available := m.Width()
 	// Leave a tiny buffer so we don't wrap in tight terminals.
 	if available > 0 {
-		available = max(0, available-1)
+		available = maxInt(0, available-1)
 	}
 	out := prefix + line
 	out = truncate(out, available)
@@ -188,7 +188,7 @@ func truncate(s string, w int) string {
 	return string(rs[:w-1]) + "…"
 }
 
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}

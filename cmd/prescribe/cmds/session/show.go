@@ -17,8 +17,6 @@ import (
 // ShowCmd is built by InitShowCmd() and registered by session/session.go.
 var ShowCmd *cobra.Command
 
-const sessionShowSlug = "session-show"
-
 type SessionShowSettings struct {
 	// No settings for now. Keep the slug in case we add flags later.
 }

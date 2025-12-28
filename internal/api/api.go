@@ -162,7 +162,7 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 			b.WriteString("```text\n")
 			b.WriteString(strings.TrimRight(content, "\n"))
 			b.WriteString("\n```\n\n")
-		default:
+		case domain.FileTypeDiff:
 			diff := f.Diff
 			b.WriteString("```diff\n")
 			b.WriteString(strings.TrimRight(diff, "\n"))

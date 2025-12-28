@@ -38,5 +38,3 @@ func Compute(width, height, headerH, footerH int) Layout {
 		BodyH:   bodyH,
 	}
 }
-
-

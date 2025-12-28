@@ -1,7 +1,7 @@
 ---
 Title: Generate PR descriptions using AI inference
 Ticket: 008-GENERATE
-Status: active
+Status: review
 Topics:
     - prescribe
     - geppetto
@@ -27,10 +27,11 @@ RelatedFiles:
       Note: Standard CLI playbook now includes export-context
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T18:17:03.937288008-05:00
+LastUpdated: 2025-12-27T20:00:48.529265643-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
