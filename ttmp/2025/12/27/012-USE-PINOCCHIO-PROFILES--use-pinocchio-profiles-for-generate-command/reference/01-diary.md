@@ -447,3 +447,31 @@ bash /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/
 
 ### What should be done in the future
 - Consider making `setup-test-repo.sh` print (or export) the actual repo path it created in a machine-readable way, to remove this entire class of mismatch.
+
+## Step 8: Make `WithProfile` bootstrap selection respect configured sources (don’t consult env unless enabled)
+
+This step fixed an important subtlety in `appconfig.WithProfile`: the bootstrap pre-parse of `profile-settings` was always consulting environment variables (defaulting to `strings.ToUpper(appName)`), even if the parser never enabled env parsing. That made profile selection “leak in” from env unexpectedly. I changed it so env is only consulted when env parsing is configured on the parser (or explicitly requested via `WithProfileEnvPrefix`), and added a unit test that would have caught the bug.
+
+**Commit (code):** 15c63ab2816e06f4711045d3bf9408be7c3dff29 — "fix(appconfig): only consult env for profile selection when enabled"
+
+### What I did
+- Updated `glazed/pkg/appconfig/options.go`:
+  - Gate bootstrap `UpdateFromEnv(...)` behind `envEnabled := len(o.envPrefixes) > 0 || pcfg.envPrefix != ""`
+- Updated tests in `glazed/pkg/appconfig/profile_test.go`:
+  - Adjusted env-selection tests to enable env parsing (`WithEnv("MYAPP")`)
+  - Added `TestWithProfile_ProfileSelection_FromEnv_requiresEnvEnabled`
+- Ran formatting + tests:
+
+```bash
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/glazed && gofmt -w pkg/appconfig/options.go pkg/appconfig/profile_test.go
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/glazed && go test ./... -count=1
+```
+
+### Why
+- Profile selection should not silently depend on env unless the caller explicitly enabled env parsing (principle of least surprise / “only configured sources”).
+
+### What warrants a second pair of eyes
+- Confirm the intended semantics: env selection should be enabled when any env parsing is configured for the parser (even if the main env prefix differs from the profile-selection prefix).
+
+### Code review instructions
+- Review `glazed/pkg/appconfig/options.go` inside `WithProfile`, then check `glazed/pkg/appconfig/profile_test.go` for the new regression test.

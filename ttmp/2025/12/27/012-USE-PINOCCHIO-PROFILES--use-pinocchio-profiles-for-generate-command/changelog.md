@@ -80,3 +80,13 @@ Added a small-repo smoke test to assert session title/description are present in
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/03-smoke-test-prescribe-generate-title-description.sh — New smoke test for title/description rendering
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/01-smoke-test-prescribe-generate-profiles.sh — Fix test repo directory propagation
 
+
+## 2025-12-28
+
+Fixed `appconfig.WithProfile` bootstrap selection to only consult env when env parsing is enabled (or explicitly requested), and added a regression test. Commit: 15c63ab.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/options.go — Gate bootstrap `UpdateFromEnv` behind env-enabled check
+- /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/profile_test.go — Regression test for env-disabled behavior
+
