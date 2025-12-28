@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	geppettolayers "github.com/go-go-golems/geppetto/pkg/layers"
 	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
@@ -145,6 +146,14 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 		if err := ctrl.LoadPromptPreset(genSettings.Preset); err != nil {
 			return errors.Wrap(err, "failed to load preset")
 		}
+	}
+
+	// Override PR title/description if specified (takes precedence over session.yaml).
+	if strings.TrimSpace(genSettings.Title) != "" {
+		ctrl.GetData().Title = genSettings.Title
+	}
+	if strings.TrimSpace(genSettings.Description) != "" {
+		ctrl.GetData().Description = genSettings.Description
 	}
 
 	// Export-only path (no inference).

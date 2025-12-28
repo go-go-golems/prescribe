@@ -14,6 +14,8 @@ type GenerationSettings struct {
 	Preset      string `glazed.parameter:"preset"`
 	LoadSession string `glazed.parameter:"load-session"`
 	OutputFile  string `glazed.parameter:"output-file"`
+	Title       string `glazed.parameter:"title"`
+	Description string `glazed.parameter:"description"`
 }
 
 func NewGenerationLayer() (schema.Section, error) {
@@ -47,6 +49,18 @@ func NewGenerationLayer() (schema.Section, error) {
 				fields.WithDefault(""),
 				fields.WithHelp("Output file (default: stdout)"),
 				fields.WithShortFlag("o"),
+			),
+			fields.New(
+				"title",
+				fields.TypeString,
+				fields.WithDefault(""),
+				fields.WithHelp("Proposed PR title (overrides session title)"),
+			),
+			fields.New(
+				"description",
+				fields.TypeString,
+				fields.WithDefault(""),
+				fields.WithHelp("PR description/notes (overrides session description)"),
 			),
 		),
 	)

@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
@@ -20,8 +21,10 @@ var InitCmd *cobra.Command
 const sessionInitSlug = "session-init"
 
 type SessionInitSettings struct {
-	Save bool   `glazed.parameter:"save"`
-	Path string `glazed.parameter:"path"`
+	Save        bool   `glazed.parameter:"save"`
+	Path        string `glazed.parameter:"path"`
+	Title       string `glazed.parameter:"title"`
+	Description string `glazed.parameter:"description"`
 }
 
 type SessionInitCommand struct {
@@ -56,6 +59,18 @@ func NewSessionInitCommand() (*SessionInitCommand, error) {
 				fields.WithDefault(""),
 				fields.WithHelp("Path to save session (default: app default session path)"),
 				fields.WithShortFlag("p"),
+			),
+			fields.New(
+				"title",
+				fields.TypeString,
+				fields.WithDefault(""),
+				fields.WithHelp("PR title to persist into session.yaml (only takes effect with --save)"),
+			),
+			fields.New(
+				"description",
+				fields.TypeString,
+				fields.WithDefault(""),
+				fields.WithHelp("PR description/notes to persist into session.yaml (only takes effect with --save)"),
 			),
 		),
 	)
@@ -97,6 +112,12 @@ func (c *SessionInitCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 	}
 
 	data := ctrl.GetData()
+	if strings.TrimSpace(settings.Title) != "" {
+		data.Title = settings.Title
+	}
+	if strings.TrimSpace(settings.Description) != "" {
+		data.Description = settings.Description
+	}
 
 	fmt.Printf("Initialized PR builder session\n")
 	fmt.Printf("  Source: %s\n", data.SourceBranch)

@@ -2,6 +2,7 @@ package session
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
@@ -83,9 +84,24 @@ func (c *SessionShowCommand) RunIntoGlazeProcessor(
 		promptPreview = preview
 	}
 
+	var prTitle any = nil
+	if strings.TrimSpace(data.Title) != "" {
+		prTitle = strings.TrimSpace(data.Title)
+	}
+	var prDescriptionPreview any = nil
+	if strings.TrimSpace(data.Description) != "" {
+		preview := strings.TrimSpace(data.Description)
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
+		}
+		prDescriptionPreview = preview
+	}
+
 	row := types.NewRow(
 		types.MRP("source_branch", data.SourceBranch),
 		types.MRP("target_branch", data.TargetBranch),
+		types.MRP("title", prTitle),
+		types.MRP("description_preview", prDescriptionPreview),
 		types.MRP("total_files", len(data.ChangedFiles)),
 		types.MRP("visible_files", len(visibleFiles)),
 		types.MRP("included_files", includedCount),
