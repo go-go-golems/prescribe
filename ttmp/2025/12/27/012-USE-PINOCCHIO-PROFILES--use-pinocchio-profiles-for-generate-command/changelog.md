@@ -109,3 +109,15 @@ Added an integration script that exercises `glazed`’s `appconfig.WithProfile` 
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/04-integration-test-glazed-withprofile-example.sh — Validates defaults, env selection, and config override behavior
 
+
+## 2025-12-28
+
+Ported Pinocchio-style YAML robustification: scan YAML code blocks from the end and pick the first that parses *and* satisfies minimal schema validation (title+body). Added a test for “last block invalid, earlier block valid”. Commit: 91f0042.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/pinocchio/pkg/middlewares/agentmode/middleware.go — Pattern reference: try YAML blocks + validate required fields
+- /home/manuel/workspaces/2025-12-26/prescribe-import/geppetto/pkg/steps/parse/yaml_blocks.go — Extract fenced YAML blocks helper
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse.go — Candidate-selection validation (Pinocchio-style)
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse_test.go — Regression test for candidate selection
+

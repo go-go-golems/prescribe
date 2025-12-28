@@ -521,3 +521,31 @@ bash /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/
 
 ### What warrants a second pair of eyes
 - Whether we want this script to live under `glazed/ttmp/...` instead (it’s validating glazed behavior), vs keeping it here because it’s directly tied to the ticket’s profile bootstrap work.
+
+## Step 11: Pinocchio YAML robustification analysis + port into prescribe PR YAML parsing
+
+This step was about taking Pinocchio’s practical robustness pattern for YAML outputs and applying it to prescribe’s structured PR parsing. Pinocchio doesn’t “magically parse anything”; instead it extracts fenced YAML blocks, attempts to decode each, validates required fields, and prefers the most recent matching block (scan from the end). That pattern prevents picking the wrong YAML when models emit multiple snippets (examples, intermediate drafts, etc.).
+
+**Commit (code):** 91f0042fd17f2327128ddae081be1173225d27c5 — "fix(api): select last valid YAML block (pinocchio-style)"
+
+### What I did
+- Read Pinocchio’s YAML handling pattern:
+  - `pinocchio/pkg/middlewares/agentmode/middleware.go` uses `parse.ExtractYAMLBlocks` and tries decoding multiple YAML blocks until it finds one that matches expected fields.
+  - `geppetto/pkg/steps/parse/yaml_blocks.go` shows `ExtractYAMLBlocks` is a markdown fenced-code-block extractor (goldmark AST).
+- Wrote an analysis note: `analysis/02-pinocchio-yaml-robustification-parsing.md`
+- Updated `prescribe/internal/api/prdata_parse.go`:
+  - Instead of always using the last YAML block, iterate blocks from last→first and pick the first that parses and passes minimal schema validation (title+body non-empty).
+  - Apply the same validation to the prose-salvage path.
+- Added a regression test proving we skip an invalid “example” YAML block and pick an earlier valid one.
+- Ran formatting + tests:
+
+```bash
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && gofmt -w internal/api/prdata_parse.go internal/api/prdata_parse_test.go
+cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./... -count=1
+```
+
+### Why
+- Models often produce multiple YAML snippets. Selecting “last block” without validation can latch onto an incomplete example and silently produce empty structured fields.
+
+### What warrants a second pair of eyes
+- The validation strictness (`title` + `body` required): confirm it’s the right balance between robustness and “don’t reject partially useful YAML”.
