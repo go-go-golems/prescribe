@@ -86,4 +86,25 @@ This step added a dedicated CLI command to emit a machine-readable per-element t
   - `prescribe session token-count --output json`
   - `prescribe session token-count --include-filtered --all --output json`
 
+## Step 3: Add `generate --print-rendered-token-count` flag
+
+This step added a small but high-signal debug flag to `prescribe generate` that prints token counts for the **rendered** LLM payload (system + user). This makes it easy to compare `session show token_count` (preflight budgeting) with the exact rendered prompt strings we will send to inference, without having to export a file or use an external counter.
+
+**Commit (code):** ae455d6d7ff12dc0de28a8157ffc69ee4445a3cc — "prescribe: optionally print rendered payload token counts"
+
+### What I did
+- Added `--print-rendered-token-count` to `prescribe generate`.
+- When enabled, prints to stderr:
+  - encoding name (`PRESCRIBE_TOKEN_ENCODING` / `tokens.EncodingName()`)
+  - system prompt token count
+  - user prompt token count
+  - total (system + user)
+  - token count of the exported envelope for the selected `--separator` (best-effort)
+
+### What worked
+- `go test ./...` passes.
+
+### What warrants a second pair of eyes
+- Whether we want to always print both “raw system/user” and “export envelope” counts, or gate the envelope count to export modes only (right now it prints best-effort in both paths).
+
 
