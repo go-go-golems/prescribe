@@ -261,19 +261,59 @@ func debugLogAssistantText(t *turns.Turn, assistantText string) {
 	preview := summarizeForDebug(assistantText, 4000)
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(assistantText)))
 	model := ""
+	stopReason := ""
+	var usage *events.Usage
 	if t != nil && t.Metadata != nil {
 		if v, ok := t.Metadata[turns.TurnMetaKeyModel]; ok {
 			if s, ok := v.(string); ok {
 				model = s
 			}
 		}
+		if v, ok := t.Metadata[turns.TurnMetaKeyStopReason]; ok && v != nil {
+			if s, ok := v.(string); ok {
+				stopReason = s
+			} else {
+				stopReason = fmt.Sprintf("%v", v)
+			}
+		}
+		if v, ok := t.Metadata[turns.TurnMetaKeyUsage]; ok && v != nil {
+			switch u := v.(type) {
+			case *events.Usage:
+				usage = u
+			case events.Usage:
+				uu := u
+				usage = &uu
+			case map[string]any:
+				// tolerate map payloads if they came from serialization boundaries
+				uu := events.Usage{}
+				if x, ok := u["input_tokens"].(int); ok {
+					uu.InputTokens = x
+				} else if x, ok := u["input_tokens"].(int64); ok {
+					uu.InputTokens = int(x)
+				}
+				if x, ok := u["output_tokens"].(int); ok {
+					uu.OutputTokens = x
+				} else if x, ok := u["output_tokens"].(int64); ok {
+					uu.OutputTokens = int(x)
+				}
+				if uu.InputTokens != 0 || uu.OutputTokens != 0 {
+					usage = &uu
+				}
+			}
+		}
 	}
-	log.Debug().
+	e := log.Debug().
 		Str("model", model).
 		Int("assistant_len", len(assistantText)).
 		Str("assistant_sha256", hash).
-		Str("assistant_preview", preview).
-		Msg("api: assistant raw output (last assistant text block)")
+		Str("assistant_preview", preview)
+	if strings.TrimSpace(stopReason) != "" {
+		e = e.Str("stop_reason", stopReason)
+	}
+	if usage != nil {
+		e = e.Int("input_tokens", usage.InputTokens).Int("output_tokens", usage.OutputTokens)
+	}
+	e.Msg("api: assistant raw output (last assistant text block)")
 }
 
 func summarizeForDebug(s string, max int) string {
