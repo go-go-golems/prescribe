@@ -31,9 +31,16 @@ Capture and investigate a mismatch between:
 ### What we observed
 
 - In `prescribe`, `session show` reported ~**146,878** tokens for a curated session (base `origin/main`).
-- The user reports that when counting the “rendered version” using Pinocchio’s token count (also using tiktoken), it showed ~**248** tokens.
+- The user tokenized the rendered payload via:
+  - `prescribe generate --export-rendered | pinocchio tokens count -`
+  - Model: `gpt-4`
+  - Codec: `cl100k_base`
+  - Total tokens: **254,352**
 
-This is a huge discrepancy and likely means **we are counting different text blobs**, or using **different encodings**, or there is a **bug in the counting flow**.
+This discrepancy suggests we are either:
+- counting **different input blobs** (session preflight vs rendered prompt),
+- counting the **same blob but with structural duplication** (template behavior), and/or
+- mixing “context-only tokens” vs “full prompt payload tokens”.
 
 ### Tokenizer used by prescribe
 
@@ -65,6 +72,22 @@ Exported rendered payload is created by:
 - which calls `internal/api.CompilePrompt(req)` (templating split + render)
 
 So “rendered payload tokens” should correspond to tokenizing the concatenated `(system,user)` strings (or the XML envelope if you tokenize the exported XML file).
+
+### Likely root cause (based on current prompt template + defaults)
+
+1) `session show token_count` **does not include prompt tokens** at all:
+   - It sums only included file diffs/full content (`file.Tokens`) + additional context items (`ctx.Tokens`).
+   - It does not add `tokens.Count(req.Prompt)` (stored template) or `tokens.Count(systemPrompt/userPrompt)` (rendered payload).
+
+2) The default prompt template can **duplicate the main context**:
+   - In `internal/prompts/assets/create-pull-request.yaml`, the template calls:
+     - `{{ template "context" . }}` and then again under `{{ if .bracket }} ... {{ end }}`
+   - In `internal/api/prompt.go`, defaults set `"bracket": true`, which means the “context” block is rendered **twice**.
+   - That can roughly double the size of the rendered user prompt relative to “just the diff/context once”.
+
+3) Rendered payload adds **extra framing tokens**:
+   - XML-ish wrappers around diffs (our `.diff` formatting uses `<file>...</file>` boundaries)
+   - Additional instruction text + YAML schema + fences.
 
 ### Environment (redacted)
 
@@ -123,8 +146,8 @@ git fetch --all --prune
 
 ### Hypotheses (most likely first)
 
-- **H1: Counting different text**: Pinocchio is counting only the YAML *output* (or only a subset of the rendered payload), not the full `(system,user)` prompt content.
-- **H2: Counting with a different encoding**: Pinocchio may default to `o200k_base` or a model-specific encoding, while prescribe defaults to `cl100k_base`.
+- **H1: Session token_count is “context-only”**: it undercounts relative to rendered payload because it excludes the system/user prompt text.
+- **H2: Template duplicates context**: `.bracket=true` renders the core context block twice, inflating rendered tokens.
 - **H3: Session token_count includes content that is not in rendered payload**:
   - e.g. context items counted in session, but not injected into the rendered prompt (template does not include `.context` or logic differs).
 - **H4: Session token_count is stale**: file tokens are computed from diffs/full-file content but the rendered payload includes something else (e.g., only summary or only paths), creating a mismatch.
