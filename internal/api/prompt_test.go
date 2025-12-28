@@ -74,3 +74,41 @@ func TestCompilePrompt_plainPrompt_fallsBackToUserContext(t *testing.T) {
 		t.Fatalf("expected fallback user context output, got:\n%s", user)
 	}
 }
+
+func TestCompilePrompt_pinocchioStyleCombinedPrompt_omitsEmptyDescriptionBlock(t *testing.T) {
+	req := GenerateDescriptionRequest{
+		SourceBranch: "feature",
+		TargetBranch: "main",
+		Prompt:       prompts.DefaultPrompt(),
+		Files: []domain.FileChange{
+			{
+				Path:     "a.go",
+				Type:     domain.FileTypeDiff,
+				Included: true,
+				Diff:     "diff --git a/a.go b/a.go\n+added\n",
+			},
+		},
+		AdditionalContext: []domain.ContextItem{
+			{Type: domain.ContextTypeFile, Path: "README.md", Content: "# Hello\n"},
+		},
+	}
+
+	_, user, err := compilePrompt(req)
+	if err != nil {
+		t.Fatalf("compilePrompt error: %v", err)
+	}
+
+	// When no note-based description was provided, the prompt must not emit a dangling marker.
+	if strings.Contains(user, "The description of the pull request is:") {
+		t.Fatalf("expected prompt to omit legacy description line, got:\n%s", user)
+	}
+	if strings.Contains(user, "Pull request description / notes provided by the user:") {
+		t.Fatalf("expected prompt to omit description block header when empty, got:\n%s", user)
+	}
+	if strings.Contains(user, "BEGIN DESCRIPTION") || strings.Contains(user, "END DESCRIPTION") {
+		t.Fatalf("expected prompt to omit description block when empty, got:\n%s", user)
+	}
+	if strings.Contains(user, "is: .") {
+		t.Fatalf("expected prompt to avoid empty description marker, got:\n%s", user)
+	}
+}
