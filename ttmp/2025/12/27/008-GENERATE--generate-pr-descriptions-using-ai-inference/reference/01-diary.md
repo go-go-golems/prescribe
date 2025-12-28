@@ -315,7 +315,7 @@ Document the step-by-step research and analysis process for implementing AI-powe
 
 ## Step 7: Lock down export-context behavior (tests) + remove exporter drift
 
-**Commit (code):** N/A — Implementation (pre-commit)
+**Commit (code):** `1b25b00` — test: cover generate --export-context and dedupe exporter
 
 ### What I did
 - Extended `prescribe/test/test-cli.sh` and `prescribe/test/test-all.sh` to exercise:
@@ -340,4 +340,4 @@ Document the step-by-step research and analysis process for implementing AI-powe
 - None for the export milestone; next work is the “Later” inference path (templating + deterministic output parsing).
 
 ### Commits (if any)
-- N/A
+- `1b25b00` - test: cover generate --export-context and dedupe exporter

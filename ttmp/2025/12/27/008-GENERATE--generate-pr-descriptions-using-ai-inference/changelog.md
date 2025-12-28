@@ -54,3 +54,8 @@ Updated standard CLI testing playbook to include generate --export-context and c
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/01-cli-testing-playbook.md — Added export-context section and fixed flags
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/tasks.md — Handoff-ready task list
 
+
+## 2025-12-28
+
+Added regression coverage for `prescribe generate --export-context` in `test/test-cli.sh` and `test/test-all.sh` (all separators + `--output-file`). Fixed those shell tests to rebuild a per-HEAD binary so they don’t accidentally exercise a stale `/tmp/prescribe`. Removed the duplicate markdown exporter under `internal/tui/export` and moved its unit test to `internal/export`. (commit `1b25b00`)
+
