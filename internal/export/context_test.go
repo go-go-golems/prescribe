@@ -12,6 +12,8 @@ func TestBuildGenerationContext_markdown_basic(t *testing.T) {
 	req := api.GenerateDescriptionRequest{
 		SourceBranch: "feature",
 		TargetBranch: "main",
+		SourceCommit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		TargetCommit: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 		Prompt:       "please write a PR description",
 		Files: []domain.FileChange{
 			{
@@ -30,6 +32,8 @@ func TestBuildGenerationContext_markdown_basic(t *testing.T) {
 	for _, want := range []string{
 		"Source: feature",
 		"Target: main",
+		"Source commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		"Target commit: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 		"please write a PR description",
 		"### a.go",
 		"diff --git a/a.go b/a.go",
@@ -40,5 +44,3 @@ func TestBuildGenerationContext_markdown_basic(t *testing.T) {
 		}
 	}
 }
-
-

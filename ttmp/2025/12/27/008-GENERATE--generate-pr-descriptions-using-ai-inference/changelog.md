@@ -89,3 +89,16 @@ Validated the `prescribe generate --export-rendered` export-only workflow and co
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/tasks.md — Mark `--export-rendered` tasks as done
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/reference/01-diary.md — Step 13 verification notes
 
+
+## 2025-12-28
+
+Reconciled branch refs with resolved commit SHAs in export payloads. Export outputs now include `<source_commit>` / `<target_commit>` in XML and the equivalent lines in other separator formats. XML context-file items also include a `commit="..."` attribute to indicate which tree the file content came from.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/controller/controller.go — Resolve source/target commit SHAs when building the canonical request
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/git/git.go — Add `ResolveCommit(ref)` helper (`git rev-parse`)
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/export/context.go — Emit commit metadata in export payloads
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-cli.sh — Assert commit tags exist in XML export outputs
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/test/test-all.sh — Assert commit tags exist in XML export outputs
+

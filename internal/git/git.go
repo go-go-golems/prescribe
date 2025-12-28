@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tokens"
+	"github.com/pkg/errors"
 )
 
 // Service provides git operations
@@ -23,8 +24,19 @@ func NewService(repoPath string) (*Service, error) {
 	if _, err := os.Stat(gitDir); os.IsNotExist(err) {
 		return nil, fmt.Errorf("not a git repository: %s", repoPath)
 	}
-	
+
 	return &Service{repoPath: repoPath}, nil
+}
+
+// ResolveCommit resolves a git ref (branch name, tag, SHA, etc) to a full commit SHA.
+func (s *Service) ResolveCommit(ref string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", ref)
+	cmd.Dir = s.repoPath
+	output, err := cmd.Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to resolve ref to commit")
+	}
+	return strings.TrimSpace(string(output)), nil
 }
 
 // GetCurrentBranch returns the current branch name
@@ -49,14 +61,14 @@ func (s *Service) GetDefaultBranch() (string, error) {
 		branch = strings.TrimPrefix(branch, "refs/remotes/origin/")
 		return branch, nil
 	}
-	
+
 	// Fallback: check if main exists, otherwise use master
 	cmd = exec.Command("git", "rev-parse", "--verify", "main")
 	cmd.Dir = s.repoPath
 	if err := cmd.Run(); err == nil {
 		return "main", nil
 	}
-	
+
 	return "master", nil
 }
 
@@ -80,24 +92,24 @@ func (s *Service) GetChangedFiles(sourceBranch, targetBranch string) ([]domain.F
 	if err != nil {
 		return nil, fmt.Errorf("failed to get changed files: %w", err)
 	}
-	
+
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	files := make([]domain.FileChange, 0, len(lines))
-	
+
 	for _, line := range lines {
 		if line == "" {
 			continue
 		}
-		
+
 		parts := strings.Fields(line)
 		if len(parts) < 3 {
 			continue
 		}
-		
+
 		additions := 0
 		deletions := 0
 		path := parts[2]
-		
+
 		// Parse additions and deletions
 		if parts[0] != "-" {
 			fmt.Sscanf(parts[0], "%d", &additions)
@@ -105,20 +117,20 @@ func (s *Service) GetChangedFiles(sourceBranch, targetBranch string) ([]domain.F
 		if parts[1] != "-" {
 			fmt.Sscanf(parts[1], "%d", &deletions)
 		}
-		
+
 		// Get the diff for this file
 		diff, err := s.GetFileDiff(sourceBranch, targetBranch, path)
 		if err != nil {
 			diff = ""
 		}
-		
+
 		// Get full file content (before and after)
 		fullBefore, _ := s.GetFileContent(targetBranch, path)
 		fullAfter, _ := s.GetFileContent(sourceBranch, path)
-		
+
 		// Count tokens using tokenizer (preflight estimate)
 		tokens_ := tokens.Count(diff)
-		
+
 		files = append(files, domain.FileChange{
 			Path:       path,
 			Included:   true, // Include by default
@@ -131,7 +143,7 @@ func (s *Service) GetChangedFiles(sourceBranch, targetBranch string) ([]domain.F
 			FullAfter:  fullAfter,
 		})
 	}
-	
+
 	return files, nil
 }
 
@@ -165,7 +177,7 @@ func (s *Service) ListFiles(ref string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list files: %w", err)
 	}
-	
+
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	files := make([]string, 0, len(lines))
 	for _, line := range lines {
@@ -173,6 +185,6 @@ func (s *Service) ListFiles(ref string) ([]string, error) {
 			files = append(files, line)
 		}
 	}
-	
+
 	return files, nil
 }

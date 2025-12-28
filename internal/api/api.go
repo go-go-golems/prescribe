@@ -33,6 +33,8 @@ func (s *Service) SetStepSettings(stepSettings *settings.StepSettings) {
 type GenerateDescriptionRequest struct {
 	SourceBranch      string
 	TargetBranch      string
+	SourceCommit      string
+	TargetCommit      string
 	Files             []domain.FileChange
 	AdditionalContext []domain.ContextItem
 	Prompt            string
@@ -132,6 +134,17 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 	b.WriteString("## Branches\n\n")
 	b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
 	b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
+
+	if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
+		b.WriteString("## Commits\n\n")
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
+		}
+		b.WriteString("\n")
+	}
 
 	b.WriteString(fmt.Sprintf("## Included files (%d)\n\n", len(req.Files)))
 	for _, f := range req.Files {

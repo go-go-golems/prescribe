@@ -335,9 +335,25 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		return api.GenerateDescriptionRequest{}, fmt.Errorf("no files included for generation")
 	}
 
+	sourceCommit := ""
+	targetCommit := ""
+	if c.gitService != nil {
+		var err error
+		sourceCommit, err = c.gitService.ResolveCommit(c.data.SourceBranch)
+		if err != nil {
+			return api.GenerateDescriptionRequest{}, fmt.Errorf("failed to resolve source commit for %q: %w", c.data.SourceBranch, err)
+		}
+		targetCommit, err = c.gitService.ResolveCommit(c.data.TargetBranch)
+		if err != nil {
+			return api.GenerateDescriptionRequest{}, fmt.Errorf("failed to resolve target commit for %q: %w", c.data.TargetBranch, err)
+		}
+	}
+
 	return api.GenerateDescriptionRequest{
 		SourceBranch:      c.data.SourceBranch,
 		TargetBranch:      c.data.TargetBranch,
+		SourceCommit:      sourceCommit,
+		TargetCommit:      targetCommit,
 		Files:             includedFiles,
 		AdditionalContext: c.data.AdditionalContext,
 		Prompt:            c.data.CurrentPrompt,

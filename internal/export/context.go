@@ -59,6 +59,21 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 	case SeparatorMarkdown:
 		var b strings.Builder
 		b.WriteString("# Prescribe LLM payload (rendered)\n\n")
+		b.WriteString("## Branches\n\n")
+		b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
+		b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
+
+		if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString("## Commits\n\n")
+			if strings.TrimSpace(req.SourceCommit) != "" {
+				b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
+			}
+			if strings.TrimSpace(req.TargetCommit) != "" {
+				b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
+			}
+			b.WriteString("\n")
+		}
+
 		b.WriteString("## System\n\n```text\n")
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n```\n\n")
@@ -70,6 +85,14 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 	case SeparatorSimple:
 		var b strings.Builder
 		b.WriteString("--- START SYSTEM PROMPT ---\n")
+		b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n", req.SourceBranch, req.TargetBranch))
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			b.WriteString(fmt.Sprintf("SOURCE_COMMIT: %s\n", req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
+		}
+		b.WriteString("\n")
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
 		b.WriteString("--- START USER PROMPT ---\n")
@@ -80,6 +103,14 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 	case SeparatorBeginEnd:
 		var b strings.Builder
 		b.WriteString("--- BEGIN SYSTEM PROMPT ---\n")
+		b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n", req.SourceBranch, req.TargetBranch))
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			b.WriteString(fmt.Sprintf("SOURCE_COMMIT: %s\n", req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
+		}
+		b.WriteString("\n")
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
 		b.WriteString("--- BEGIN USER PROMPT ---\n")
@@ -90,6 +121,14 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 	case SeparatorDefault:
 		var b strings.Builder
 		b.WriteString("System:\n")
+		b.WriteString(fmt.Sprintf("Source: %s\nTarget: %s\n", req.SourceBranch, req.TargetBranch))
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			b.WriteString(fmt.Sprintf("Source commit: %s\n", req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString(fmt.Sprintf("Target commit: %s\n", req.TargetCommit))
+		}
+		b.WriteString("\n")
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n\nUser:\n")
 		b.WriteString(strings.TrimRight(userPrompt, "\n"))
@@ -105,6 +144,10 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 		b.WriteString(fmt.Sprintf("<source>%s</source>\n", xmlEscape(req.SourceBranch)))
 		b.WriteString(fmt.Sprintf("<target>%s</target>\n", xmlEscape(req.TargetBranch)))
 		b.WriteString("</branches>\n")
+		b.WriteString("<commits>\n")
+		b.WriteString(fmt.Sprintf("<source_commit>%s</source_commit>\n", xmlEscape(req.SourceCommit)))
+		b.WriteString(fmt.Sprintf("<target_commit>%s</target_commit>\n", xmlEscape(req.TargetCommit)))
+		b.WriteString("</commits>\n")
 
 		b.WriteString("<llm_payload>\n")
 		b.WriteString("<system><![CDATA[")
@@ -127,6 +170,10 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 	b.WriteString(fmt.Sprintf("<source>%s</source>\n", xmlEscape(req.SourceBranch)))
 	b.WriteString(fmt.Sprintf("<target>%s</target>\n", xmlEscape(req.TargetBranch)))
 	b.WriteString("</branches>\n")
+	b.WriteString("<commits>\n")
+	b.WriteString(fmt.Sprintf("<source_commit>%s</source_commit>\n", xmlEscape(req.SourceCommit)))
+	b.WriteString(fmt.Sprintf("<target_commit>%s</target_commit>\n", xmlEscape(req.TargetCommit)))
+	b.WriteString("</commits>\n")
 
 	b.WriteString("<prompt>\n")
 	b.WriteString("<text>\n")
@@ -136,7 +183,18 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 
 	b.WriteString(fmt.Sprintf("<files count=\"%d\">\n", len(req.Files)))
 	for _, f := range req.Files {
-		b.WriteString(fmt.Sprintf("<file name=\"%s\" type=\"%s\">\n", xmlEscape(f.Path), xmlEscape(string(f.Type))))
+		fileTag := fmt.Sprintf("<file name=\"%s\" type=\"%s\"", xmlEscape(f.Path), xmlEscape(string(f.Type)))
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			fileTag += fmt.Sprintf(" source_commit=\"%s\"", xmlEscape(req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			fileTag += fmt.Sprintf(" target_commit=\"%s\"", xmlEscape(req.TargetCommit))
+		}
+		if strings.TrimSpace(string(f.Version)) != "" {
+			fileTag += fmt.Sprintf(" version=\"%s\"", xmlEscape(string(f.Version)))
+		}
+		fileTag += ">\n"
+		b.WriteString(fileTag)
 		switch f.Type {
 		case domain.FileTypeFull:
 			content := f.FullAfter
@@ -167,7 +225,12 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 				b.WriteString(xmlEscape(strings.TrimSpace(ctx.Content)))
 				b.WriteString("\n</text>\n</item>\n")
 			case domain.ContextTypeFile:
-				b.WriteString(fmt.Sprintf("<item type=\"file\" path=\"%s\">\n<content>\n", xmlEscape(ctx.Path)))
+				itemTag := fmt.Sprintf("<item type=\"file\" path=\"%s\"", xmlEscape(ctx.Path))
+				if strings.TrimSpace(req.SourceCommit) != "" {
+					itemTag += fmt.Sprintf(" commit=\"%s\"", xmlEscape(req.SourceCommit))
+				}
+				itemTag += ">\n<content>\n"
+				b.WriteString(itemTag)
 				b.WriteString(xmlEscape(strings.TrimRight(ctx.Content, "\n")))
 				b.WriteString("\n</content>\n</item>\n")
 			default:
@@ -198,6 +261,16 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 	b.WriteString("## Branches\n\n")
 	b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
 	b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
+	if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
+		b.WriteString("## Commits\n\n")
+		if strings.TrimSpace(req.SourceCommit) != "" {
+			b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
+		}
+		if strings.TrimSpace(req.TargetCommit) != "" {
+			b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
+		}
+		b.WriteString("\n")
+	}
 
 	b.WriteString("## Prompt\n\n")
 	b.WriteString("```text\n")
@@ -259,7 +332,14 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 func buildSimple(req api.GenerateDescriptionRequest) string {
 	var b strings.Builder
 	b.WriteString("--- START PRESCRIBE CONTEXT ---\n")
-	b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n\n", req.SourceBranch, req.TargetBranch))
+	b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n", req.SourceBranch, req.TargetBranch))
+	if strings.TrimSpace(req.SourceCommit) != "" {
+		b.WriteString(fmt.Sprintf("SOURCE_COMMIT: %s\n", req.SourceCommit))
+	}
+	if strings.TrimSpace(req.TargetCommit) != "" {
+		b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
+	}
+	b.WriteString("\n")
 	b.WriteString("--- START PROMPT ---\n")
 	b.WriteString(strings.TrimSpace(req.Prompt))
 	b.WriteString("\n--- END PROMPT ---\n\n")
@@ -286,7 +366,14 @@ func buildSimple(req api.GenerateDescriptionRequest) string {
 func buildBeginEnd(req api.GenerateDescriptionRequest) string {
 	var b strings.Builder
 	b.WriteString("--- BEGIN PRESCRIBE CONTEXT ---\n")
-	b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n\n", req.SourceBranch, req.TargetBranch))
+	b.WriteString(fmt.Sprintf("SOURCE: %s\nTARGET: %s\n", req.SourceBranch, req.TargetBranch))
+	if strings.TrimSpace(req.SourceCommit) != "" {
+		b.WriteString(fmt.Sprintf("SOURCE_COMMIT: %s\n", req.SourceCommit))
+	}
+	if strings.TrimSpace(req.TargetCommit) != "" {
+		b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
+	}
+	b.WriteString("\n")
 	b.WriteString("--- BEGIN PROMPT ---\n")
 	b.WriteString(strings.TrimSpace(req.Prompt))
 	b.WriteString("\n--- END PROMPT ---\n\n")
@@ -314,6 +401,13 @@ func buildDefault(req api.GenerateDescriptionRequest) string {
 	var b strings.Builder
 	b.WriteString("Prescribe context\n\n")
 	b.WriteString(fmt.Sprintf("Source: %s\nTarget: %s\n\n", req.SourceBranch, req.TargetBranch))
+	if strings.TrimSpace(req.SourceCommit) != "" {
+		b.WriteString(fmt.Sprintf("Source commit: %s\n", req.SourceCommit))
+	}
+	if strings.TrimSpace(req.TargetCommit) != "" {
+		b.WriteString(fmt.Sprintf("Target commit: %s\n", req.TargetCommit))
+	}
+	b.WriteString("\n")
 	b.WriteString("Prompt:\n")
 	b.WriteString(strings.TrimSpace(req.Prompt))
 	b.WriteString("\n\n")

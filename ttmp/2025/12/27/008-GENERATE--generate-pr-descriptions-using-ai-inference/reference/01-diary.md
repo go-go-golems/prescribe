@@ -13,7 +13,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T19:42:13-05:00
+LastUpdated: 2025-12-27T19:54:31-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -528,3 +528,39 @@ The key nuance is templating: if the stored prompt is pinocchio-style Go templat
 
 ### Code review instructions
 - Review `pkg/doc/topics/02-how-to-generate-pr-description.md` around the Step 5 export sections.
+
+## Step 15: Reconcile branch names with commit SHAs in export payloads
+
+This step makes exports reproducible. Previously, export payloads only recorded branch names (e.g. `feature/foo` vs `master`). Since branches move, that meant an exported context could become ambiguous later: “feature/foo” might point to a different commit tomorrow than it did when you exported.
+
+I fixed that by resolving the branch refs to concrete commit SHAs at request-build time and emitting those SHAs in both `--export-context` and `--export-rendered` outputs. I also attach the source commit ref to context-file items so you can tell which exact tree the context file content came from.
+
+**Commit (code):** N/A — implementation in progress
+
+### What I did
+- Added ref-to-SHA resolution to the git layer (`git rev-parse`) and threaded:
+  - `SourceCommit`
+  - `TargetCommit`
+  through the canonical `GenerateDescriptionRequest`.
+- Updated exporters:
+  - `--export-context`: add `<commits>` to XML and commit lines to markdown/simple/begin-end/default
+  - `--export-rendered`: add `<commits>` to the rendered XML envelope and commit info to other separators
+  - add `commit="..."` attribute to XML context-file items (sourced from the source commit)
+- Tightened shell smoke tests to assert commit tags are present and non-empty in XML exports.
+
+### Why
+- Export payloads should be self-contained and reproducible; branch names alone are not stable identifiers.
+
+### What worked
+- `go test ./...` passes.
+- `bash test/test-cli.sh` and `bash test/test-all.sh` pass and now validate `<source_commit>`/`<target_commit>` tags in the XML export outputs.
+
+### What warrants a second pair of eyes
+- Confirm the choice of `git diff target...source` (merge-base semantics) matches how reviewers expect “target commit” to be interpreted. We currently record the ref’s resolved commit SHA, not the merge-base SHA.
+
+### Code review instructions
+- Start at `internal/controller/controller.go` (`BuildGenerateDescriptionRequest`) and verify commit resolution is best-effort and does not break non-git unit tests.
+- Review `internal/export/context.go` for the additive output changes (`<commits>` blocks and context-file `commit` attribute).
+- Validate via:
+  - `go test ./... -count=1`
+  - `bash test/test-cli.sh`

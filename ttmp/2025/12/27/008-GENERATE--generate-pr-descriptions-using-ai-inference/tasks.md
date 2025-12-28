@@ -19,7 +19,7 @@
 
 ## Later (post-export milestone)
 
-- [ ] Reconcile commit/branch metadata in exporter (include source/target commit hashes; include commit ref for context files)
+- [x] Reconcile commit/branch metadata in exporter (include source/target commit hashes; include commit ref for context files)
 
 ## Next
 
