@@ -27,3 +27,27 @@ func TestParseGeneratedPRDataFromAssistantText_fallback_stripsFence(t *testing.T
 		t.Fatalf("expected title=ok, got %q", got.Title)
 	}
 }
+
+func TestParseGeneratedPRDataFromAssistantText_salvagesYAMLFromTitleBlock(t *testing.T) {
+	in := "Sure — here is the YAML:\n\n" +
+		"title: ok\n" +
+		"body: |\n" +
+		"  hi\n" +
+		"changelog: |\n" +
+		"  c\n" +
+		"release_notes:\n" +
+		"  title: rn\n" +
+		"  body: |\n" +
+		"    rn body\n"
+
+	got, err := ParseGeneratedPRDataFromAssistantText(in)
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+	if got.Title != "ok" {
+		t.Fatalf("expected title=ok, got %q", got.Title)
+	}
+	if got.ReleaseNotes == nil || got.ReleaseNotes.Title != "rn" {
+		t.Fatalf("expected release_notes.title=rn, got %#v", got.ReleaseNotes)
+	}
+}

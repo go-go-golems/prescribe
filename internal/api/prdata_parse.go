@@ -1,6 +1,7 @@
 package api
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/go-go-golems/geppetto/pkg/events/structuredsink/parsehelpers"
@@ -31,6 +32,17 @@ func ParseGeneratedPRDataFromAssistantText(assistantText string) (*domain.Genera
 	}
 
 	_, body := parsehelpers.StripCodeFenceBytes([]byte(raw))
+	if out, err := parseGeneratedPRDataYAML(body); err == nil {
+		return out, nil
+	}
+
+	// Heuristic salvage: if the model emitted prose around the YAML (common in some providers),
+	// attempt to parse from the last "title:" block to the end.
+	salvaged, ok := trySalvageYAMLFromTitleBlock(string(body))
+	if ok {
+		return parseGeneratedPRDataYAML([]byte(salvaged))
+	}
+
 	return parseGeneratedPRDataYAML(body)
 }
 
@@ -44,4 +56,25 @@ func parseGeneratedPRDataYAML(b []byte) (*domain.GeneratedPRData, error) {
 		return nil, errors.Wrap(err, "failed to parse PR YAML")
 	}
 	return &out, nil
+}
+
+var reYAMLTitleStart = regexp.MustCompile(`(?m)^[ \t]*title:[ \t]*`)
+
+func trySalvageYAMLFromTitleBlock(s string) (string, bool) {
+	raw := strings.TrimSpace(s)
+	if raw == "" {
+		return "", false
+	}
+
+	locs := reYAMLTitleStart.FindAllStringIndex(raw, -1)
+	if len(locs) == 0 {
+		return "", false
+	}
+	// Prefer the last occurrence (models often show an example earlier and the real output later).
+	start := locs[len(locs)-1][0]
+	out := strings.TrimSpace(raw[start:])
+	if out == "" {
+		return "", false
+	}
+	return out, true
 }
