@@ -549,3 +549,35 @@ cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./..
 
 ### What warrants a second pair of eyes
 - The validation strictness (`title` + `body` required): confirm it’s the right balance between robustness and “don’t reject partially useful YAML”.
+
+## Step 12: Debug Turn payload + raw Gemini output (why body/changelog are empty)
+
+This step added explicit debug logs around what we send to the LLM engine (seed Turn) and what we
+receive back (raw assistant text). The goal was to explain the Gemini “partial YAML” behavior we’re
+seeing: Gemini is returning only a `title:` line and then a bare `body` key without a colon/value.
+That is invalid YAML, which previously caused parsing to fail (or produce empty fields when repaired).
+
+**Commit (code):** 9d65e78f17817a99ed6ca4fe5e9168671060ea93 — "debug(api): log seed prompt + assistant raw output (preview+hash)"
+
+### What I did
+- Added debug logs in `internal/api/api.go`:
+  - Seed turn: system/user lengths + sha256 + truncated previews
+  - Assistant raw output: length + sha256 + truncated preview
+- Ran a small-repo generate using the Pinocchio profile:
+  - `PINOCCHIO_PROFILE=gemini-2.5-pro`
+  - Captured stdout/stderr artifacts under `/tmp/prescribe-gemini-profile-debug-*`
+
+### What I saw (key evidence)
+- Seed user prompt includes the YAML-only contract and the YAML schema (so prompt looks structurally correct).
+- Gemini output preview (raw assistant text) was essentially:
+  - `title: '...'`
+  - `body` (missing `:` / value), sometimes inside a ```yaml fence
+- That explains why `GeneratedPRData` ends up with `body: ""` / `changelog: ""` (or parse failure before repair).
+
+### Follow-up improvement (small repair)
+- Added a minimal parser repair for a common formatting failure mode: bare `body`/`changelog` lines without `:`.
+
+**Commit (code):** e0309ac3ab265ee378709b4cbe73e5a519a93630 — "fix(api): repair common bare YAML keys from LLM outputs"
+
+### What warrants a second pair of eyes
+- Whether we should treat “body empty” as a hard parse failure and trigger a repair retry (second inference pass) rather than silently accepting an empty body.
