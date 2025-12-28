@@ -13,11 +13,11 @@
 - [x] Decide where structured PR fields live (extend `domain.PRData` vs parallel result type)
 
 ### Structured streaming extraction (optional, later)
-- [ ] Update prompt to optionally emit a tagged block (e.g. `<prescribe:prdata:v1>...`) for structuredsink extraction
-- [ ] Implement a `prdata` extractor session using `parsehelpers.NewDebouncedYAML` to emit `prdata-update` / `prdata-completed` events
+- [ ] (moved) Update prompt to optionally emit a tagged block (e.g. `<prescribe:prdata:v1>...`) for structuredsink extraction — moved to `014-STRUCTUREDSINK-STREAMING`
+- [ ] (moved) Implement a `prdata` extractor session using `parsehelpers.NewDebouncedYAML` to emit `prdata-update` / `prdata-completed` events — moved to `014-STRUCTUREDSINK-STREAMING`
 
 ### (Later) TUI streaming integration
-- [ ] Wire streaming generation into `prescribe tui` (see analysis doc in this ticket)
+- [ ] (moved) Wire streaming generation into `prescribe tui` — moved to `015-TUI-STREAMING`
 
 ## Completed
 

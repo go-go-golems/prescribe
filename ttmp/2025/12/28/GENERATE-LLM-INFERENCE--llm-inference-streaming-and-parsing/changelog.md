@@ -43,4 +43,10 @@ Updated user-facing documentation for the new `generate` options (including `--s
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/README.md — Update generate usage/options
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/28/GENERATE-LLM-INFERENCE--llm-inference-streaming-and-parsing/playbook/01-playbook-write-a-great-pr-description-from-scratch-go-repo-many-commits.md — New playbook
 
+## 2025-12-28
+
+Split remaining work into dedicated tickets:
+- `014-STRUCTUREDSINK-STREAMING` (structured streaming extraction)
+- `015-TUI-STREAMING` (Bubble Tea / TUI streaming integration)
+
 

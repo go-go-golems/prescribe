@@ -1,7 +1,7 @@
 ---
 Title: Generate LLM inference (streaming + parsing)
 Ticket: GENERATE-LLM-INFERENCE
-Status: active
+Status: closed
 Topics:
     - prescribe
     - geppetto
@@ -43,6 +43,10 @@ This ticket owns the **actual LLM inference path** behind `prescribe generate`:
 - (later) streaming integration into the TUI,
 - robust extraction/parsing of structured PR output (YAML) from the final Turn,
 - optional structured streaming extraction via Geppetto `structuredsink`.
+
+This ticket has been **split**:
+- structured streaming extraction moved to `014-STRUCTUREDSINK-STREAMING`
+- TUI streaming integration moved to `015-TUI-STREAMING`
 
 ## Tasks
 
