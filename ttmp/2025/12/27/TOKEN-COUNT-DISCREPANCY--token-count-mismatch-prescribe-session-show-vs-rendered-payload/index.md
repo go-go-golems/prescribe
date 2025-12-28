@@ -1,7 +1,7 @@
 ---
 Title: 'Token count mismatch: prescribe session show vs rendered payload'
 Ticket: TOKEN-COUNT-DISCREPANCY
-Status: active
+Status: review
 Topics:
     - prescribe
     - tokenization
@@ -25,10 +25,11 @@ RelatedFiles:
       Note: Concrete session commands + token tuning steps used during report
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T20:56:40.940937122-05:00
+LastUpdated: 2025-12-28T11:01:59.563730233-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Token count mismatch: prescribe session show vs rendered payload
