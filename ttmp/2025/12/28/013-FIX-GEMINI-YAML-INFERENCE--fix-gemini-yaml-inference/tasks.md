@@ -22,7 +22,7 @@ WhenToUse: ""
 
 ## Repro + evidence gathering
 
-- [ ] Run the Gemini repro script and attach the artifacts paths to the bug report:
+- [x] Run the Gemini repro script and attach the artifacts paths to the bug report:
   - `prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/05-smoke-test-prescribe-generate-gemini-profile.sh`
 - [ ] Run provider compare on the same repo/session (Gemini vs OpenAI vs Claude):
   - `prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/06-compare-provider-profiles-generate.sh`
@@ -30,16 +30,19 @@ WhenToUse: ""
 
 ## Debugging: streaming vs non-streaming
 
-- [ ] Add a dedicated ticket script to compare Gemini streaming vs non-streaming on the same repo/session:
+- [x] Add a dedicated ticket script to compare Gemini streaming vs non-streaming on the same repo/session:
   - New script location: `scripts/01-compare-gemini-streaming-vs-nonstreaming.sh`
   - Run twice with `PINOCCHIO_PROFILE=gemini-2.5-pro`: once with `generate --stream`, once without.
   - Capture stdout/stderr artifacts under `/tmp/...` and compare assistant raw output length/hash and parse results.
-- [ ] Re-run Gemini generation **without** `--stream` and compare raw assistant output length/hash:
+- [x] Re-run Gemini generation **without** `--stream` and compare raw assistant output length/hash:
   - If non-streaming returns full YAML, the issue is likely streaming aggregation in the Gemini engine.
   - If non-streaming also returns partial YAML, it’s likely model behavior / max tokens / safety refusal.
 - [ ] Inspect geppetto Gemini engine response assembly:
   - `geppetto/pkg/steps/ai/gemini/engine_gemini.go`
   - Confirm how streaming chunks are concatenated and how final text is chosen.
+
+Note: `--print-parsed-parameters` is useful for provenance (where `ai-max-response-tokens` came from),
+but it may print secrets if your config/profile contains API keys. Use with care.
 
 ## Fix options
 

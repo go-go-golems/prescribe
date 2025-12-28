@@ -80,9 +80,77 @@ This step adds best-effort logging for Gemini response metadata so we can quickl
 ### Why
 - Without stop reason/usage, “partial YAML” is ambiguous: it could be truncation (`MAX_TOKENS`), refusal/safety, or genuine model noncompliance.
 
+### What didn't work
+- The first attempt to commit the Gemini engine change failed due to `golangci-lint` (`exhaustive`) complaining about an intentionally-partial `switch` over `reflect.Kind`:
+
+  - `pkg/steps/ai/gemini/engine_gemini.go:... missing cases in switch of type reflect.Kind (exhaustive)`
+
+  We fixed it by adding `//nolint:exhaustive` on that numeric-only switch.
+
 ### What warrants a second pair of eyes
 - The reflection-based extraction in the Gemini engine: confirm it matches the SDK fields in the current `generative-ai-go` version.
 - The mapping of Gemini token counts to our generic `Usage` struct (input=prompt tokens, output=candidate tokens).
+
+## Step 3: Reproduce and confirm truncation cause (MaxTokens) for stream vs non-stream
+
+This step ran the new ticket script that executes Gemini twice on the same tiny repo/session: once with `generate --stream` and once without. Both runs produced truncated YAML and, critically, the captured metadata shows the **stop reason is MaxTokens** in both cases. That strongly suggests the “bare `body`/partial YAML” symptom is primarily a **token budget issue**, not a streaming-assembly bug.
+
+### What I did
+- Ran:
+  - `prescribe/ttmp/2025/12/28/013-FIX-GEMINI-YAML-INFERENCE--fix-gemini-yaml-inference/scripts/01-compare-gemini-streaming-vs-nonstreaming.sh`
+- Artifacts:
+  - Base: `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947`
+  - Streaming:
+    - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.stream.out.txt`
+    - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.stream.err.txt`
+  - Non-streaming:
+    - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.nonstream.out.txt`
+    - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.nonstream.err.txt`
+
+### What worked
+- We now have deterministic evidence (logs + stop_reason + token usage) to explain the truncation.
+
+### Key observations
+- Streaming run:
+  - `stop_reason=FinishReasonMaxTokens`
+  - `input_tokens=1718 output_tokens=22`
+  - assistant output stops right after `body:` (truncated YAML)
+- Non-streaming run:
+  - `stop_reason=FinishReasonMaxTokens`
+  - `input_tokens=1718 output_tokens=19`
+  - assistant output stops right after the title line (also truncated)
+
+### What I learned
+- The issue reproduces **with and without** `--stream`; streaming display is not the cause.
+- The model is being capped at a very small output token budget (tens of tokens), causing YAML truncation.
+
+### What should be done next
+- Implement a single retry path for invalid/partial YAML when `stop_reason` indicates max tokens:
+  - bump `ai-max-response-tokens` for the retry (provider-agnostic; especially helps Gemini profiles)
+  - add a corrective retry instruction (“Output complete YAML only; no fences; include all required keys”)
+- Also consider documenting/adjusting recommended `ai-max-response-tokens` for Gemini profiles used with `prescribe generate`.
+
+## Step 4: Trace the low max token limit back to config defaults (Pinocchio vs Prescribe)
+
+This step answered “why is Gemini so capped?” by using `--print-parsed-parameters` to inspect provenance for `ai-max-response-tokens`. The key discovery is that the Gemini profile (`gemini-2.5-pro`) does **not** set `ai-max-response-tokens`, so we fall back to geppetto’s `ai-chat` defaults unless a config file overrides it. In my environment, Pinocchio has a global config file (`~/.pinocchio/config.yaml`) that sets `ai-chat.ai-max-response-tokens: 4096`, but `prescribe` (as a separate app name) did not load that file, causing the unexpectedly small output budget.
+
+Important process note: `--print-parsed-parameters` can include **secret values** when your config/profile contains API keys; treat its output as sensitive.
+
+**Commit (code / prescribe):** d290191c523ebc7907bab1b3cd5365f32cd707a5 — "Generate: apply ~/.pinocchio config as defaults overlay"
+
+**Commit (code / prescribe):** 0e5fce96e8300a8a65655b8bb26e6bdffddaafb7 — "Generate: inherit ai-chat defaults from ~/.pinocchio/config.yaml"
+
+### What I did
+- Ran `prescribe generate --print-parsed-parameters` with `PINOCCHIO_PROFILE=gemini-2.5-pro` and confirmed:
+  - `ai-max-response-tokens` initially came from defaults (1000) and not from the Gemini profile.
+  - After loading Pinocchio config as a defaults overlay, `ai-max-response-tokens` resolves to 4096 from `~/.pinocchio/config.yaml`.
+- Updated `prescribe generate` middleware chain to load Pinocchio config as a *defaults overlay* (lower precedence than profiles), while filtering non-layer keys like `repositories: [...]`.
+
+### What worked
+- With the overlay in place, Gemini runs complete without truncation and the retry path is not triggered.
+
+### What warrants a second pair of eyes
+- The config loader mapper: confirm we correctly ignore non-layer keys (e.g. `repositories`) and don’t accidentally load unrelated keys into existing layers.
 
 ## Usage Examples
 

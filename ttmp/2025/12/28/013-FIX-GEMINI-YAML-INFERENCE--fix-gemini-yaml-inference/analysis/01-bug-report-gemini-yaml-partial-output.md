@@ -79,6 +79,34 @@ body
 ```
 ```
 
+### Streaming vs non-streaming: both truncate due to MaxTokens
+
+We ran the ticket comparison script to execute the same tiny repo/session twice (Gemini):
+- once with `generate --stream`
+- once without `--stream`
+
+Artifacts (Dec 28, 2025):
+- Base: `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947`
+- Streaming:
+  - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.stream.out.txt`
+  - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.stream.err.txt`
+- Non-streaming:
+  - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.nonstream.out.txt`
+  - `/tmp/prescribe-gemini-stream-vs-nonstream-20251228-152947.nonstream.err.txt`
+
+Key finding: **both runs report** `stop_reason=FinishReasonMaxTokens` with very small output token counts (tens of tokens).
+That strongly indicates the YAML is being cut off due to **max response tokens**, not due to streaming output parsing/assembly.
+
+### Root cause: Pinocchio config defaults not applied to prescribe
+
+Using `--print-parsed-parameters`, we confirmed that the `gemini-2.5-pro` profile does **not** set `ai-max-response-tokens`,
+so `prescribe` initially fell back to the geppetto `ai-chat` layer default (1000). In our environment, Pinocchio additionally
+has a global config file at `~/.pinocchio/config.yaml` that sets `ai-chat.ai-max-response-tokens: 4096`, but `prescribe`
+did not load Pinocchio’s config because it only discovers `prescribe` config paths via `ResolveAppConfigPath("prescribe", "")`.
+
+Fix: `prescribe generate` now loads `~/.pinocchio/config.yaml` as a *defaults overlay* (lower precedence than profiles),
+so provider/model selection still comes from `PINOCCHIO_PROFILE`, while token defaults are inherited.
+
 ### Seed prompt correctness
 
 We instrumented debug logs to print:
@@ -133,8 +161,8 @@ This helps determine whether the issue is Gemini-specific.
 
 ## Hypotheses
 
-1) **Gemini engine streaming aggregation bug**: we may be dropping text after the first newline or mishandling chunk concatenation.
-2) **Gemini model behavior**: it may stop early, refuse to output the full YAML, or be constrained by max tokens/safety.
+1) **Max response tokens too low** (most likely): both streaming and non-streaming runs ended with `FinishReasonMaxTokens`.
+2) **Gemini model behavior**: even with sufficient tokens, the model may still violate “YAML-only” (code fences, partial keys) sometimes.
 3) **Prompt interaction**: despite “YAML-only”, some models may output “schema header” and stop.
 
 ## Next steps (recommended)
