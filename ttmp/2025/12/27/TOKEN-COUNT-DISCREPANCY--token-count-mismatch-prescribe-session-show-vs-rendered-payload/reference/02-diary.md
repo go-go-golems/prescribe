@@ -131,4 +131,36 @@ This step added a best-effort utility command to analyze exported “XML-ish” 
 - Example usage:
   - `prescribe tokens count-xml --file /tmp/prescribe-rendered.xml --output json`
 
+## Step 5: Repro script plan (low-noise) + first run
+
+This step adds a single low-noise script that recreates the “mismatch” setup from the ticket and then runs *only* the debug commands we need: session breakdown, rendered payload token counts, export files, and post-hoc section counts. The goal is to quickly answer whether the discrepancy is a **tokenizer mismatch** (different encoding/codecs) or a **text mismatch** (e.g. context duplication + envelope overhead).
+
+### Debugging plan (updated)
+- Run the repro script to generate deterministic artifacts (session JSON + exported XML).
+- Compare:
+  - `session show token_count` vs `session token-count stored_total` (should match)
+  - `generate --print-rendered-token-count` (system/user/total) vs `tokens count-xml` section counts (`<llm_payload>`, `<system>`, `<user>`)
+  - `prescribe tokens count-xml` document total vs `pinocchio tokens count` on the *exact same bytes* (rendered.xml)
+- If prescribe + pinocchio match on rendered.xml with the same codec, the discrepancy is **not** tokenizer mismatch.
+
+### What I did
+- Added script: `scripts/repro-token-count-discrepancy.sh`
+
+### What worked
+- The repro run shows `pinocchio` and `prescribe` match exactly when counting the *same bytes* with `cl100k_base`:
+  - `rendered.xml` token count: **242,372** (both tools)
+
+### What I learned
+- The discrepancy is **not** a tokenizer mismatch; it’s a **different-input-text** mismatch:
+  - `session show token_count`: **128,798**
+  - rendered payload (system+user): **242,194**
+  - rendered XML export envelope: **242,372**
+
+### What should be done in the future
+- Use this script + the existing tools to quantify whether the default template is duplicating context (e.g. `.bracket=true` rendering the context block twice), and how much token overhead comes from scaffolding vs diff/context content.
+
+### Code review instructions
+- Read the script, then run it from anywhere:
+  - `bash scripts/repro-token-count-discrepancy.sh`
+
 
