@@ -52,12 +52,15 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 		return nil, errors.New("no AI StepSettings configured (configure provider/model flags higher up)")
 	}
 
-	userContext := buildUserContext(req)
+	systemPrompt, userPrompt, err := compilePrompt(req)
+	if err != nil {
+		return nil, err
+	}
 
 	// Use Turns directly (no conversation.Manager)
 	seed := turns.NewTurnBuilder().
-		WithSystemPrompt(strings.TrimSpace(req.Prompt)).
-		WithUserPrompt(userContext).
+		WithSystemPrompt(systemPrompt).
+		WithUserPrompt(userPrompt).
 		Build()
 
 	eng, err := factory.NewEngineFromStepSettings(s.stepSettings)
