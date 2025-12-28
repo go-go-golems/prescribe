@@ -99,7 +99,6 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 		"additional":        []string{},
 
 		// Defaults from the embedded prompt pack (keep behavior stable)
-		"bracket":       true,
 		"without_files": true,
 		"concise":       false,
 		"use_bullets":   false,

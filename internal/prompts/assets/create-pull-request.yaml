@@ -46,10 +46,6 @@ flags:
     type: bool
     help: Use keywords in the answer
     default: false
-  - name: bracket
-    type: bool
-    help: Use bracketed text in the answer
-    default: true
   - name: without_files
     type: bool
     help: Do not include files in the answer
@@ -146,8 +142,6 @@ prompt: |
   {{- end }}
   {{ end }}
 
-  {{ if .bracket }}
-  {{ template "context" . }}
-  {{ end }}
+  {{/* NOTE: we intentionally render the main context only once to avoid ballooning the prompt. */}}
 
 

@@ -10,8 +10,8 @@ set -euo pipefail
 # - creates a small throwaway git repo via prescribe's existing smoke-test setup
 # - initializes a session against master
 # - exports rendered XML twice:
-#   (A) default prompt
-#   (B) modified prompt with the bracketed second `{{ template "context" . }}` removed
+#   (A) default prompt (current behavior)
+#   (B) modified prompt with any bracketed second `{{ template "context" . }}` removed (best-effort)
 # - extracts the user CDATA text and counts duplication markers
 #
 # Minimal stdout; everything else goes into a log.
