@@ -25,4 +25,12 @@ Added stdio streaming mode for inference: `prescribe generate --stream` streams 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/controller/controller.go — `GenerateDescriptionStreaming` wrapper
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — `--stream` flag wiring
 
+## 2025-12-28
+
+Improved streaming UX by printing a final parsed PR-data summary (YAML) to stderr at the end of `--stream` runs (or a clear parse-failed marker). This keeps stdout semantics stable for the final description output.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — End-of-run parsed summary printing for `--stream`
+
 

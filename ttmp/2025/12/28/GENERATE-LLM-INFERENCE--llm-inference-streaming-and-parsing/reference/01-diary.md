@@ -14,7 +14,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T20:16:57-05:00
+LastUpdated: 2025-12-27T20:18:36-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -107,4 +107,23 @@ Implementation-wise, we follow Geppetto’s canonical pattern: create an `events
 ### Code review instructions
 - Start in `internal/api/api.go` (`GenerateDescriptionStreaming`).
 - Review `cmd/prescribe/cmds/generate.go` for the `--stream` switch.
+
+## Step 5: Print a final parsed PR-data summary at the end of streaming runs
+
+Streaming is great for responsiveness, but it can be hard to “see the final structure” when the output arrives as deltas. This step adds a deterministic end-of-run summary for `--stream` runs: after inference completes, we print either the parsed PR YAML fields (preferred) or a clear parse-failed marker.
+
+This keeps stdout semantics stable (final description output still goes to stdout or `--output-file`) while stderr carries both the live stream and the final structured summary.
+
+**Commit (code):** N/A — implementation in progress
+
+### What I did
+- Updated the `prescribe generate --stream` path to print:
+  - `--- Parsed PR data (YAML) ---` followed by a marshaled YAML struct when parsing succeeds, or
+  - a parse error marker when parsing fails.
+
+### Why
+- Makes the “structured output contract” visible and debuggable during streaming runs without requiring a separate parsing step.
+
+### Code review instructions
+- Review `cmd/prescribe/cmds/generate.go` streaming branch for the stderr summary printing.
 

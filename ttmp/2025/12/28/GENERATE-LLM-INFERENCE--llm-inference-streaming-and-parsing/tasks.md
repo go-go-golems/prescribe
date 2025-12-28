@@ -4,7 +4,7 @@
 
 ### Streaming (stdio)
 - [x] Add `prescribe generate --stream` (or similar) to stream LLM output/events to the terminal using `events.EventRouter` + `middleware.NewWatermillSink`
-- [ ] Ensure streaming mode still returns a final result (and exit code) and prints the final parsed PR data summary (or raw output) at the end
+- [x] Ensure streaming mode still returns a final result (and exit code) and prints the final parsed PR data summary (or raw output) at the end
 
 ### Robust final extraction / parsing (non-streaming too)
 - [x] Parse assistant output YAML into structured PR result (title/body/changelog/release_notes) using:

@@ -16,6 +16,7 @@ import (
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var generateCmd *cobra.Command
@@ -185,6 +186,24 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 	}
 	if err != nil {
 		return errors.Wrap(err, "failed to generate description")
+	}
+
+	if extra.Stream {
+		// Print a deterministic end-of-run summary to stderr so users can see the parsed structure
+		// even if they streamed raw deltas. Keep stdout reserved for the final description output.
+		data := ctrl.GetData()
+		if data != nil && data.GeneratedPRData != nil {
+			b, err := yaml.Marshal(data.GeneratedPRData)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "\n--- Parsed PR data (failed to marshal): %v ---\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "\n--- Parsed PR data (YAML) ---\n%s\n", string(b))
+			}
+		} else if data != nil && data.GeneratedPRDataParseError != "" {
+			fmt.Fprintf(os.Stderr, "\n--- Parsed PR data: failed (%s) ---\n", data.GeneratedPRDataParseError)
+		} else {
+			fmt.Fprintf(os.Stderr, "\n--- Parsed PR data: not available ---\n")
+		}
 	}
 
 	// Output description
