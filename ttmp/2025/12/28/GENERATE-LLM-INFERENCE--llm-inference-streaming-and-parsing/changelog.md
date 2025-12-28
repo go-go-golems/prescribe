@@ -15,4 +15,14 @@ Implemented robust final YAML extraction/parsing for PR output (title/body/chang
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/domain/domain.go — Add `GeneratedPRData` to `PRData`
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/controller/controller.go — Store parsed fields on controller data
 
+## 2025-12-28
+
+Added stdio streaming mode for inference: `prescribe generate --stream` streams partial completions/events to stderr via `events.EventRouter` + `middleware.NewWatermillSink` while still producing a final result.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/api.go — `GenerateDescriptionStreaming` (engine sink + router)
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/controller/controller.go — `GenerateDescriptionStreaming` wrapper
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — `--stream` flag wiring
+
 

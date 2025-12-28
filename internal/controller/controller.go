@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -374,6 +375,29 @@ func (c *Controller) GenerateDescription(ctx context.Context) (string, error) {
 
 	// Generate description
 	resp, err := c.apiService.GenerateDescription(ctx, req)
+	if err != nil {
+		return "", err
+	}
+
+	c.data.GeneratedDescription = resp.Description
+	c.data.GeneratedPRData = resp.Parsed
+	c.data.GeneratedPRDataParseError = resp.ParseError
+	return resp.Description, nil
+}
+
+// GenerateDescriptionStreaming runs inference with stdio streaming enabled and returns the final description.
+// Streaming output is written to w as events arrive.
+func (c *Controller) GenerateDescriptionStreaming(ctx context.Context, w io.Writer) (string, error) {
+	req, err := c.BuildGenerateDescriptionRequest()
+	if err != nil {
+		return "", err
+	}
+
+	if err := c.apiService.ValidateRequest(req); err != nil {
+		return "", err
+	}
+
+	resp, err := c.apiService.GenerateDescriptionStreaming(ctx, req, w)
 	if err != nil {
 		return "", err
 	}

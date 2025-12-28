@@ -3,14 +3,19 @@ package api
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
+	"github.com/go-go-golems/geppetto/pkg/events"
+	geppettoengine "github.com/go-go-golems/geppetto/pkg/inference/engine"
 	"github.com/go-go-golems/geppetto/pkg/inference/engine/factory"
+	"github.com/go-go-golems/geppetto/pkg/inference/middleware"
 	"github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
 	"github.com/go-go-golems/geppetto/pkg/turns"
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 // Service provides API operations for generating PR descriptions
@@ -92,6 +97,103 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 	}
 
 	// Best-effort token usage (provider usage might be in Turn.Metadata; we can wire later).
+	tokensUsed := tokens.Count(description)
+
+	model := ""
+	if updatedTurn != nil && updatedTurn.Metadata != nil {
+		if v, ok := updatedTurn.Metadata[turns.TurnMetaKeyModel]; ok {
+			if s, ok := v.(string); ok {
+				model = s
+			}
+		}
+	}
+
+	return &GenerateDescriptionResponse{
+		Description: description,
+		Parsed:      parsed,
+		ParseError:  parseErrStr,
+		TokensUsed:  tokensUsed,
+		Model:       model,
+	}, nil
+}
+
+// GenerateDescriptionStreaming runs inference with an attached event sink and prints streaming
+// events to the provided writer while still returning the final result.
+//
+// This is intended for stdio streaming (CLI). TUI streaming can re-use the same plumbing with
+// a different router handler.
+func (s *Service) GenerateDescriptionStreaming(ctx context.Context, req GenerateDescriptionRequest, w io.Writer) (*GenerateDescriptionResponse, error) {
+	if s.stepSettings == nil {
+		return nil, errors.New("no AI StepSettings configured (configure provider/model flags higher up)")
+	}
+
+	systemPrompt, userPrompt, err := compilePrompt(req)
+	if err != nil {
+		return nil, err
+	}
+
+	seed := turns.NewTurnBuilder().
+		WithSystemPrompt(systemPrompt).
+		WithUserPrompt(userPrompt).
+		Build()
+
+	router, err := events.NewEventRouter()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create event router")
+	}
+	defer func() {
+		_ = router.Close()
+	}()
+
+	router.AddHandler("chat", "chat", events.StepPrinterFunc("", w))
+
+	watermillSink := middleware.NewWatermillSink(router.Publisher, "chat")
+	eng, err := factory.NewEngineFromStepSettings(s.stepSettings, geppettoengine.WithSink(watermillSink))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create engine from step settings")
+	}
+
+	eg := errgroup.Group{}
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	eg.Go(func() error {
+		err := router.Run(ctx)
+		if errors.Is(err, context.Canceled) {
+			return nil
+		}
+		return err
+	})
+
+	var updatedTurn *turns.Turn
+	eg.Go(func() error {
+		defer cancel()
+		<-router.Running()
+		t, err := eng.RunInference(ctx, seed)
+		if err != nil {
+			return errors.Wrap(err, "inference failed")
+		}
+		updatedTurn = t
+		return nil
+	})
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	description := extractLastAssistantText(updatedTurn)
+	if strings.TrimSpace(description) == "" {
+		description = "<no assistant text produced>"
+	}
+
+	var parsed *domain.GeneratedPRData
+	parseErrStr := ""
+	if p, err := ParseGeneratedPRDataFromAssistantText(description); err == nil {
+		parsed = p
+	} else {
+		parseErrStr = err.Error()
+	}
+
 	tokensUsed := tokens.Count(description)
 
 	model := ""

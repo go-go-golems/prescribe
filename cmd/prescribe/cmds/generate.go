@@ -29,6 +29,7 @@ var _ cmds.BareCommand = &GenerateCommand{}
 type GenerateExtraSettings struct {
 	ExportContext  bool   `glazed.parameter:"export-context"`
 	ExportRendered bool   `glazed.parameter:"export-rendered"`
+	Stream         bool   `glazed.parameter:"stream"`
 	Separator      string `glazed.parameter:"separator"`
 }
 
@@ -64,6 +65,12 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		parameters.WithHelp("Print the rendered LLM payload (system+user) and exit (no inference)"),
 		parameters.WithDefault(false),
 	)
+	streamFlag := parameters.NewParameterDefinition(
+		"stream",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("Stream inference output/events to stderr while still producing a final result"),
+		parameters.WithDefault(false),
+	)
 	separatorFlag := parameters.NewParameterDefinition(
 		"separator",
 		parameters.ParameterTypeString,
@@ -81,7 +88,7 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		"generate",
 		cmds.WithShort("Generate PR description"),
 		cmds.WithLong("Generate a PR description using AI based on the current session."),
-		cmds.WithFlags(extraFlags, exportRenderedFlag, separatorFlag),
+		cmds.WithFlags(extraFlags, exportRenderedFlag, streamFlag, separatorFlag),
 		cmds.WithLayersList(
 			layersList...,
 		),
@@ -170,7 +177,12 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 
 	// Generate description
 	fmt.Fprintf(os.Stderr, "Generating PR description...\n")
-	description, err := ctrl.GenerateDescription(ctx)
+	description := ""
+	if extra.Stream {
+		description, err = ctrl.GenerateDescriptionStreaming(ctx, os.Stderr)
+	} else {
+		description, err = ctrl.GenerateDescription(ctx)
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to generate description")
 	}

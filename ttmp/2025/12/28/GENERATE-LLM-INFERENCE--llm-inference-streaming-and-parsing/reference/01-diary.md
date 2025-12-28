@@ -14,7 +14,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T20:11:29-05:00
+LastUpdated: 2025-12-27T20:16:57-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -82,4 +82,29 @@ I’m implementing a best-effort parser that works for both non-streaming and fu
 - Start at `internal/api/prdata_parse.go` and its tests.
 - Review `internal/api/api.go` for where parsing is applied and how failures are carried.
 
+## Step 4: Add stdio streaming mode (`prescribe generate --stream`)
+
+This step adds a “live” UX for `prescribe generate`: while the model is producing output, we stream partial completions and events to the terminal. This is the same plumbing we’ll later reuse for TUI streaming, but for now it’s purely stdio-driven.
+
+Implementation-wise, we follow Geppetto’s canonical pattern: create an `events.EventRouter`, attach a `middleware.NewWatermillSink` to the engine (`engine.WithSink`), register an `events.StepPrinterFunc` handler, and run `router.Run` in parallel with `engine.RunInference` using `errgroup`.
+
+**Commit (code):** N/A — implementation in progress
+
+### What I did
+- Added `api.Service.GenerateDescriptionStreaming(ctx, req, w)` which:
+  - streams events to `w` via `events.StepPrinterFunc`
+  - still returns a final `GenerateDescriptionResponse` (including parsed PR YAML fields)
+- Added `Controller.GenerateDescriptionStreaming(ctx, w)` to store the final raw and parsed results on `domain.PRData`.
+- Added CLI flag `prescribe generate --stream` to enable streaming (events to stderr), while keeping final output behavior unchanged.
+- Added a minimal unit test asserting streaming requires StepSettings (no provider configured).
+
+### Why
+- Streaming makes generation feel responsive and enables quick iteration on prompts without waiting for a full “silent” run.
+
+### What warrants a second pair of eyes
+- Decide whether the final “parsed PR summary” should be printed explicitly at the end of streaming mode (vs leaving that to future TUI integration).
+
+### Code review instructions
+- Start in `internal/api/api.go` (`GenerateDescriptionStreaming`).
+- Review `cmd/prescribe/cmds/generate.go` for the `--stream` switch.
 
