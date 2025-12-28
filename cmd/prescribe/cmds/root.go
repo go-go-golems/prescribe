@@ -9,6 +9,7 @@ import (
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/file"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/filter"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/session"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/tokens"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -57,6 +58,9 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	if err := context.Init(); err != nil {
 		return errors.Wrap(err, "failed to init context commands")
 	}
+	if err := tokens.Init(); err != nil {
+		return errors.Wrap(err, "failed to init tokens commands")
+	}
 	if err := InitGenerateCmd(); err != nil {
 		return errors.Wrap(err, "failed to init generate command")
 	}
@@ -69,6 +73,7 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.AddCommand(session.SessionCmd)
 	rootCmd.AddCommand(file.FileCmd)
 	rootCmd.AddCommand(context.ContextCmd)
+	rootCmd.AddCommand(tokens.TokensCmd)
 
 	// Root-level commands (generate, tui)
 	rootCmd.AddCommand(generateCmd)
