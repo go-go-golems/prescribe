@@ -101,7 +101,56 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 	if p, err := ParseGeneratedPRDataFromAssistantText(description); err == nil {
 		parsed = p
 	} else {
+		parsed = p // best-effort: keep partial struct if available
 		parseErrStr = err.Error()
+	}
+	if parsed != nil && !isGeneratedPRDataValid(parsed) {
+		if parseErrStr == "" {
+			parseErrStr = "parsed PR YAML is missing required fields (title/body)"
+		}
+	}
+
+	// Best-effort retry: if the model likely hit a max token limit and produced invalid/partial YAML,
+	// rerun once with a higher output token budget and a short corrective instruction.
+	if parseErrStr != "" && isLikelyMaxTokensStopReason(getTurnStopReason(updatedTurn)) {
+		retryMax := computeRetryMaxResponseTokens(s.stepSettings)
+		if retryMax > 0 {
+			log.Debug().
+				Str("stop_reason", getTurnStopReason(updatedTurn)).
+				Int("retry_max_response_tokens", retryMax).
+				Msg("api: retrying inference due to invalid YAML + max-tokens stop reason")
+
+			retrySettings := s.stepSettings.Clone()
+			retrySettings.Chat.MaxResponseTokens = &retryMax
+
+			retrySeed := turns.NewTurnBuilder().
+				WithSystemPrompt(systemPrompt).
+				WithUserPrompt(userPrompt + "\n\n" + yamlRepairRetrySuffix()).
+				Build()
+
+			debugLogTurnSeed(req, retrySeed, systemPrompt, userPrompt+"\n\n"+yamlRepairRetrySuffix())
+
+			retryEng, err := factory.NewEngineFromStepSettings(retrySettings)
+			if err != nil {
+				log.Debug().Err(err).Msg("api: retry engine creation failed; keeping first attempt")
+			} else if retryTurn, err := retryEng.RunInference(ctx, retrySeed); err != nil {
+				log.Debug().Err(err).Msg("api: retry inference failed; keeping first attempt")
+			} else {
+				retryDesc := extractLastAssistantText(retryTurn)
+				if strings.TrimSpace(retryDesc) != "" {
+					debugLogAssistantText(retryTurn, retryDesc)
+					rParsed, rErrStr := parseAndValidateGeneratedPRData(retryDesc)
+					if rErrStr == "" {
+						updatedTurn = retryTurn
+						description = retryDesc
+						parsed = rParsed
+						parseErrStr = ""
+					} else {
+						log.Debug().Str("retry_parse_error", rErrStr).Msg("api: retry output still invalid; keeping first attempt")
+					}
+				}
+			}
+		}
 	}
 
 	// Best-effort token usage (provider usage might be in Turn.Metadata; we can wire later).
@@ -203,7 +252,56 @@ func (s *Service) GenerateDescriptionStreaming(ctx context.Context, req Generate
 	if p, err := ParseGeneratedPRDataFromAssistantText(description); err == nil {
 		parsed = p
 	} else {
+		parsed = p // best-effort: keep partial struct if available
 		parseErrStr = err.Error()
+	}
+	if parsed != nil && !isGeneratedPRDataValid(parsed) {
+		if parseErrStr == "" {
+			parseErrStr = "parsed PR YAML is missing required fields (title/body)"
+		}
+	}
+
+	// Same best-effort retry policy as non-streaming. Note: streaming output to `w` will include
+	// the first attempt's deltas; we still aim to produce a valid final result for stdout + parsed summary.
+	if parseErrStr != "" && isLikelyMaxTokensStopReason(getTurnStopReason(updatedTurn)) {
+		retryMax := computeRetryMaxResponseTokens(s.stepSettings)
+		if retryMax > 0 {
+			log.Debug().
+				Str("stop_reason", getTurnStopReason(updatedTurn)).
+				Int("retry_max_response_tokens", retryMax).
+				Msg("api: retrying inference (streaming) due to invalid YAML + max-tokens stop reason")
+
+			retrySettings := s.stepSettings.Clone()
+			retrySettings.Chat.MaxResponseTokens = &retryMax
+
+			retrySeed := turns.NewTurnBuilder().
+				WithSystemPrompt(systemPrompt).
+				WithUserPrompt(userPrompt + "\n\n" + yamlRepairRetrySuffix()).
+				Build()
+
+			debugLogTurnSeed(req, retrySeed, systemPrompt, userPrompt+"\n\n"+yamlRepairRetrySuffix())
+
+			retryEng, err := factory.NewEngineFromStepSettings(retrySettings, geppettoengine.WithSink(watermillSink))
+			if err != nil {
+				log.Debug().Err(err).Msg("api: retry engine creation failed; keeping first attempt")
+			} else if retryTurn, err := retryEng.RunInference(ctx, retrySeed); err != nil {
+				log.Debug().Err(err).Msg("api: retry inference failed; keeping first attempt")
+			} else {
+				retryDesc := extractLastAssistantText(retryTurn)
+				if strings.TrimSpace(retryDesc) != "" {
+					debugLogAssistantText(retryTurn, retryDesc)
+					rParsed, rErrStr := parseAndValidateGeneratedPRData(retryDesc)
+					if rErrStr == "" {
+						updatedTurn = retryTurn
+						description = retryDesc
+						parsed = rParsed
+						parseErrStr = ""
+					} else {
+						log.Debug().Str("retry_parse_error", rErrStr).Msg("api: retry output still invalid; keeping first attempt")
+					}
+				}
+			}
+		}
 	}
 
 	tokensUsed := tokens.Count(description)
