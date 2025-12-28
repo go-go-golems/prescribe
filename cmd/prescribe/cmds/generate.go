@@ -27,8 +27,9 @@ type GenerateCommand struct {
 var _ cmds.BareCommand = &GenerateCommand{}
 
 type GenerateExtraSettings struct {
-	ExportContext bool   `glazed.parameter:"export-context"`
-	Separator     string `glazed.parameter:"separator"`
+	ExportContext  bool   `glazed.parameter:"export-context"`
+	ExportRendered bool   `glazed.parameter:"export-rendered"`
+	Separator      string `glazed.parameter:"separator"`
 }
 
 func NewGenerateCommand() (*GenerateCommand, error) {
@@ -57,10 +58,16 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		parameters.WithHelp("Print the full generation context (prompt + files + context) and exit (no inference)"),
 		parameters.WithDefault(false),
 	)
+	exportRenderedFlag := parameters.NewParameterDefinition(
+		"export-rendered",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("Print the rendered LLM payload (system+user) and exit (no inference)"),
+		parameters.WithDefault(false),
+	)
 	separatorFlag := parameters.NewParameterDefinition(
 		"separator",
 		parameters.ParameterTypeString,
-		parameters.WithHelp("Separator format for --export-context: xml (default), markdown, simple, begin-end, default"),
+		parameters.WithHelp("Separator format for export flags: xml (default), markdown, simple, begin-end, default"),
 		parameters.WithDefault("xml"),
 	)
 
@@ -74,7 +81,7 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		"generate",
 		cmds.WithShort("Generate PR description"),
 		cmds.WithLong("Generate a PR description using AI based on the current session."),
-		cmds.WithFlags(extraFlags, separatorFlag),
+		cmds.WithFlags(extraFlags, exportRenderedFlag, separatorFlag),
 		cmds.WithLayersList(
 			layersList...,
 		),
@@ -120,18 +127,34 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 	}
 
 	// Export-only path (no inference).
-	if extra.ExportContext {
+	if extra.ExportContext && extra.ExportRendered {
+		return errors.New("flags --export-context and --export-rendered are mutually exclusive")
+	}
+	if extra.ExportContext || extra.ExportRendered {
 		req, err := ctrl.BuildGenerateDescriptionRequest()
 		if err != nil {
 			return err
 		}
 		sep := pexport.SeparatorType(extra.Separator)
-		text := pexport.BuildGenerationContext(req, sep)
+		text := ""
+		if extra.ExportRendered {
+			rendered, err := pexport.BuildRenderedLLMPayload(req, sep)
+			if err != nil {
+				return err
+			}
+			text = rendered
+		} else {
+			text = pexport.BuildGenerationContext(req, sep)
+		}
 		if genSettings.OutputFile != "" {
 			if err := os.WriteFile(genSettings.OutputFile, []byte(text), 0644); err != nil {
 				return errors.Wrap(err, "failed to write output file")
 			}
-			fmt.Fprintf(os.Stderr, "Context written to %s\n", genSettings.OutputFile)
+			what := "Context"
+			if extra.ExportRendered {
+				what = "Rendered payload"
+			}
+			fmt.Fprintf(os.Stderr, "%s written to %s\n", what, genSettings.OutputFile)
 			return nil
 		}
 		fmt.Print(text)

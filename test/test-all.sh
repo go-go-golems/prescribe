@@ -158,6 +158,26 @@ grep -q "<prescribe>" "$CTX_OUTPUT_FILE"
 
 echo ""
 
+echo "6.0b: Export rendered LLM payload (no inference)"
+RENDERED_XML="/tmp/prescribe-rendered.xml"
+RENDERED_MD="/tmp/prescribe-rendered.md"
+RENDERED_OUTPUT_FILE="/tmp/prescribe-rendered.output-file.xml"
+rm -f "$RENDERED_XML" "$RENDERED_MD" "$RENDERED_OUTPUT_FILE"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator xml >"$RENDERED_XML"
+test -s "$RENDERED_XML"
+grep -q "<llm_payload>" "$RENDERED_XML"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown >"$RENDERED_MD"
+test -s "$RENDERED_MD"
+grep -q "# Prescribe LLM payload (rendered)" "$RENDERED_MD"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator xml --output-file "$RENDERED_OUTPUT_FILE"
+test -s "$RENDERED_OUTPUT_FILE"
+grep -q "<llm_payload>" "$RENDERED_OUTPUT_FILE"
+
+echo ""
+
 echo "6.1: Generate with default prompt"
 if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
   $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate -o /tmp/pr-default.md

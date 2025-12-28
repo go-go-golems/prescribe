@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-go-golems/glazed/pkg/helpers/templating"
@@ -54,7 +55,13 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 			}
 		default:
 			if strings.TrimSpace(f.Diff) != "" {
-				diffParts = append(diffParts, strings.TrimRight(f.Diff, "\n"))
+				// Keep diffs well-delimited per file to avoid “smashed together” ambiguity.
+				// We mirror the XML-ish boundary style used in the export-context separator approach.
+				diffParts = append(diffParts, fmt.Sprintf(
+					"<file name=\"%s\" type=\"diff\">\n<diff>\n%s\n</diff>\n</file>",
+					xmlEscapeAttr(f.Path),
+					strings.TrimRight(f.Diff, "\n"),
+				))
 			}
 		}
 	}
@@ -100,6 +107,12 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 	}
 }
 
+// CompilePrompt is an exported wrapper to compile the prompt into the exact (system,user) strings
+// that will be used to seed a Turn. This is useful for CLI export-only workflows.
+func CompilePrompt(req GenerateDescriptionRequest) (systemPrompt string, userPrompt string, err error) {
+	return compilePrompt(req)
+}
+
 func splitCombinedPinocchioPrompt(prompt string) (systemTemplate string, userTemplate string, ok bool) {
 	// prescribe stores a single "combined" string. Our default prompt is derived from pinocchio's
 	// create-pull-request prompt pack, which defines a "context" template. We treat the text before
@@ -137,6 +150,15 @@ func compilePrompt(req GenerateDescriptionRequest) (systemPrompt string, userPro
 		return "", "", errors.Wrap(err, "failed to render user prompt template")
 	}
 	return strings.TrimSpace(sys), strings.TrimSpace(user), nil
+}
+
+func xmlEscapeAttr(s string) string {
+	// Minimal XML escaping for attribute safety.
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	return s
 }
 
 

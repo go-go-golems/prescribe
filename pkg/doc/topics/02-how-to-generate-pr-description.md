@@ -201,6 +201,26 @@ prescribe generate --export-context --separator default
 prescribe generate --export-context --separator xml --output-file context.xml
 ```
 
+### Export the rendered LLM payload (no inference)
+
+This renders the prompt template (pinocchio-style Go templates) and outputs the **exact** `(system,user)` payload
+that would seed the LLM Turn, without running inference.
+
+```bash
+# Default separator is xml
+prescribe generate --export-rendered
+
+# Explicit separator selection
+prescribe generate --export-rendered --separator xml
+prescribe generate --export-rendered --separator markdown
+prescribe generate --export-rendered --separator simple
+prescribe generate --export-rendered --separator begin-end
+prescribe generate --export-rendered --separator default
+
+# Write export to a file
+prescribe generate --export-rendered --separator xml --output-file rendered.xml
+```
+
 ## Troubleshooting
 
 When generation fails, it’s usually a session state issue (no included files, wrong branch session, over-filtering) rather than a “model problem”.

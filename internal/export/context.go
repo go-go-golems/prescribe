@@ -42,6 +42,83 @@ func BuildGenerationContext(req api.GenerateDescriptionRequest, sep SeparatorTyp
 	}
 }
 
+// BuildRenderedLLMPayload compiles and renders the pinocchio-style prompt (if applicable)
+// and returns the exact (system,user) payload that would seed the Turn (no inference).
+//
+// This is intended for CLI export/debugging: "what we would send to the model".
+func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorType) (string, error) {
+	systemPrompt, userPrompt, err := api.CompilePrompt(req)
+	if err != nil {
+		return "", err
+	}
+	if sep == "" {
+		sep = SeparatorXML
+	}
+
+	switch sep {
+	case SeparatorMarkdown:
+		var b strings.Builder
+		b.WriteString("# Prescribe LLM payload (rendered)\n\n")
+		b.WriteString("## System\n\n```text\n")
+		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
+		b.WriteString("\n```\n\n")
+		b.WriteString("## User\n\n```text\n")
+		b.WriteString(strings.TrimRight(userPrompt, "\n"))
+		b.WriteString("\n```\n")
+		return b.String(), nil
+
+	case SeparatorSimple:
+		var b strings.Builder
+		b.WriteString("--- START SYSTEM PROMPT ---\n")
+		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
+		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
+		b.WriteString("--- START USER PROMPT ---\n")
+		b.WriteString(strings.TrimRight(userPrompt, "\n"))
+		b.WriteString("\n--- END USER PROMPT ---\n")
+		return b.String(), nil
+
+	case SeparatorBeginEnd:
+		var b strings.Builder
+		b.WriteString("--- BEGIN SYSTEM PROMPT ---\n")
+		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
+		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
+		b.WriteString("--- BEGIN USER PROMPT ---\n")
+		b.WriteString(strings.TrimRight(userPrompt, "\n"))
+		b.WriteString("\n--- END USER PROMPT ---\n")
+		return b.String(), nil
+
+	case SeparatorDefault:
+		var b strings.Builder
+		b.WriteString("System:\n")
+		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
+		b.WriteString("\n\nUser:\n")
+		b.WriteString(strings.TrimRight(userPrompt, "\n"))
+		b.WriteString("\n")
+		return b.String(), nil
+
+	case SeparatorXML:
+		fallthrough
+	default:
+		var b strings.Builder
+		b.WriteString("<prescribe>\n")
+		b.WriteString("<branches>\n")
+		b.WriteString(fmt.Sprintf("<source>%s</source>\n", xmlEscape(req.SourceBranch)))
+		b.WriteString(fmt.Sprintf("<target>%s</target>\n", xmlEscape(req.TargetBranch)))
+		b.WriteString("</branches>\n")
+
+		b.WriteString("<llm_payload>\n")
+		b.WriteString("<system><![CDATA[")
+		b.WriteString(xmlCDATA(systemPrompt))
+		b.WriteString("]]></system>\n")
+		b.WriteString("<user><![CDATA[")
+		b.WriteString(xmlCDATA(userPrompt))
+		b.WriteString("]]></user>\n")
+		b.WriteString("</llm_payload>\n")
+		b.WriteString("</prescribe>\n")
+		return b.String(), nil
+	}
+}
+
 func buildXML(req api.GenerateDescriptionRequest) string {
 	var b strings.Builder
 
@@ -104,6 +181,12 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 
 	b.WriteString("</prescribe>\n")
 	return b.String()
+}
+
+func xmlCDATA(s string) string {
+	// Escape the CDATA terminator by splitting into multiple CDATA sections.
+	// This preserves the original bytes while keeping the XML well-formed.
+	return strings.ReplaceAll(s, "]]>", "]]]]><![CDATA[>")
 }
 
 func buildMarkdown(req api.GenerateDescriptionRequest) string {

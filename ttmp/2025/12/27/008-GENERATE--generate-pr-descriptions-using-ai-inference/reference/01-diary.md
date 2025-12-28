@@ -435,3 +435,19 @@ Document the step-by-step research and analysis process for implementing AI-powe
 
 ### Commits (if any)
 - N/A
+
+## Step 12: Add `generate --export-rendered` (render prompt templates, no inference)
+
+**Commit (code):** N/A — Implementation (in progress)
+
+### What I did
+- Added a new export-only mode for `prescribe generate` to print the **rendered** LLM payload `(system,user)` without running inference.
+- Reused the same Glazed templating helpers as Pinocchio to render the prompt template.
+
+### Why
+- The existing `--export-context` is great for inspecting the canonical request + file/context payload, but it prints the prompt template “as stored”.
+- For debugging prompt templating, we also want “what the model actually sees”, without spending tokens.
+
+### Next steps
+- Run `go test ./...` and the shell smoke tests.
+- Commit once everything is green.

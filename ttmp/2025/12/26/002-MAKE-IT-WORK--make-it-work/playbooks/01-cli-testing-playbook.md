@@ -379,6 +379,22 @@ $PRESCRIBE -r "$REPO" -t master generate --export-context --separator default
 $PRESCRIBE -r "$REPO" -t master generate --export-context --separator xml --output-file /tmp/prescribe-context.xml
 ```
 
+### 5.0b: Export rendered LLM payload (no inference)
+
+This prints the **rendered** `(system,user)` payload that would be sent to the model (no inference).
+
+```bash
+# Export to stdout
+$PRESCRIBE -r "$REPO" -t master generate --export-rendered
+
+# Export with explicit separator selection
+$PRESCRIBE -r "$REPO" -t master generate --export-rendered --separator xml
+$PRESCRIBE -r "$REPO" -t master generate --export-rendered --separator markdown
+
+# Export to file
+$PRESCRIBE -r "$REPO" -t master generate --export-rendered --separator xml --output-file /tmp/prescribe-rendered.xml
+```
+
 ### 5.1: Generate with Default Settings
 
 ```bash
