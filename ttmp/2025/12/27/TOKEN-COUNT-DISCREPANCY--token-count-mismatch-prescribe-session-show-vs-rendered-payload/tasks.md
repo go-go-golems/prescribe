@@ -10,20 +10,20 @@
 
 ### Debugging tools to build (this ticket)
 
-- [ ] Add **verbose per-element session context token breakdown** ("show token count"):
-  - [ ] One row/entry per included file (diff/full) with `path`, `type`, `included`, `tokens`, and small summary fields (additions/deletions if available)
-  - [ ] One row/entry per additional context item with `type`, `path` (if file), `tokens`
-  - [ ] Include `PRESCRIBE_TOKEN_ENCODING` / `tokens.EncodingName()` in output
-  - [ ] Output should be stable + machine-readable (JSON-friendly)
-- [ ] Add **post-hoc “XML-ish” token counter** utility:
-  - [ ] Input: a rendered/exported `.xml` file (not strict XML)
-  - [ ] Output: token counts per top-level-ish section/tag (best-effort), plus totals
-  - [ ] Must use the same tokenizer as prescribe (`internal/tokens`)
-- [ ] Add **rendered payload token count** output:
-  - [ ] When a flag is passed to `generate`, compute token counts of the rendered payload:
-    - [ ] total tokens
-    - [ ] system prompt tokens
-    - [ ] user prompt tokens
-    - [ ] (optional) exported envelope tokens when `--separator xml` is used
-  - [ ] Ensure this works both when exporting rendered payload to file and when generating normally (no inference required)
+- [x] Add **verbose per-element session context token breakdown** ("show token count"):
+  - [x] One row/entry per included file (diff/full) with `path`, `type`, `included`, `tokens`, and small summary fields (additions/deletions if available)
+  - [x] One row/entry per additional context item with `type`, `path` (if file), `tokens`
+  - [x] Include `PRESCRIBE_TOKEN_ENCODING` / `tokens.EncodingName()` in output
+  - [x] Output should be stable + machine-readable (JSON-friendly)
+- [x] Add **post-hoc “XML-ish” token counter** utility:
+  - [x] Input: a rendered/exported `.xml` file (not strict XML)
+  - [x] Output: token counts per top-level-ish section/tag (best-effort), plus totals
+  - [x] Must use the same tokenizer as prescribe (`internal/tokens`)
+- [x] Add **rendered payload token count** output:
+  - [x] When a flag is passed to `generate`, compute token counts of the rendered payload:
+    - [x] total tokens
+    - [x] system prompt tokens
+    - [x] user prompt tokens
+    - [x] (optional) exported envelope tokens when `--separator xml` is used
+  - [x] Ensure this works both when exporting rendered payload to file and when generating normally (no inference required)
 
