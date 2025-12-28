@@ -4,13 +4,17 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	geppettolayers "github.com/go-go-golems/geppetto/pkg/layers"
 	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
+	"github.com/go-go-golems/glazed/pkg/appconfig"
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	cmd_middlewares "github.com/go-go-golems/glazed/pkg/cmds/middlewares"
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
+	glazed_config "github.com/go-go-golems/glazed/pkg/config"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	papi "github.com/go-go-golems/prescribe/internal/api"
 	pexport "github.com/go-go-golems/prescribe/internal/export"
@@ -270,10 +274,117 @@ func InitGenerateCmd() error {
 	if err != nil {
 		return err
 	}
+
+	// Build a middleware chain that supports:
+	// - config files (prescribe config) for parameter defaults / overrides
+	// - PINOCCHIO profiles.yaml (bootstrap parse of profile selection + profile loading)
+	// - env overrides (PRESCRIBE_* and PINOCCHIO_*)
+	//
+	// The precedence is:
+	// defaults < profiles < config < env < args < flags
+	generateMiddlewares := func(parsedCommandLayers *glazed_layers.ParsedLayers, cmd *cobra.Command, args []string) ([]cmd_middlewares.Middleware, error) {
+		// 1) Resolve config files (low -> high precedence).
+		commandSettings := &cli.CommandSettings{}
+		if parsedCommandLayers != nil {
+			_ = parsedCommandLayers.InitializeStruct(cli.CommandSettingsSlug, commandSettings)
+		}
+
+		var configFiles []string
+		// Base config discovery (if present).
+		if p, err := glazed_config.ResolveAppConfigPath("prescribe", ""); err == nil && p != "" {
+			configFiles = append(configFiles, p)
+		}
+		// Optional explicit config overlay.
+		if commandSettings.ConfigFile != "" {
+			configFiles = append(configFiles, commandSettings.ConfigFile)
+		}
+		// Optional "load parameters from file" overlay (legacy).
+		if commandSettings.LoadParametersFromFile != "" {
+			configFiles = append(configFiles, commandSettings.LoadParametersFromFile)
+		}
+
+		// 2) Bootstrap-parse profile selection using appconfig (circularity-safe).
+		// This allows `profile-settings.profile` and `profile-settings.profile-file` to be set by:
+		// - cobra flags (--profile/--profile-file)
+		// - env vars (PINOCCHIO_PROFILE / PINOCCHIO_PROFILE_FILE)
+		// - config files under `profile-settings:`
+		type bootstrap struct {
+			Profile cli.ProfileSettings
+		}
+		profileSettingsLayer, err := cli.NewProfileSettingsLayer()
+		if err != nil {
+			return nil, err
+		}
+		bootstrapParser, err := appconfig.NewParser[bootstrap](
+			appconfig.WithDefaults(),
+			appconfig.WithConfigFiles(configFiles...),
+			appconfig.WithEnv("PINOCCHIO"),
+			appconfig.WithCobra(cmd, args),
+		)
+		if err != nil {
+			return nil, err
+		}
+		if err := bootstrapParser.Register(appconfig.LayerSlug(cli.ProfileSettingsSlug), profileSettingsLayer, func(t *bootstrap) any {
+			return &t.Profile
+		}); err != nil {
+			return nil, err
+		}
+		boot, err := bootstrapParser.Parse()
+		if err != nil {
+			return nil, err
+		}
+
+		xdgConfigPath, err := os.UserConfigDir()
+		if err != nil {
+			return nil, err
+		}
+		defaultProfileFile := filepath.Join(xdgConfigPath, "pinocchio", "profiles.yaml")
+		profileName := boot.Profile.Profile
+		if profileName == "" {
+			profileName = "default"
+		}
+		profileFile := boot.Profile.ProfileFile
+		if profileFile == "" {
+			profileFile = defaultProfileFile
+		}
+
+		profileMiddleware := cmd_middlewares.GatherFlagsFromProfiles(
+			defaultProfileFile,
+			profileFile,
+			profileName,
+			parameters.WithParseStepSource("profiles"),
+			parameters.WithParseStepMetadata(map[string]interface{}{
+				"profileFile": profileFile,
+				"profile":     profileName,
+			}),
+		)
+
+		// 3) Main chain (highest -> lowest precedence in slice order).
+		middlewares_ := []cmd_middlewares.Middleware{
+			cmd_middlewares.ParseFromCobraCommand(cmd, parameters.WithParseStepSource("cobra")),
+			cmd_middlewares.GatherArguments(args, parameters.WithParseStepSource("arguments")),
+
+			// Environment overrides
+			cmd_middlewares.UpdateFromEnv("PRESCRIBE", parameters.WithParseStepSource("env")),
+			cmd_middlewares.UpdateFromEnv("PINOCCHIO", parameters.WithParseStepSource("env")),
+
+			// Config files: low -> high precedence
+			cmd_middlewares.LoadParametersFromFiles(configFiles),
+
+			// Profiles: apply after defaults but before config/env/flags
+			profileMiddleware,
+
+			// Defaults (lowest precedence)
+			cmd_middlewares.SetFromDefaults(parameters.WithParseStepSource(parameters.SourceDefaults)),
+		}
+		return middlewares_, nil
+	}
+
 	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
 		cli.WithParserConfig(cli.CobraParserConfig{
-			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
+			EnableProfileSettingsLayer: true,
+			MiddlewaresFunc:            generateMiddlewares,
 		}),
 	)
 	if err != nil {
