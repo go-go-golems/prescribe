@@ -498,3 +498,26 @@ cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./..
 
 ### What warrants a second pair of eyes
 - Confirm the heuristic (last `title:` block) is conservative enough and won’t accidentally parse unrelated YAML-ish snippets in long outputs.
+
+## Step 10: Integration script for `glazed` WithProfile (example program)
+
+This step adds a lightweight end-to-end validation for `appconfig.WithProfile` without having to spin up any prescribe flows. It uses the existing `glazed` example program (`cmd/examples/appconfig-profiles`) and asserts the three core behaviors: default profile applies, env-selected profile applies, and config can override profiles.
+
+**Commit (code):** 1a1169c0352d674bc9e38a7f11207d335548c2ad — "test(012): add WithProfile example integration script"
+
+### What I did
+- Added `scripts/04-integration-test-glazed-withprofile-example.sh`
+- Ran it successfully:
+
+```bash
+bash /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/04-integration-test-glazed-withprofile-example.sh
+```
+
+### What didn't work
+- First attempt used a bash function inside `bash -c` and failed with `exit 127` (function not found in subshell).
+
+### What I changed
+- Inlined the `cd "$GLAZED_DIR" && go run ...` calls directly into the `bash -c` commands, avoiding function export.
+
+### What warrants a second pair of eyes
+- Whether we want this script to live under `glazed/ttmp/...` instead (it’s validating glazed behavior), vs keeping it here because it’s directly tied to the ticket’s profile bootstrap work.

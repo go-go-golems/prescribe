@@ -100,3 +100,12 @@ Improved robustness when models emit prose-wrapped YAML by adding a heuristic sa
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse.go — Heuristic salvage parsing for prose-wrapped YAML
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prdata_parse_test.go — Test covering prose-wrapped YAML parsing
 
+
+## 2025-12-28
+
+Added an integration script that exercises `glazed`’s `appconfig.WithProfile` end-to-end via the `cmd/examples/appconfig-profiles` program. Commit: 1a1169c.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/04-integration-test-glazed-withprofile-example.sh — Validates defaults, env selection, and config override behavior
+
