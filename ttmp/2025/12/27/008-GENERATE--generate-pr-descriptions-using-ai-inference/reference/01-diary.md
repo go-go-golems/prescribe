@@ -458,7 +458,9 @@ This step was about making sure the `--export-rendered` workflow is actually shi
 
 After confirming the implementation exists end-to-end (CLI flag wiring → exporter → prompt compiler) I ran the `prescribe` module unit tests and the CLI smoke suites to lock down the behavior in automation. With that green, I’m updating the ticket bookkeeping so the open items reflect reality.
 
-**Commit (code):** N/A — verification + docs bookkeeping
+**Commit (docs):** `aa7c015` — "docs: close out 008 export-rendered tasks"
+
+**Commit (code):** N/A — verification step
 
 ### What I did
 - Verified the CLI export-only path in `cmd/prescribe/cmds/generate.go` supports:
