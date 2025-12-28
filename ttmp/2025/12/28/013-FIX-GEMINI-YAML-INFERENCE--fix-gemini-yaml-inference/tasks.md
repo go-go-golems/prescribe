@@ -30,6 +30,10 @@ WhenToUse: ""
 
 ## Debugging: streaming vs non-streaming
 
+- [ ] Add a dedicated ticket script to compare Gemini streaming vs non-streaming on the same repo/session:
+  - New script location: `scripts/01-compare-gemini-streaming-vs-nonstreaming.sh`
+  - Run twice with `PINOCCHIO_PROFILE=gemini-2.5-pro`: once with `generate --stream`, once without.
+  - Capture stdout/stderr artifacts under `/tmp/...` and compare assistant raw output length/hash and parse results.
 - [ ] Re-run Gemini generation **without** `--stream` and compare raw assistant output length/hash:
   - If non-streaming returns full YAML, the issue is likely streaming aggregation in the Gemini engine.
   - If non-streaming also returns partial YAML, it’s likely model behavior / max tokens / safety refusal.
