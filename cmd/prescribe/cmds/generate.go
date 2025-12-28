@@ -312,6 +312,19 @@ func InitGenerateCmd() error {
 			configFiles = append(configFiles, commandSettings.LoadParametersFromFile)
 		}
 
+		// Optional: Load Pinocchio config as a *defaults overlay* (lower precedence than profiles).
+		//
+		// This is useful because many users keep common AI defaults (like ai-max-response-tokens)
+		// in `~/.pinocchio/config.yaml`, but `prescribe` is a separate app name and therefore
+		// won't discover it via `ResolveAppConfigPath("prescribe", "")`.
+		//
+		// We intentionally apply this AFTER profiles (lower precedence) so profiles can still
+		// select provider/model without being overridden by global defaults.
+		pinocchioConfigFile := ""
+		if p, err := glazed_config.ResolveAppConfigPath("pinocchio", ""); err == nil && p != "" {
+			pinocchioConfigFile = p
+		}
+
 		// 2) Bootstrap-parse profile selection using appconfig (circularity-safe).
 		// This allows `profile-settings.profile` and `profile-settings.profile-file` to be set by:
 		// - cobra flags (--profile/--profile-file)
@@ -382,10 +395,41 @@ func InitGenerateCmd() error {
 
 			// Profiles: apply after defaults but before config/env/flags
 			profileMiddleware,
-
-			// Defaults (lowest precedence)
-			cmd_middlewares.SetFromDefaults(parameters.WithParseStepSource(parameters.SourceDefaults)),
 		}
+		if pinocchioConfigFile != "" {
+			middlewares_ = append(middlewares_,
+				cmd_middlewares.LoadParametersFromFile(
+					pinocchioConfigFile,
+					// Pinocchio config often includes non-layer top-level keys like `repositories: [...]`.
+					// The default loader expects every top-level key to be a layer map, so we filter here.
+					cmd_middlewares.WithConfigFileMapper(func(raw interface{}) (map[string]map[string]interface{}, error) {
+						out := map[string]map[string]interface{}{}
+						rm, ok := raw.(map[string]interface{})
+						if !ok {
+							return out, nil
+						}
+						for k, v := range rm {
+							vm, ok := v.(map[string]interface{})
+							if !ok {
+								continue
+							}
+							out[k] = vm
+						}
+						return out, nil
+					}),
+					cmd_middlewares.WithParseOptions(
+						parameters.WithParseStepSource("pinocchio-config"),
+						parameters.WithParseStepMetadata(map[string]interface{}{
+							"config_file": pinocchioConfigFile,
+						}),
+					),
+				),
+			)
+		}
+		// Defaults (lowest precedence)
+		middlewares_ = append(middlewares_,
+			cmd_middlewares.SetFromDefaults(parameters.WithParseStepSource(parameters.SourceDefaults)),
+		)
 		return middlewares_, nil
 	}
 
