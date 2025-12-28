@@ -79,3 +79,13 @@ Refined the streaming/templating analysis to explicitly align “concat diffs”
 
 Split inference work into a dedicated ticket `GENERATE-LLM-INFERENCE` and moved inference-heavy analysis/design docs there (templating/streaming/parsing). Ticket `008-GENERATE` now stays focused on deterministic exporter workflows and export-only CLI functionality.
 
+
+## 2025-12-28
+
+Validated the `prescribe generate --export-rendered` export-only workflow and confirmed `go test ./...` plus the CLI smoke scripts pass. Updated ticket bookkeeping to mark the `--export-rendered` tasks complete.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/tasks.md — Mark `--export-rendered` tasks as done
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/reference/01-diary.md — Step 13 verification notes
+

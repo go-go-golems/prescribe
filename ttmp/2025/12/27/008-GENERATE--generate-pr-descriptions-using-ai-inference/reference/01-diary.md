@@ -13,7 +13,7 @@ Owners: []
 RelatedFiles: []
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T18:17:17.497197787-05:00
+LastUpdated: 2025-12-28T00:00:00Z
 WhatFor: ""
 WhenToUse: ""
 ---
@@ -451,3 +451,58 @@ Document the step-by-step research and analysis process for implementing AI-powe
 ### Next steps
 - Run `go test ./...` and the shell smoke tests.
 - Commit once everything is green.
+
+## Step 13: Validate `generate --export-rendered` (green tests) + close ticket tasks
+
+This step was about making sure the `--export-rendered` workflow is actually shippable: it should render the pinocchio-style prompt template into the concrete `(system,user)` payload, support the same separator styles as `--export-context`, and honor `--output-file`—all without running inference.
+
+After confirming the implementation exists end-to-end (CLI flag wiring → exporter → prompt compiler) I ran the `prescribe` module unit tests and the CLI smoke suites to lock down the behavior in automation. With that green, I’m updating the ticket bookkeeping so the open items reflect reality.
+
+**Commit (code):** N/A — verification + docs bookkeeping
+
+### What I did
+- Verified the CLI export-only path in `cmd/prescribe/cmds/generate.go` supports:
+  - `--export-rendered` (mutually exclusive with `--export-context`)
+  - `--separator` selection
+  - `--output-file` writes for export-only mode
+- Verified the exporter implementation in `internal/export/context.go` emits `(system,user)` in all separator modes (XML/markdown/simple/begin-end/default).
+- Ran tests:
+  - `go test ./... -count=1`
+  - `bash test/test-cli.sh`
+  - `bash test/test-all.sh`
+
+### Why
+- `--export-rendered` is a debugging seam: it lets us confirm “what the model sees” without spending tokens. It needs to be deterministic and well-tested.
+
+### What worked
+- Unit tests passed for `internal/api` and `internal/export`.
+- Both shell smoke suites passed, including checks that:
+  - XML output contains `<llm_payload>`
+  - markdown output contains `# Prescribe LLM payload (rendered)`
+  - `--output-file` produces a non-empty rendered file
+
+### What didn't work
+- N/A
+
+### What I learned
+- The existing smoke test suite is already a great guardrail for keeping export-only modes stable across refactors (especially `--separator` output shape expectations).
+
+### What was tricky to build
+- N/A (verification step)
+
+### What warrants a second pair of eyes
+- Confirm that `--separator` help text (“Separator format for export flags…”) is clear that the rendered payload uses its own envelope (not the same XML as `--export-context`).
+- Confirm the pinocchio prompt-splitting heuristic (`{{ define "context" ... }}` boundary) is “strict enough” for our embedded presets without surprising edge-cases.
+
+### What should be done in the future
+- Consider adding branch/commit metadata to the rendered payload envelope (similar to the “Later” task for exporter commit refs).
+
+### Code review instructions
+- Start in `cmd/prescribe/cmds/generate.go` and review the export-only branch (`--export-context` / `--export-rendered`).
+- Review `internal/export/context.go` (`BuildRenderedLLMPayload`) for delimiter formats.
+- Run:
+  - `go test ./... -count=1`
+  - `bash test/test-cli.sh`
+
+### Technical details
+- `--export-rendered` output is built by `internal/export.BuildRenderedLLMPayload`, which calls `internal/api.CompilePrompt` to produce the concrete system/user strings (template rendering when applicable).

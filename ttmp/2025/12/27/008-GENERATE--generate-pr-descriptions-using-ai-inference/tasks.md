@@ -23,5 +23,5 @@
 
 ## Next
 
-- [ ] Add `prescribe generate --export-rendered` to export the **rendered** (templated) prompt payload as text (no inference), mirroring Pinocchio-style template rendering
-- [ ] Document and test `--export-rendered` (works with `--output-file`; clarify interaction with `--separator` and `--export-context`)
+- [x] Add `prescribe generate --export-rendered` to export the **rendered** (templated) prompt payload as text (no inference), mirroring Pinocchio-style template rendering
+- [x] Document and test `--export-rendered` (works with `--output-file`; clarify interaction with `--separator` and `--export-context`)
