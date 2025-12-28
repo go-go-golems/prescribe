@@ -173,4 +173,27 @@ This step documented concrete hypotheses for why the rendered system/user payloa
 ### What warrants a second pair of eyes
 - Confirm we should treat context duplication as a “bug” vs “intended prompting strategy”; if it’s intended, we should rename/clarify semantics of `session show token_count` as *context-only*.
 
+## Step 7: Validate duplication on a small repo (smoke-test repo)
+
+This step validated the strongest hypothesis (template duplication) on a tiny synthetic repo so we can directly compare actual rendered outputs. We export the rendered payload with the default template, then export again with a modified prompt that removes the bracketed second `context` render. The result is unambiguous: the default user prompt contains the context block twice and has roughly double the user-token count compared to the no-dup version.
+
+### What I did
+- Added + ran script: `scripts/repro-small-repo-balloon.sh`
+- Captured a minimal summary including:
+  - `session show token_count`
+  - rendered system/user token counts for default vs no-dup
+  - a stable duplication marker count (2 → 1)
+
+### What worked
+- Duplication marker (`"The description of the pull request is:"`) count:
+  - default: 2
+  - no-dup: 1
+- Rendered user tokens:
+  - default: 2511
+  - no-dup: 1255
+
+### What I learned
+- The prompt “ballooning” is dominated by **template duplication** when `.bracket=true`.
+
+
 
