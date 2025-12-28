@@ -184,7 +184,12 @@ prescribe generate --output-file pr-description.md
 
 ### Export the exact generation context payload (no inference)
 
-This is the “catter-style” export: it prints the **exact text blob** that `prescribe generate` would send to the model (prompt + included files + additional context), without running inference.
+This is the “catter-style” export: it prints the **canonical generation context blob** (stored prompt text + included files + additional context), without running inference.
+
+Notes:
+- `--export-context` and `--export-rendered` are **mutually exclusive** (you can’t pass both).
+- If your prompt is a pinocchio-style Go template, `--export-context` prints the **stored template**. Use `--export-rendered` to see the rendered `(system,user)` payload that seeds the Turn.
+- `--separator` only affects the export modes (`--export-context` / `--export-rendered`).
 
 ```bash
 # Default separator is xml
