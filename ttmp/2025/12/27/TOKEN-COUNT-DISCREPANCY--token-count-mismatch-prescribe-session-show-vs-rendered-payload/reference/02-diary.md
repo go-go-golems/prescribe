@@ -163,4 +163,14 @@ This step adds a single low-noise script that recreates the “mismatch” setup
 - Read the script, then run it from anywhere:
   - `bash scripts/repro-token-count-discrepancy.sh`
 
+## Step 6: Hypotheses for ballooning + plan to validate on a small test repo
+
+This step documented concrete hypotheses for why the rendered system/user payload can be much larger than `session show token_count`. The main suspected culprit is **template duplication**: the default prompt renders the `context` template twice when `.bracket=true`, and prescribe sets `.bracket=true` by default. The next move is to validate this on a small synthetic repo so we can compare actual rendered outputs directly without huge files.
+
+### What I did
+- Added hypothesis doc: `analysis/03-hypotheses-why-rendered-prompt-balloons.md`
+
+### What warrants a second pair of eyes
+- Confirm we should treat context duplication as a “bug” vs “intended prompting strategy”; if it’s intended, we should rename/clarify semantics of `session show token_count` as *context-only*.
+
 
