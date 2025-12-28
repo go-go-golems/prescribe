@@ -1,0 +1,47 @@
+# Changelog
+
+## 2025-12-27
+
+- Initial workspace created
+
+
+## 2025-12-27
+
+Created analysis document and research diary. Analyzed current generate.go implementation, profile system architecture, appconfig package, and bootstrap pattern. Identified need to add WithProfile() option to appconfig and refactor generate.go to use appconfig.Parser.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/analysis/01-analysis-integrating-pinocchio-profiles-with-generate-command-using-appconfig.md — Comprehensive analysis document
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/reference/01-diary.md — Research diary documenting findings
+
+
+## 2025-12-28
+
+Implemented appconfig.WithProfile (circularity-safe bootstrap pre-parse of profile-settings + profiles.yaml application), added unit tests and a small example program, and committed in glazed worktree (9c37e8d).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/cmd/examples/appconfig-profiles/main.go — Small standalone example for debugging WithProfile
+- /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/options.go — Add WithProfile + selection/bootstrap logic
+- /home/manuel/workspaces/2025-12-26/prescribe-import/glazed/pkg/appconfig/profile_test.go — Tests for selection/precedence/error behavior
+
+
+## 2025-12-28
+
+Prescribe generate now loads Pinocchio profiles via bootstrap profile-settings parse; added small-repo smoke test script under ticket scripts/. Commits: ca8da4e (generate wiring), 7d37195 (smoke test).
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/generate.go — Enable profile flags + bootstrap selection + apply GatherFlagsFromProfiles
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/01-smoke-test-prescribe-generate-profiles.sh — Reproducible small-repo smoke test
+
+
+## 2025-12-28
+
+Tightened the embedded `create-pull-request` prompt contract to be YAML-only and to avoid rendering an empty description marker when no note-based description exists. Added a unit test to lock the behavior down. Commit: fbfb180.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/prompts/assets/create-pull-request.yaml — Conditional description rendering + YAML-only output instructions
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prompt_test.go — Regression test for empty-description rendering
+

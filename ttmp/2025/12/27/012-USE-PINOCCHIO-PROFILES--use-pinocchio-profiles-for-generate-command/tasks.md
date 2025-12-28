@@ -1,0 +1,21 @@
+# Tasks
+
+## TODO
+
+- [x] Add tasks here
+
+- [x] Implement glazed/pkg/appconfig.WithProfile (bootstrap-parse profile-settings, then load profiles.yaml at correct precedence)
+- [x] Add unit tests covering WithProfile selection via env/config/cobra + error behavior when profiles.yaml missing
+- [x] Run go test ./... and commit WithProfile work; update diary with commands + commit hash (glazed commit: 9c37e8d)
+- [ ] Create/reuse small test git repo via TOKEN-COUNT-DISCREPANCY/scripts/repro-small-repo-balloon.sh; use it for integration testing
+- [ ] Fix appconfig.WithProfile bootstrap selection so it truly uses only configured sources (env/config/cobra) and not unconditionally env
+- [ ] Add tests proving profile selection resolution from config/env/cobra and correct precedence defaults < profiles < config/env/flags
+- [ ] Integration test in small repo: run a minimal Go snippet or command to validate WithProfile end-to-end, then go test and commit
+- [x] Prescribe: wire generate command to load pinocchio profiles.yaml (bootstrap-parse profile-settings, apply GatherFlagsFromProfiles in middleware chain) (prescribe commit: ca8da4e)
+- [x] Prescribe: add small-repo integration script to validate generate + --print-parsed-parameters shows profiles step (prescribe commit: 7d37195)
+- [ ] Design+impl: Persist PR Title/Description in session.yaml (internal/session.Session + internal/domain.PRData) and plumb into BuildGenerateDescriptionRequest + template vars (.title/.description)
+- [ ] CLI: Add generate --title/--description flags (override session values) and session init --title/--description (persist when --save)
+- [x] Prompt: Update internal/prompts/assets/create-pull-request.yaml with clearer upfront framing (PR description task + YAML-only contract) and avoid emitting empty 'The description of the pull request is: .' (prescribe commit: fbfb180)
+- [x] Tests: Add/extend unit tests for prompt rendering to assert .title/.description are rendered and no empty description marker is emitted (prescribe commit: fbfb180)
+- [ ] Small-repo scripts: Add/extend ticket scripts to set session title/description and export-rendered to verify the exact prompt sent contains them
+- [ ] Gemini robustness: Decide whether to add retry/repair for non-YAML model outputs (detect parse failure; optionally re-ask for YAML-only)
