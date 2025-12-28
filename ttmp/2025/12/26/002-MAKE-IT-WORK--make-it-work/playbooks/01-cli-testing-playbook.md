@@ -326,8 +326,9 @@ Add files or notes that aren't part of the diff but provide context for PR gener
 # Add a file as additional context
 $PRESCRIBE -r "$REPO" -t master context add "README.md"
 
-# Add multiple files
-$PRESCRIBE -r "$REPO" -t master context add "README.md" "CONTRIBUTING.md"
+# Add multiple files (run command once per file)
+$PRESCRIBE -r "$REPO" -t master context add "README.md"
+$PRESCRIBE -r "$REPO" -t master context add "CONTRIBUTING.md"
 ```
 
 **Verify:**
@@ -342,13 +343,12 @@ $PRESCRIBE -r "$REPO" -t master session show
 $PRESCRIBE -r "$REPO" -t master context add \
     --note "This PR is part of the Q1 security improvements epic"
 
-# Add multiple notes
-$PRESCRIBE -r "$REPO" -t master context add \
-    --note "Related to issue #123" \
-    --note "Requires database migration"
+# Add multiple notes (run command once per note)
+$PRESCRIBE -r "$REPO" -t master context add --note "Related to issue #123"
+$PRESCRIBE -r "$REPO" -t master context add --note "Requires database migration"
 ```
 
-**Note:** Check if multiple `--note` flags work or if you need separate commands.
+**Note:** `context add` accepts a single note per invocation (run it multiple times to add multiple notes).
 
 **Verify:**
 ```bash
@@ -359,6 +359,26 @@ $PRESCRIBE -r "$REPO" -t master session show --yaml | grep -A 10 "context:"
 
 Generate AI-powered PR descriptions from the configured session.
 
+### 5.0: Export generation context payload (no inference)
+
+This prints the **exact text blob** that would be sent to the model (prompt + included files + additional context),
+without running inference.
+
+```bash
+# Export to stdout (default separator is xml)
+$PRESCRIBE -r "$REPO" -t master generate --export-context
+
+# Export with explicit separator selection
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator xml
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator markdown
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator simple
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator begin-end
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator default
+
+# Export to file
+$PRESCRIBE -r "$REPO" -t master generate --export-context --separator xml --output-file /tmp/prescribe-context.xml
+```
+
 ### 5.1: Generate with Default Settings
 
 ```bash
@@ -366,7 +386,7 @@ Generate AI-powered PR descriptions from the configured session.
 $PRESCRIBE -r "$REPO" -t master generate
 
 # Generate and save to file
-$PRESCRIBE -r "$REPO" -t master generate --output /tmp/pr-description.md
+$PRESCRIBE -r "$REPO" -t master generate --output-file /tmp/pr-description.md
 
 # View generated file
 cat /tmp/pr-description.md
@@ -394,7 +414,7 @@ $PRESCRIBE -r "$REPO" -t master generate --preset technical
 
 ```bash
 # Load session from file and generate
-$PRESCRIBE -r "$REPO" -t master generate --session /tmp/my-session.yaml
+$PRESCRIBE -r "$REPO" -t master generate --load-session /tmp/my-session.yaml
 ```
 
 **Note:** This should work even without an active session in `.pr-builder/`.
