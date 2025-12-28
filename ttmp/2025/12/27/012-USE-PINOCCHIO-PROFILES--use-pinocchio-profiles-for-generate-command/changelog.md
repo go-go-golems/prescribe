@@ -70,3 +70,13 @@ Added `generate --title/--description` overrides and `session init --title/--des
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/init.go — Persist title/description when initializing + saving
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/cmd/prescribe/cmds/session/show.go — Show title + description preview
 
+
+## 2025-12-28
+
+Added a small-repo smoke test to assert session title/description are present in the rendered payload, and fixed `TEST_REPO_DIR` propagation in the existing profiles smoke test. Commit: c4f7a31.
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/03-smoke-test-prescribe-generate-title-description.sh — New smoke test for title/description rendering
+- /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/01-smoke-test-prescribe-generate-profiles.sh — Fix test repo directory propagation
+

@@ -17,5 +17,5 @@
 - [x] CLI: Add generate --title/--description flags (override session values) and session init --title/--description (persist when --save) (prescribe commit: 46a2c0f)
 - [x] Prompt: Update internal/prompts/assets/create-pull-request.yaml with clearer upfront framing (PR description task + YAML-only contract) and avoid emitting empty 'The description of the pull request is: .' (prescribe commit: fbfb180)
 - [x] Tests: Add/extend unit tests for prompt rendering to assert .title/.description are rendered and no empty description marker is emitted (prescribe commit: fbfb180)
-- [ ] Small-repo scripts: Add/extend ticket scripts to set session title/description and export-rendered to verify the exact prompt sent contains them
+- [x] Small-repo scripts: Add/extend ticket scripts to set session title/description and export-rendered to verify the exact prompt sent contains them (prescribe commit: c4f7a31)
 - [ ] Gemini robustness: Decide whether to add retry/repair for non-YAML model outputs (detect parse failure; optionally re-ask for YAML-only)

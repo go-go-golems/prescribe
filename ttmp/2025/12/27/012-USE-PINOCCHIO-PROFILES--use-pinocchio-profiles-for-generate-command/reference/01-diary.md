@@ -404,3 +404,46 @@ cd /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe && go test ./..
 
 ### Code review instructions
 - Start at `pkg/layers/generation.go` to see the flag definitions, then review `cmd/prescribe/cmds/generate.go` and `cmd/prescribe/cmds/session/init.go`.
+
+## Step 7: Backfill smoke tests for small-repo scripts (and fix TEST_REPO_DIR propagation)
+
+This step started as a “quick confidence check” after adding title/description plumbing: I wrote a small-repo smoke test that initializes a session with `--title/--description`, then exports the rendered payload and asserts those strings are present. The first run failed in a surprising way (controller couldn’t initialize git), which turned out to be a script wiring bug: we weren’t propagating `TEST_REPO_DIR` into the shared `setup-test-repo.sh` helper.
+
+### What I did
+- Added a new ticket smoke test:
+  - `scripts/03-smoke-test-prescribe-generate-title-description.sh`
+  - Flow: setup tiny repo → `session init --save --title/--description` → `generate --export-rendered` → `grep` asserts.
+- Ran the smoke test and captured the failure:
+
+```bash
+bash /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/03-smoke-test-prescribe-generate-title-description.sh
+```
+
+### What didn't work (exact error)
+- The helper created the repo at `/tmp/prescribe-test-repo`, but `prescribe` was invoked with `--repo /tmp/prescribe-generate-title-desc-test-repo`, so controller init failed:
+  - `Error: failed to create controller: failed to initialize git service: not a git repository: /tmp/prescribe-generate-title-desc-test-repo`
+
+### Why it happened
+- `test-scripts/setup-test-repo.sh` reads `TEST_REPO_DIR` from the environment.
+- The smoke scripts were calling the helper without exporting `TEST_REPO_DIR`, so it always defaulted to `/tmp/prescribe-test-repo`, drifting from the script’s own `TEST_REPO_DIR`.
+
+### What I changed
+- Fixed `scripts/03-smoke-test-prescribe-generate-title-description.sh` to call:
+  - `env TEST_REPO_DIR="$TEST_REPO_DIR" bash "$PRESCRIBE_ROOT/test-scripts/setup-test-repo.sh"`
+- Also fixed the same bug in the earlier profiles smoke test `scripts/01-smoke-test-prescribe-generate-profiles.sh` for consistency.
+
+### What worked
+- After the fix, the title/description smoke test passes and confirms the rendered payload contains both strings:
+
+```bash
+bash /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/012-USE-PINOCCHIO-PROFILES--use-pinocchio-profiles-for-generate-command/scripts/03-smoke-test-prescribe-generate-title-description.sh
+```
+
+### Commit (code)
+- **c4f7a31c3278d7bae1ec4dcfdd2daa1599309fbf** — "test(012): add title/description smoke test and fix TEST_REPO_DIR propagation"
+
+### What warrants a second pair of eyes
+- Sanity check that all ticket smoke scripts consistently propagate env vars into shared helpers (to avoid “works on my machine” / wrong repo path).
+
+### What should be done in the future
+- Consider making `setup-test-repo.sh` print (or export) the actual repo path it created in a machine-readable way, to remove this entire class of mismatch.
