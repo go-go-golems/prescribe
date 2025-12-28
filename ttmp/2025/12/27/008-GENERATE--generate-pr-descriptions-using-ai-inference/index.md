@@ -41,6 +41,12 @@ RelatedFiles:
       Note: Document export-only context generation flags
     - Path: ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/playbooks/01-cli-testing-playbook.md
       Note: Standard CLI playbook now includes export-context
+    - Path: analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md
+      Note: End-to-end blueprint: Glazed templating + streaming inference + structured PR data parsing/extraction
+    - Path: internal/api/prompt.go
+      Note: Current prompt compiler (split+render pinocchio-style prompt using glazed templating)
+    - Path: ../../../../../../geppetto/pkg/doc/topics/11-structured-data-event-sinks.md
+      Note: Tag-only structured sink + extractor-owned parsing for robust streaming structured extraction
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-27T18:17:03.937288008-05:00

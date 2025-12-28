@@ -59,3 +59,13 @@ Updated standard CLI testing playbook to include generate --export-context and c
 
 Added regression coverage for `prescribe generate --export-context` in `test/test-cli.sh` and `test/test-all.sh` (all separators + `--output-file`). Fixed those shell tests to rebuild a per-HEAD binary so they don’t accidentally exercise a stale `/tmp/prescribe`. Removed the duplicate markdown exporter under `internal/tui/export` and moved its unit test to `internal/export`. (commit `1b25b00`)
 
+
+## 2025-12-28
+
+Implemented Pinocchio-style prompt templating for inference using Glazed’s templating helpers (`sprig` + `TemplateFuncs`). The combined default prompt is now split into system vs user templates at `{{ define "context" ... }}` and rendered with variables derived from the generation request (diff/full files/context notes/files). Added unit tests for templated and fallback behavior. (commit `fd6eeed`)
+
+
+## 2025-12-28
+
+Added a detailed analysis doc covering the end-to-end pipeline: render templates via Glazed helpers, run inference in streaming mode (Watermill sink + EventRouter), and extract/parse structured PR YAML output (including an optional structured-tag + extractor approach). (doc: `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`)
+

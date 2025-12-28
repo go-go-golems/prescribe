@@ -341,3 +341,72 @@ Document the step-by-step research and analysis process for implementing AI-powe
 
 ### Commits (if any)
 - `1b25b00` - test: cover generate --export-context and dedupe exporter
+
+## Step 8: Start “real prompt” support for inference (split + render templates)
+
+**Commit (code):** N/A — Implementation (in progress)
+
+### What I did
+- Reviewed the current inference path (`internal/api/api.go`) and confirmed we currently feed the *entire* stored prompt string as a system prompt.
+- Noted that the default prompt template is pinocchio-style and contains Go template directives (`{{ define "context" }}`, `{{ .diff }}`, etc.) which are not currently rendered before inference.
+
+### Why
+- Without rendering, the model sees raw template syntax and missing variables, which hurts output quality and makes presets misleading.
+- The ticket’s “Later” milestone explicitly calls out pinocchio-style prompt templating as the next functional step after export-context.
+
+### Next steps
+- Implement a small prompt compiler:
+  - split combined prompt into **system template** + **user template** (default marker: `{{ define "context"`),
+  - render both using `text/template` + a minimal FuncMap (e.g. `join`),
+  - populate `.diff`, `.code`, and `.context` from `GenerateDescriptionRequest`,
+  - fall back to the existing system+userContext behavior when the prompt isn’t template-shaped.
+
+### Commits (if any)
+- N/A
+
+## Step 9: Switch to Glazed templating helpers (sprig + TemplateFuncs) like Pinocchio
+
+**Commit (code):** `fd6eeed` — feat: render pinocchio-style prompt templates via glazed templating
+
+### What I did
+- Located Glazed’s canonical template helper: `glazed/pkg/helpers/templating` (`CreateTemplate` wires in sprig + `TemplateFuncs`).
+- Confirmed Pinocchio’s runtime prompt rendering uses the same helper (`templating.CreateTemplate(...).Parse(...).Execute(...)`).
+- Implemented prompt compilation for prescribe inference:
+  - detect pinocchio-style combined prompt (contains `{{ define "context"`),
+  - split into system vs user template,
+  - render both using Glazed templating helpers,
+  - map prescribe data into template vars (`diff`, `code`, `context`, `description`, …),
+  - fall back to the previous behavior for non-template prompts.
+- Added unit tests validating both the templated path (no raw `{{ ... }}` left; diff/context appear) and the fallback path.
+
+### Why
+- The default prompt preset embedded in prescribe is pinocchio-style and contains Go template directives; without rendering, the model sees raw template syntax.
+- Using the shared Glazed helper keeps parity with Pinocchio and gives us sprig functions “for free”.
+
+### What worked
+- `go test ./...` passes in the `prescribe` module after wiring the new compilation step.
+
+### Commits (if any)
+- `fd6eeed` - feat: render pinocchio-style prompt templates via glazed templating
+
+## Step 10: Research + write the streaming/template/render/parsing analysis doc
+
+**Commit (code):** N/A — Documentation/analysis
+
+### What I did
+- Reviewed Geppetto’s streaming reference (`geppetto/cmd/examples/simple-streaming-inference/main.go`) to capture the canonical `EventRouter` + `WatermillSink` + `errgroup` pattern.
+- Reviewed Geppetto’s structured streaming extraction design (`geppetto/pkg/doc/topics/11-structured-data-event-sinks.md`) to understand tag-only sinks and extractor-owned YAML parsing (`parsehelpers`).
+- Wrote a detailed end-to-end analysis doc in the ticket describing:
+  - template rendering pipeline (Glazed templating),
+  - streaming inference wiring for the TUI,
+  - deterministic extraction/parsing of PR YAML output into structured fields,
+  - an optional “structured tag” approach for robust streaming typed extraction.
+
+### Why
+- We need a concrete blueprint before implementing streaming in the TUI and before locking down a stable output format/parser for PR data.
+
+### Output
+- `analysis/02-analysis-template-rendering-streaming-and-prdata-extraction.md`
+
+### Commits (if any)
+- N/A
