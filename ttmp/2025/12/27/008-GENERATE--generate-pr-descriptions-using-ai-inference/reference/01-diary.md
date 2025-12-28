@@ -284,3 +284,60 @@ Document the step-by-step research and analysis process for implementing AI-powe
 - Analysis document: `prescribe/ttmp/2025/12/27/008-GENERATE--generate-pr-descriptions-using-ai-inference/analysis/01-analysis-export-prescribe-diff-data-and-generate-pr-descriptions-with-geppetto-inference.md`
 - Document includes: architecture analysis, pseudocode, implementation plan, design decisions, open questions
 - Next steps: resolve open questions, begin Phase 1 implementation
+
+## Step 6: Resume work — validate export milestone state (TUI/CLI parity)
+
+**Commit (code):** N/A — Investigation
+
+### What I did
+- Read the ticket `tasks.md` and cross-checked the current code paths for:
+  - CLI: `prescribe generate --export-context --separator ...` implementation
+  - TUI: CopyContext hotkey path (clipboard export)
+  - Exporter implementations (canonical vs duplicated)
+- Verified docs/playbook references for `--export-context`, `--separator`, and `--output-file`.
+
+### Why
+- The “Next (handoff-ready)” tasks are mostly about correctness and avoiding drift:
+  TUI/CLI should share the same exporter, and we need tests that lock down the flag behavior.
+
+### What I learned
+- The shared exporter already exists in `internal/export/context.go` and supports multiple separators.
+- The TUI CopyContext path already uses the shared exporter with `SeparatorMarkdown` (clipboard behavior preserved).
+- There is still a duplicate markdown exporter in `internal/tui/export/` that can now be removed (or replaced with tests in `internal/export` to prevent drift).
+- The “standard CLI testing playbook” and the doc topic already contain `generate --export-context` examples; the task list appears slightly stale.
+
+### Open questions / next steps
+- Add automated CLI coverage: exercise `generate --export-context` for all separators and `--output-file`.
+- Move the existing exporter test to `internal/export` and delete the duplicate `internal/tui/export` package to avoid drift.
+
+### Commits (if any)
+- N/A
+
+## Step 7: Lock down export-context behavior (tests) + remove exporter drift
+
+**Commit (code):** N/A — Implementation (pre-commit)
+
+### What I did
+- Extended `prescribe/test/test-cli.sh` and `prescribe/test/test-all.sh` to exercise:
+  - `prescribe generate --export-context` (default xml)
+  - `--separator` in all modes: xml/markdown/simple/begin-end/default
+  - `--output-file` in export-only mode (non-empty file output)
+- Fixed an issue where those shell tests could accidentally run a stale `/tmp/prescribe` binary:
+  they now rebuild a per-`git rev-parse --short HEAD` binary each run.
+- Moved the markdown exporter unit test from the old `internal/tui/export` package into `internal/export`
+  (test now targets `BuildGenerationContext(..., SeparatorMarkdown)`).
+- Deleted the duplicate exporter implementation under `internal/tui/export` to avoid format drift.
+
+### Why
+- The export-only milestone is a stable seam we’ll rely on for future inference integration; it needs regression coverage.
+- Keeping a single exporter implementation avoids subtle TUI vs CLI differences over time.
+
+### What worked
+- `go test ./...` in the `prescribe` module passes.
+- Shell smoke tests (`bash prescribe/test/test-cli.sh` and `bash prescribe/test/test-all.sh`) now pass and validate the new flags.
+
+### Open questions / next steps
+- None for the export milestone; next work is the “Later” inference path (templating + deterministic output parsing).
+
+### Commits (if any)
+- N/A

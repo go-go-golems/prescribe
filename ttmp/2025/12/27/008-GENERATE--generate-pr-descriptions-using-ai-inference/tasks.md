@@ -7,15 +7,15 @@
 - [x] Add catter-style context exporter for GenerateDescriptionRequest (supports separator types; default xml)
 - [x] Wire 'prescribe generate' flag to output exported context string (no inference)
 - [x] Add 'prescribe generate' flag for separator selection (xml/markdown/simple/begin-end/default)
-- [ ] Refactor TUI CopyContext to reuse the same exporter (keep clipboard behavior)
+- [x] Refactor TUI CopyContext to reuse the same exporter (keep clipboard behavior)
 - [x] Update docs/help for new generate export flag and separator flag
 
 ## Next (handoff-ready)
 
-- [ ] Update “standard CLI testing playbook” to include `generate --export-context` and correct flag names
-- [ ] Extend `prescribe/test/test-all.sh` and/or `prescribe/test/test-cli.sh` to exercise `generate --export-context` (all separators; file output)
-- [ ] Update `prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md` to mention `--output-file` works with `--export-context` (already documented) and keep examples consistent
-- [ ] Remove duplicate markdown exporter (`internal/tui/export`) or explicitly document why we keep both (avoid drift)
+- [x] Update “standard CLI testing playbook” to include `generate --export-context` and correct flag names
+- [x] Extend `prescribe/test/test-all.sh` and/or `prescribe/test/test-cli.sh` to exercise `generate --export-context` (all separators; file output)
+- [x] Update `prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md` to mention `--output-file` works with `--export-context` (already documented) and keep examples consistent
+- [x] Remove duplicate markdown exporter (`internal/tui/export`) or explicitly document why we keep both (avoid drift)
 
 ## Later (post-export milestone)
 

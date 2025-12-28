@@ -8,7 +8,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/domain"
 )
 
-func TestBuildGenerationContextText_basic(t *testing.T) {
+func TestBuildGenerationContext_markdown_basic(t *testing.T) {
 	req := api.GenerateDescriptionRequest{
 		SourceBranch: "feature",
 		TargetBranch: "main",
@@ -26,7 +26,7 @@ func TestBuildGenerationContextText_basic(t *testing.T) {
 		},
 	}
 
-	out := BuildGenerationContextText(req)
+	out := BuildGenerationContext(req, SeparatorMarkdown)
 	for _, want := range []string{
 		"Source: feature",
 		"Target: main",
@@ -40,3 +40,5 @@ func TestBuildGenerationContextText_basic(t *testing.T) {
 		}
 	}
 }
+
+

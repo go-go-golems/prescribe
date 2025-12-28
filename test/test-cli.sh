@@ -8,10 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PRESCRIBE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Build a local binary for speed/reproducibility (override with PRESCRIBE_BIN if desired).
-PRESCRIBE_BIN="${PRESCRIBE_BIN:-/tmp/prescribe}"
-if [ ! -x "$PRESCRIBE_BIN" ]; then
-  (cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
-fi
+PRESCRIBE_BIN_DEFAULT="/tmp/prescribe-$(cd "$PRESCRIBE_ROOT" && git rev-parse --short HEAD 2>/dev/null || echo dev)"
+PRESCRIBE_BIN="${PRESCRIBE_BIN:-$PRESCRIBE_BIN_DEFAULT}"
+(cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
 
 echo "=========================================="
 echo "PR Builder CLI Test Suite"
@@ -55,7 +54,54 @@ echo ""
 echo "✓ Filter list works"
 echo ""
 
-echo "Test 5: Generate with output file (optional)"
+echo "Test 5: Export generation context (no inference)"
+echo "===================="
+
+CTX_DEFAULT="/tmp/prescribe-context-default.xml"
+CTX_XML="/tmp/prescribe-context.xml"
+CTX_MD="/tmp/prescribe-context.md"
+CTX_SIMPLE="/tmp/prescribe-context.simple.txt"
+CTX_BEGIN_END="/tmp/prescribe-context.begin-end.txt"
+CTX_PLAIN="/tmp/prescribe-context.default.txt"
+CTX_OUTPUT_FILE="/tmp/prescribe-context.output-file.xml"
+
+rm -f "$CTX_DEFAULT" "$CTX_XML" "$CTX_MD" "$CTX_SIMPLE" "$CTX_BEGIN_END" "$CTX_PLAIN" "$CTX_OUTPUT_FILE"
+
+# Default separator is xml
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context >"$CTX_DEFAULT"
+test -s "$CTX_DEFAULT"
+grep -q "<prescribe>" "$CTX_DEFAULT"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator xml >"$CTX_XML"
+test -s "$CTX_XML"
+grep -q "<prescribe>" "$CTX_XML"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator markdown >"$CTX_MD"
+test -s "$CTX_MD"
+grep -q "# Prescribe generation context" "$CTX_MD"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator simple >"$CTX_SIMPLE"
+test -s "$CTX_SIMPLE"
+grep -q "START PRESCRIBE CONTEXT" "$CTX_SIMPLE"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator begin-end >"$CTX_BEGIN_END"
+test -s "$CTX_BEGIN_END"
+grep -q "BEGIN PRESCRIBE CONTEXT" "$CTX_BEGIN_END"
+
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator default >"$CTX_PLAIN"
+test -s "$CTX_PLAIN"
+grep -q "Prescribe context" "$CTX_PLAIN"
+
+# Verify --output-file also works in export mode
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator xml --output-file "$CTX_OUTPUT_FILE"
+test -s "$CTX_OUTPUT_FILE"
+grep -q "<prescribe>" "$CTX_OUTPUT_FILE"
+
+echo ""
+echo "✓ Export context works"
+echo ""
+
+echo "Test 6: Generate with output file (optional)"
 echo "===================="
 if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
   $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate -o /tmp/pr-description.md

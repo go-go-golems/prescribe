@@ -107,7 +107,7 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 }
 
 func buildMarkdown(req api.GenerateDescriptionRequest) string {
-	// Keep identical to old clipboard exporter to avoid behavior regressions.
+	// Markdown is our "clipboard-friendly" representation; keep it stable.
 	// (call sites can choose markdown explicitly)
 	var b strings.Builder
 
