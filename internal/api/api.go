@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -74,6 +76,8 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 		WithUserPrompt(userPrompt).
 		Build()
 
+	debugLogTurnSeed(req, seed, systemPrompt, userPrompt)
+
 	eng, err := factory.NewEngineFromStepSettings(s.stepSettings)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create engine from step settings")
@@ -89,6 +93,8 @@ func (s *Service) GenerateDescription(ctx context.Context, req GenerateDescripti
 		// Preserve a minimal signal for callers/debugging
 		description = "<no assistant text produced>"
 	}
+
+	debugLogAssistantText(updatedTurn, description)
 
 	var parsed *domain.GeneratedPRData
 	parseErrStr := ""
@@ -139,6 +145,8 @@ func (s *Service) GenerateDescriptionStreaming(ctx context.Context, req Generate
 		WithUserPrompt(userPrompt).
 		Build()
 
+	debugLogTurnSeed(req, seed, systemPrompt, userPrompt)
+
 	router, err := events.NewEventRouter()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create event router")
@@ -188,6 +196,8 @@ func (s *Service) GenerateDescriptionStreaming(ctx context.Context, req Generate
 		description = "<no assistant text produced>"
 	}
 
+	debugLogAssistantText(updatedTurn, description)
+
 	var parsed *domain.GeneratedPRData
 	parseErrStr := ""
 	if p, err := ParseGeneratedPRDataFromAssistantText(description); err == nil {
@@ -214,6 +224,82 @@ func (s *Service) GenerateDescriptionStreaming(ctx context.Context, req Generate
 		TokensUsed:  tokensUsed,
 		Model:       model,
 	}, nil
+}
+
+func debugLogTurnSeed(req GenerateDescriptionRequest, seed *turns.Turn, systemPrompt, userPrompt string) {
+	sysSum := summarizeForDebug(systemPrompt, 4000)
+	userSum := summarizeForDebug(userPrompt, 4000)
+	sysHash := fmt.Sprintf("%x", sha256.Sum256([]byte(systemPrompt)))
+	userHash := fmt.Sprintf("%x", sha256.Sum256([]byte(userPrompt)))
+
+	log.Debug().
+		Str("source_branch", req.SourceBranch).
+		Str("target_branch", req.TargetBranch).
+		Str("model_request", "").
+		Str("turn_id", func() string {
+			if seed == nil {
+				return ""
+			}
+			return seed.ID
+		}()).
+		Int("turn_blocks", func() int {
+			if seed == nil {
+				return 0
+			}
+			return len(seed.Blocks)
+		}()).
+		Int("system_len", len(systemPrompt)).
+		Str("system_sha256", sysHash).
+		Str("system_preview", sysSum).
+		Int("user_len", len(userPrompt)).
+		Str("user_sha256", userHash).
+		Str("user_preview", userSum).
+		Msg("api: seed turn prepared for inference")
+}
+
+func debugLogAssistantText(t *turns.Turn, assistantText string) {
+	preview := summarizeForDebug(assistantText, 4000)
+	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(assistantText)))
+	model := ""
+	if t != nil && t.Metadata != nil {
+		if v, ok := t.Metadata[turns.TurnMetaKeyModel]; ok {
+			if s, ok := v.(string); ok {
+				model = s
+			}
+		}
+	}
+	log.Debug().
+		Str("model", model).
+		Int("assistant_len", len(assistantText)).
+		Str("assistant_sha256", hash).
+		Str("assistant_preview", preview).
+		Msg("api: assistant raw output (last assistant text block)")
+}
+
+func summarizeForDebug(s string, max int) string {
+	const ellipsis = "\n...\n"
+	if max <= 0 {
+		return ""
+	}
+	ss := strings.TrimSpace(s)
+	if len(ss) <= max {
+		return ss
+	}
+	// Keep a prefix and suffix to help detect truncation/format issues.
+	prefixLen := max * 2 / 3
+	suffixLen := max - prefixLen - len(ellipsis)
+	if suffixLen < 0 {
+		suffixLen = 0
+	}
+	if prefixLen < 0 {
+		prefixLen = 0
+	}
+	prefix := ss[:prefixLen]
+	suffix := ""
+	if suffixLen > 0 {
+		suffix = ss[len(ss)-suffixLen:]
+	}
+	return prefix + ellipsis + suffix
 }
 
 // ValidateRequest validates a generate description request
