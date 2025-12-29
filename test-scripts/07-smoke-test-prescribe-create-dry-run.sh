@@ -11,10 +11,12 @@ set -euo pipefail
 #
 # Environment overrides:
 # - PRESCRIBE_ROOT: path to prescribe module (default: current workspace)
+# - TEST_REPO_DIR: where to create the tiny git repo (default: /tmp/prescribe-create-non-dry-run-test-repo)
 # - BASE: output file prefix (default: /tmp/prescribe-create-dry-run-<timestamp>)
 #
 
 PRESCRIBE_ROOT="${PRESCRIBE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+TEST_REPO_DIR="${TEST_REPO_DIR:-/tmp/prescribe-create-non-dry-run-test-repo}"
 BASE="${BASE:-/tmp/prescribe-create-dry-run-$(date +%Y%m%d-%H%M%S)}"
 
 LOG="${BASE}.log"
@@ -32,6 +34,7 @@ run_quiet() {
 
 echo "prescribe create dry-run smoke test" >"$LOG"
 echo "PRESCRIBE_ROOT=${PRESCRIBE_ROOT}" >>"$LOG"
+echo "TEST_REPO_DIR=${TEST_REPO_DIR}" >>"$LOG"
 echo "BASE=${BASE}" >>"$LOG"
 
 prescribe() {
@@ -65,5 +68,19 @@ echo "- create --dry-run --yaml-file"
 echo "- create --dry-run --use-last"
 echo
 echo "done"
+
+# 3) non-dry-run attempt in tiny repo (expected to fail fast at git push; verify tracing)
+#
+# We run this in a repo without a configured remote so `git push` fails quickly.
+# We also disable prompts and bound runtime with `timeout` so we can detect hangs.
+
+run_quiet "setup small test repo (no remote)" env TEST_REPO_DIR="$TEST_REPO_DIR" bash "${PRESCRIBE_ROOT}/test-scripts/setup-test-repo.sh"
+
+run_quiet "create (non-dry-run; expected failure at git push)" bash -c \
+  "cd \"$PRESCRIBE_ROOT\" && timeout 10s env GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo \"$TEST_REPO_DIR\" create --yaml-file \"$YAML_FILE\" || true"
+
+grep -Fq "prescribe create: command: git push" "$LOG"
+grep -Fq "prescribe create: command: gh pr create" "$LOG"
+grep -Fq "saved PR data to" "$LOG"
 
 
