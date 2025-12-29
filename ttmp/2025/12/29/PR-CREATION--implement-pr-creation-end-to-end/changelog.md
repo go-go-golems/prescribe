@@ -128,3 +128,13 @@ Steps 11-12: save PR YAML on create failure + add github arg tests (commit c4e22
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/prdata/prdata.go — Timestamped failure PR YAML path helper
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary steps 11-12
 
+
+## 2025-12-29
+
+Step 13: diagnosed create timeouts as git push pre-push hooks; extended smoke test
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/07-smoke-test-prescribe-create-dry-run.sh — Add bounded non-dry-run create section
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 13
+

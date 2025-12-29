@@ -609,3 +609,40 @@ This step added unit tests around the most error-prone piece of the `gh` integra
 
 ### What warrants a second pair of eyes
 - Confirm we should keep argument ordering stable (tests assert exact slice ordering)
+
+## Step 13: Diagnose non-dry-run create timeouts (git push hooks) + extend smoke test
+
+This step investigated why a `prescribe create` run without `--dry-run` previously “timed out”. The result is clear: the hang was in **`git push`**, specifically because the `prescribe/` repo has a **`lefthook` pre-push hook** that runs tests and golangci-lint. It was not `gh` prompting interactively.
+
+To make this diagnosable going forward, we extended the existing smoke test to include a **bounded non-dry-run** run against a tiny repo with no remote configured, so `git push` fails quickly and we can still validate tracing + save-on-failure behavior.
+
+**Commit (code):** 106e5e5be87a99f51a6064501f4caf3f8107f5fa — "test: add bounded non-dry-run create smoke check"
+
+### What I did
+- Ran `prescribe create` from within `prescribe/` with a timeout and prompts disabled:
+  - `timeout 10s env GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo . create --title \"t\" --body \"b\"`
+- Observed the tracing output:
+  - it always prints the commands first (`git push`, then redacted `gh ...`)
+  - it stalled during `git push`
+- Confirmed the actual work happening during the stall was `lefthook`’s **pre-push** hook running `make test` and `golangci-lint`
+- Updated `test-scripts/07-smoke-test-prescribe-create-dry-run.sh` to add a third section:
+  - create a tiny local repo (no remote)
+  - run `create` non-dry-run with `timeout` + prompts disabled
+  - assert the log contains the new trace lines and “saved PR data to …”
+
+### Why
+- Prevent future confusion: timeouts aren’t “gh interactive”, they’re “git push runs hooks / blocks”
+- Ensure we have a reliable, offline-friendly reproduction that never talks to GitHub
+
+### What worked
+- The log clearly shows where we were running (`cwd`), what repo we targeted, and which commands were executed
+- The bounded smoke test captures tracing + save-on-failure output deterministically
+
+### What didn't work
+- Running non-dry-run against the actual `prescribe/` repo is slow because pre-push hooks do real work (expected)
+
+### What I learned
+- The safest “diagnose create” recipe is: `timeout + GIT_TERMINAL_PROMPT=0 + GH_PROMPT_DISABLED=1` plus our new tracing lines
+
+### What warrants a second pair of eyes
+- Decide whether `prescribe create` should provide a flag to skip pushing (useful for repos with heavy pre-push hooks)
