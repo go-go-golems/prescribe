@@ -11,15 +11,22 @@ Intent: long-term
 Owners: []
 RelatedFiles:
     - Path: prescribe/cmd/prescribe/cmds/create.go
-      Note: 'New ''prescribe create'' command skeleton + flags (task #2)'
+      Note: |-
+        New 'prescribe create' command skeleton + flags (task #2)
+        On failure
     - Path: prescribe/cmd/prescribe/cmds/root.go
       Note: 'Wires create command into root command tree (task #2)'
+    - Path: prescribe/internal/github/github_test.go
+      Note: 'Unit tests for gh pr create arg building and redaction (task #14)'
+    - Path: prescribe/internal/prdata/prdata.go
+      Note: 'Failure PR data path + timestamped save location (task #11)'
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-29T08:32:36.47208347-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Diary
@@ -536,3 +543,69 @@ Because our smoke test environment doesn’t have a GitHub remote, we validate t
   - `cmd/prescribe/cmds/create.go` (use-last loading)
   - `internal/prdata/prdata.go` (+ test)
   - `test-scripts/07-smoke-test-prescribe-create-dry-run.sh`
+
+## Step 11: Save PR YAML to disk on create failure
+
+This step hardens the CLI for real-world failures (auth, networking, missing upstream): if `prescribe create` fails while pushing or running `gh pr create`, it now writes a timestamped YAML file under `.pr-builder/` so you can retry manually without losing the generated PR content.
+
+We keep the workflow safe for local development by relying on the existing dry-run smoke tests for the happy-path and validating the failure-save logic via unit tests + code review (we don’t require an actual GH remote).
+
+**Commit (code):** c4e22c9b91bc6fc454dbcabb33ab0f67564a4ae6 — "create: save pr-data yaml on failure; test gh args"
+
+### What I did
+- Added `internal/prdata.FailurePRDataPath(repoPath, now)` for timestamped paths like:
+  - `.pr-builder/pr-data-YYYYMMDD-HHMMSS.yaml`
+- Updated `cmd/prescribe/cmds/create.go`:
+  - on `git push` failure: write PR data YAML and print where it was saved
+  - on `gh pr create` failure: write PR data YAML and print where it was saved
+
+### Why
+- Avoid losing work when create fails; always leave a retry artifact behind
+
+### What worked
+- Unit and lint pass: `go test ./... -count=1`
+- Failure path now produces a deterministic “saved PR data to …” message on stderr
+
+### What didn't work
+- N/A
+
+### What I learned
+- The `internal/prdata` helper is a natural place to centralize “save on failure” behavior so future features (task #16 / integrations) can reuse it
+
+### What was tricky to build
+- Avoiding misleading output: we need to save to disk *before* telling the user where to find it
+
+### What warrants a second pair of eyes
+- Confirm the timestamp format and directory choice are acceptable as a stable UX contract
+
+### What should be done in the future
+- Optionally write the same “failure artifact” on other failure types (e.g., parse failures) if useful
+
+### Code review instructions
+- Start with:
+  - `cmd/prescribe/cmds/create.go`
+  - `internal/prdata/prdata.go`
+
+### Technical details
+- Failure artifacts go under: `.pr-builder/pr-data-<timestamp>.yaml`
+
+## Step 12: Add unit tests for `gh pr create` argument construction
+
+This step added unit tests around the most error-prone piece of the `gh` integration: building the argument list correctly and ensuring we redact the PR body when printing/logging.
+
+**Commit (code):** c4e22c9b91bc6fc454dbcabb33ab0f67564a4ae6 — "create: save pr-data yaml on failure; test gh args"
+
+### What I did
+- Added `internal/github/github_test.go` with tests for:
+  - missing title/body validation
+  - base + draft flags
+  - redaction behavior for `--body`
+
+### Why
+- Keep the integration stable without requiring network/GitHub access during tests
+
+### What worked
+- Tests run quickly and validate the CLI surface without external dependencies
+
+### What warrants a second pair of eyes
+- Confirm we should keep argument ordering stable (tests assert exact slice ordering)

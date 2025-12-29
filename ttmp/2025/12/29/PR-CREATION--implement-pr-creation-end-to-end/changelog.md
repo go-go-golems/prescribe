@@ -116,3 +116,15 @@ Steps 9-10: implement create --yaml-file and --use-last; add dry-run smoke test 
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary steps 9-10
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/scripts/01-write-last-generated-prdata.go — Ticket helper for smoke test
 
+
+## 2025-12-29
+
+Steps 11-12: save PR YAML on create failure + add github arg tests (commit c4e22c9b91bc6fc454dbcabb33ab0f67564a4ae6)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Save PR YAML on failure (git push / gh)
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/github/github_test.go — Unit tests for gh arg building and redaction
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/prdata/prdata.go — Timestamped failure PR YAML path helper
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary steps 11-12
+
