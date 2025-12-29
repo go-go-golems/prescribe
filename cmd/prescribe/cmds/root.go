@@ -64,6 +64,9 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	if err := InitGenerateCmd(); err != nil {
 		return errors.Wrap(err, "failed to init generate command")
 	}
+	if err := InitCreateCmd(); err != nil {
+		return errors.Wrap(err, "failed to init create command")
+	}
 	if err := InitTuiCmd(); err != nil {
 		return errors.Wrap(err, "failed to init tui command")
 	}
@@ -75,8 +78,9 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.AddCommand(context.ContextCmd)
 	rootCmd.AddCommand(tokens.TokensCmd)
 
-	// Root-level commands (generate, tui)
+	// Root-level commands (generate, create, tui)
 	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(tuiCmd)
 
 	return nil
