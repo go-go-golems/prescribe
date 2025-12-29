@@ -20,6 +20,10 @@ RelatedFiles:
       Note: 'Unit tests for gh pr create arg building and redaction (task #14)'
     - Path: prescribe/internal/prdata/prdata.go
       Note: 'Failure PR data path + timestamped save location (task #11)'
+    - Path: prescribe/test-scripts/08-integration-test-pr-creation.sh
+      Note: 'End-to-end PR creation integration test: local git remote + fake gh; covers create + generate --create'
+    - Path: prescribe/test-scripts/README.md
+      Note: 'Documents PR creation integration script + SKIP_GENERATE mode'
 ExternalSources: []
 Summary: ""
 LastUpdated: 2025-12-29T08:32:36.47208347-05:00
@@ -800,3 +804,64 @@ This step updated the user-facing docs to reflect the new end-to-end PR creation
 - Start with:
   - `prescribe/README.md`
   - `prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md`
+
+## Step 18: Add end-to-end integration test for PR creation (local remote + fake gh)
+
+This step turned the previously “manual validation” into a repeatable, safe integration check: we can now run `create` and `generate --create` end-to-end without pushing to GitHub or creating real PRs. The script uses a local bare git remote so `git push` succeeds, and it injects a fake `gh` into `PATH` so `gh pr create` is captured to a log instead of hitting the network.
+
+It also explicitly acknowledges a constraint: `prescribe generate` still requires real AI step settings. To keep the test useful even without AI config, the script supports `SKIP_GENERATE=1` to test only the create flows.
+
+**Commit (code):** c29bac1a02b3f48ff811f090297f411b70994b7e — "test: add PR creation integration script (fake gh + local remote)"
+
+### What I did
+- Added a new integration script: `prescribe/test-scripts/08-integration-test-pr-creation.sh`
+  - Creates a local bare remote under `/tmp/...remote.git` and sets it as `origin`
+  - Writes a tiny YAML file and runs `prescribe create --yaml-file ...` (non-dry-run)
+  - Runs `prescribe generate` and asserts it writes `.pr-builder/last-generated-pr.yaml`
+  - Runs `prescribe create --use-last` (non-dry-run)
+  - Runs `prescribe generate --create` (non-dry-run)
+  - Replaces `gh` with a fake script in `PATH` that records `gh pr create ...` and prints a fake URL
+- Updated `prescribe/test-scripts/README.md` to document the new script and `SKIP_GENERATE=1`
+- Ran it in both modes:
+  - `cd prescribe && SKIP_GENERATE=1 bash test-scripts/08-integration-test-pr-creation.sh`
+  - `cd prescribe && bash test-scripts/08-integration-test-pr-creation.sh`
+
+### Why
+- The last remaining ticket task was an “integration test: end-to-end PR creation”
+- We want coverage that is deterministic and safe (no real GitHub side effects), while still validating `git push` + `gh pr create` wiring
+
+### What worked
+- The script verified all targeted flows and produced stable logs:
+  - create from YAML (`--yaml-file`)
+  - generate → persisted `.pr-builder/last-generated-pr.yaml` → create (`--use-last`)
+  - generate `--create` (push + gh)
+
+### What didn't work
+- Initial run failed with:
+  - `grep: unrecognized option '--title Hello'`
+- Root cause: patterns beginning with `--` were treated as grep flags; fixed by using `grep -Fq -- "..."`.
+
+### What I learned
+- For CLI integration tests, it’s worth guarding against “grep option parsing” whenever expected output contains `--flags`.
+- A local bare remote is the simplest way to exercise `git push` without network access.
+
+### What was tricky to build
+- Making the test both “safe by default” (no GitHub) and still meaningful (exercise push + create), while acknowledging that generate requires AI config.
+
+### What warrants a second pair of eyes
+- Verify that mocking `gh` via `PATH` is acceptable for this repo’s testing philosophy (vs. a Go-level exec abstraction).
+- Confirm the script’s assumptions around branch names (`master`) match the rest of the smoke test scripts.
+
+### What should be done in the future
+- If we ever add a mock inference provider, we could remove the AI-config requirement and make the full script runnable in CI.
+
+### Code review instructions
+- Start with:
+  - `prescribe/test-scripts/08-integration-test-pr-creation.sh`
+  - `prescribe/test-scripts/README.md`
+- Validate locally:
+  - `cd prescribe && SKIP_GENERATE=1 bash test-scripts/08-integration-test-pr-creation.sh`
+  - `cd prescribe && bash test-scripts/08-integration-test-pr-creation.sh`
+
+### Technical details
+- The fake `gh` writes a log to `${GH_LOG}` and returns a fake PR URL for `gh pr create`.

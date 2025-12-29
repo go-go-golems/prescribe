@@ -18,4 +18,4 @@
 - [x] Wire up generate --create flow: After successful generation in generate command call PR creation logic, use generated PR data for creation, handle errors appropriately
 - [x] Add tests for PR creation: Create prescribe/internal/github/github_test.go, test gh pr create command construction with various flags, mock gh command execution for unit tests
 - [x] Update documentation: Update prescribe/README.md with create command usage, document --use-last/--yaml-file/--title/--body/--draft/--dry-run/--base flags, add examples for common workflows
-- [ ] Integration test: end-to-end PR creation: Test full flow (prescribe generate → prescribe create --use-last), test prescribe generate --create, test prescribe create --yaml-file <file>, verify PR is actually created (or mocked appropriately)
+- [x] Integration test: end-to-end PR creation: Test full flow (prescribe generate → prescribe create --use-last), test prescribe generate --create, test prescribe create --yaml-file <file>, verify PR is actually created (or mocked appropriately). See `prescribe/test-scripts/08-integration-test-pr-creation.sh`.

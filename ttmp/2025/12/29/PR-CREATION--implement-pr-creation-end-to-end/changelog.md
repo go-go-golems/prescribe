@@ -178,3 +178,14 @@ Step 17: updated documentation for PR creation workflows (create + generate --cr
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md — Add PR creation step
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 17
 
+
+## 2025-12-29
+
+Step 18: add safe end-to-end integration test for PR creation (local git remote + fake gh) (commit c29bac1a02b3f48ff811f090297f411b70994b7e)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/08-integration-test-pr-creation.sh — Integration test for create/generate --create without hitting GitHub
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/README.md — Document new integration script + SKIP_GENERATE mode
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 18 entry
+
