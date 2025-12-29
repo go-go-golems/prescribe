@@ -1,9 +1,11 @@
 package prdata
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/pkg/errors"
@@ -12,6 +14,12 @@ import (
 
 func LastGeneratedPRDataPath(repoPath string) string {
 	return filepath.Join(repoPath, ".pr-builder", "last-generated-pr.yaml")
+}
+
+func FailurePRDataPath(repoPath string, now time.Time) string {
+	// Use a timestamped filename so repeated failures don't overwrite.
+	ts := now.UTC().Format("20060102-150405")
+	return filepath.Join(repoPath, ".pr-builder", fmt.Sprintf("pr-data-%s.yaml", ts))
 }
 
 func LoadGeneratedPRDataFromYAMLFile(path string) (*domain.GeneratedPRData, error) {

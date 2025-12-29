@@ -3,13 +3,16 @@ package cmds
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
 	cmd_middlewares "github.com/go-go-golems/glazed/pkg/cmds/middlewares"
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
+	"github.com/go-go-golems/prescribe/internal/domain"
 	"github.com/go-go-golems/prescribe/internal/git"
 	"github.com/go-go-golems/prescribe/internal/github"
 	"github.com/go-go-golems/prescribe/internal/prdata"
@@ -177,12 +180,18 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 		return err
 	}
 	if err := gitSvc.PushCurrentBranch(ctx); err != nil {
+		failPath := prdata.FailurePRDataPath(repoSettings.RepoPath, time.Now())
+		_ = prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body})
+		fmt.Fprintf(os.Stderr, "PR creation failed during git push; saved PR data to %s\n", failPath)
 		return err
 	}
 
 	svc := github.NewService(repoSettings.RepoPath)
 	out, err := svc.CreatePR(ctx, opts)
 	if err != nil {
+		failPath := prdata.FailurePRDataPath(repoSettings.RepoPath, time.Now())
+		_ = prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body})
+		fmt.Fprintf(os.Stderr, "PR creation failed during gh pr create; saved PR data to %s\n", failPath)
 		return err
 	}
 
