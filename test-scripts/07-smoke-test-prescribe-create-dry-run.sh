@@ -77,7 +77,7 @@ echo "done"
 run_quiet "setup small test repo (no remote)" env TEST_REPO_DIR="$TEST_REPO_DIR" bash "${PRESCRIBE_ROOT}/test-scripts/setup-test-repo.sh"
 
 run_quiet "create (non-dry-run; expected failure at git push)" bash -c \
-  "cd \"$PRESCRIBE_ROOT\" && timeout 10s env GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo \"$TEST_REPO_DIR\" create --yaml-file \"$YAML_FILE\" || true"
+  "cd \"$PRESCRIBE_ROOT\" && timeout 10s env LEFTHOOK=0 GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo \"$TEST_REPO_DIR\" create --yaml-file \"$YAML_FILE\" || true"
 
 grep -Fq "prescribe create: command: git push" "$LOG"
 grep -Fq "prescribe create: command: gh pr create" "$LOG"
