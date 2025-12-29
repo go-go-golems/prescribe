@@ -685,3 +685,42 @@ This step ran a **real** `prescribe create` (non-dry-run) from within the `presc
 ### Code review instructions
 - Open PR #2 and review commit list:
   - `https://github.com/go-go-golems/prescribe/pull/2`
+
+## Step 15: Add `prescribe generate --create` wiring (with dry-run/base/draft flags)
+
+This step wired up a combined workflow: after generating a PR description (and successfully parsing the structured YAML into `GeneratedPRData`), `prescribe generate --create` can now push the branch and create the PR via `gh pr create`.
+
+To keep this testable in environments without a GitHub remote, we also added `--create-dry-run` which prints the create actions without executing them.
+
+**Commit (code):** a87691b292f95b3a1a1bcc97da37a33b640e304a — "generate: add --create (with dry-run/base/draft flags)"
+
+### What I did
+- Added new flags to `prescribe generate`:
+  - `--create` (enable PR creation after generation)
+  - `--create-dry-run` (print actions only)
+  - `--create-draft` (create draft PR)
+  - `--create-base` (base branch, default `main`)
+- Implemented the post-generation flow using `GeneratedPRData`:
+  - `git push` (same behavior as `prescribe create`)
+  - `gh pr create ...` (printed to stderr to avoid mixing with description output)
+
+### Why
+- Enable the “one command” workflow: generate + create PR
+- Keep it safe and inspectable in CI/smoke tests via `--create-dry-run`
+
+### What worked
+- Help output shows the new flags (`go run ./cmd/prescribe generate --help`)
+- Existing unit tests and smoke tests still pass
+
+### What didn't work
+- We did not run a full end-to-end “generate with inference” in smoke tests (it requires LLM config); this step is wiring + flag surface + safe dry-run mode
+
+### What warrants a second pair of eyes
+- Confirm that printing `gh` output to stderr is the right UX (stdout remains the generated description)
+- Confirm the failure-save behavior is sufficient (we only save PR data YAML on `gh` failure, not on push failure in generate path yet)
+
+### Code review instructions
+- Start with:
+  - `cmd/prescribe/cmds/generate.go`
+- Validate flags exist:
+  - `cd prescribe && go run ./cmd/prescribe generate --help | grep -E -- \"create-dry-run|create-base|create-draft|--create\"`

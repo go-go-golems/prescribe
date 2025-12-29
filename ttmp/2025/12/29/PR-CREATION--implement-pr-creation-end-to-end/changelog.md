@@ -148,3 +148,13 @@ Step 14: validated real create flow (LEFTHOOK=0): pushed branch and opened draft
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Tracing shows push+gh success; used to open PR
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 14 records PR URL
 
+
+## 2025-12-29
+
+Step 15: add generate --create wiring (+ dry-run/base/draft flags) (commit a87691b292f95b3a1a1bcc97da37a33b640e304a)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/generate.go — Implement generate --create flow
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 15
+
