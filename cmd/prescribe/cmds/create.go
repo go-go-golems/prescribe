@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -175,25 +176,43 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 		return nil
 	}
 
+	// Trace execution path (stderr): helps diagnose hangs/timeouts (git auth prompts, gh auth prompts, network stalls).
+	cwd, _ := os.Getwd()
+	absRepo, _ := filepath.Abs(repoSettings.RepoPath)
+	fmt.Fprintf(os.Stderr, "prescribe create: cwd=%s repo=%s abs_repo=%s source=%s base=%q draft=%v title_len=%d body_len=%d\n",
+		cwd, repoSettings.RepoPath, absRepo, sourceDesc, opts.Base, opts.Draft, len(opts.Title), len(opts.Body))
+	fmt.Fprintf(os.Stderr, "prescribe create: command: git push\n")
+	fmt.Fprintf(os.Stderr, "prescribe create: command: gh %s\n", strings.Join(github.RedactGhArgs(args), " "))
+
 	gitSvc, err := git.NewService(repoSettings.RepoPath)
 	if err != nil {
 		return err
 	}
+	pushStart := time.Now()
 	if err := gitSvc.PushCurrentBranch(ctx); err != nil {
 		failPath := prdata.FailurePRDataPath(repoSettings.RepoPath, time.Now())
-		_ = prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body})
-		fmt.Fprintf(os.Stderr, "PR creation failed during git push; saved PR data to %s\n", failPath)
+		if werr := prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body}); werr != nil {
+			fmt.Fprintf(os.Stderr, "prescribe create: git push failed after %s; also failed to save PR data to %s: %v\n", time.Since(pushStart), failPath, werr)
+		} else {
+			fmt.Fprintf(os.Stderr, "prescribe create: git push failed after %s; saved PR data to %s\n", time.Since(pushStart), failPath)
+		}
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "prescribe create: git push succeeded (%s)\n", time.Since(pushStart))
 
 	svc := github.NewService(repoSettings.RepoPath)
+	ghStart := time.Now()
 	out, err := svc.CreatePR(ctx, opts)
 	if err != nil {
 		failPath := prdata.FailurePRDataPath(repoSettings.RepoPath, time.Now())
-		_ = prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body})
-		fmt.Fprintf(os.Stderr, "PR creation failed during gh pr create; saved PR data to %s\n", failPath)
+		if werr := prdata.WriteGeneratedPRDataToYAMLFile(failPath, &domain.GeneratedPRData{Title: opts.Title, Body: opts.Body}); werr != nil {
+			fmt.Fprintf(os.Stderr, "prescribe create: gh pr create failed after %s; also failed to save PR data to %s: %v\n", time.Since(ghStart), failPath, werr)
+		} else {
+			fmt.Fprintf(os.Stderr, "prescribe create: gh pr create failed after %s; saved PR data to %s\n", time.Since(ghStart), failPath)
+		}
 		return err
 	}
+	fmt.Fprintf(os.Stderr, "prescribe create: gh pr create succeeded (%s)\n", time.Since(ghStart))
 
 	fmt.Print(out)
 	return nil
