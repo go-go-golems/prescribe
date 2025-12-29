@@ -3,12 +3,14 @@ package cmds
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/go-go-golems/glazed/pkg/cli"
 	"github.com/go-go-golems/glazed/pkg/cmds"
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
 	cmd_middlewares "github.com/go-go-golems/glazed/pkg/cmds/middlewares"
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
+	"github.com/go-go-golems/prescribe/internal/github"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -81,8 +83,8 @@ func NewCreateCommand() (*CreateCommand, error) {
 	baseFlag := parameters.NewParameterDefinition(
 		"base",
 		parameters.ParameterTypeString,
-		parameters.WithHelp("Base branch for PR (default: main or detected default branch)"),
-		parameters.WithDefault(""),
+		parameters.WithHelp("Base branch for PR"),
+		parameters.WithDefault("main"),
 	)
 
 	layersList := []glazed_layers.ParameterLayer{
@@ -108,17 +110,44 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 		return errors.Wrap(err, "failed to decode create extra settings")
 	}
 
-	// TODO: Implement PR creation logic in subsequent tasks
-	fmt.Println("Create command called with flags:")
-	fmt.Printf("  --use-last: %v\n", extra.UseLast)
-	fmt.Printf("  --yaml-file: %s\n", extra.YAMLFile)
-	fmt.Printf("  --title: %s\n", extra.Title)
-	fmt.Printf("  --body: %s\n", extra.Body)
-	fmt.Printf("  --draft: %v\n", extra.Draft)
-	fmt.Printf("  --dry-run: %v\n", extra.DryRun)
-	fmt.Printf("  --base: %s\n", extra.Base)
+	repoSettings, err := prescribe_layers.GetRepositorySettings(parsedLayers)
+	if err != nil {
+		return err
+	}
 
-	return fmt.Errorf("PR creation not yet implemented")
+	// NOTE: --use-last and --yaml-file are intentionally not implemented yet (tracked as separate tasks).
+	if extra.UseLast || strings.TrimSpace(extra.YAMLFile) != "" {
+		return errors.New("--use-last / --yaml-file not implemented yet")
+	}
+
+	opts := github.CreatePROptions{
+		Title: extra.Title,
+		Body:  extra.Body,
+		Base:  extra.Base,
+		Draft: extra.Draft,
+	}
+
+	args, err := github.BuildGhCreatePRArgs(opts)
+	if err != nil {
+		return err
+	}
+
+	if extra.DryRun {
+		fmt.Println("Dry-run: would create PR via GitHub CLI:")
+		fmt.Printf("  repo: %s\n", repoSettings.RepoPath)
+		fmt.Printf("  command: gh %s\n", strings.Join(github.RedactGhArgs(args), " "))
+		fmt.Printf("  title_len=%d body_len=%d base=%q draft=%v\n", len(opts.Title), len(opts.Body), opts.Base, opts.Draft)
+		return nil
+	}
+
+	svc := github.NewService(repoSettings.RepoPath)
+	out, err := svc.CreatePR(ctx, opts)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(out)
+	return nil
 }
 
 func InitCreateCmd() error {
