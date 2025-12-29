@@ -12,6 +12,7 @@ import (
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
 	"github.com/go-go-golems/prescribe/internal/git"
 	"github.com/go-go-golems/prescribe/internal/github"
+	"github.com/go-go-golems/prescribe/internal/prdata"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -48,7 +49,7 @@ func NewCreateCommand() (*CreateCommand, error) {
 	useLastFlag := parameters.NewParameterDefinition(
 		"use-last",
 		parameters.ParameterTypeBool,
-		parameters.WithHelp("Use the last generated PR data from session"),
+		parameters.WithHelp("Use the last generated PR data saved under .pr-builder"),
 		parameters.WithDefault(false),
 	)
 	yamlFileFlag := parameters.NewParameterDefinition(
@@ -116,14 +117,42 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 		return err
 	}
 
-	// NOTE: --use-last and --yaml-file are intentionally not implemented yet (tracked as separate tasks).
-	if extra.UseLast || strings.TrimSpace(extra.YAMLFile) != "" {
-		return errors.New("--use-last / --yaml-file not implemented yet")
+	var sourceDesc string
+	title := strings.TrimSpace(extra.Title)
+	body := strings.TrimSpace(extra.Body)
+
+	if strings.TrimSpace(extra.YAMLFile) != "" {
+		p, err := prdata.LoadGeneratedPRDataFromYAMLFile(extra.YAMLFile)
+		if err != nil {
+			return err
+		}
+		sourceDesc = "yaml-file:" + extra.YAMLFile
+		title = p.Title
+		body = p.Body
+	} else if extra.UseLast {
+		path := prdata.LastGeneratedPRDataPath(repoSettings.RepoPath)
+		p, err := prdata.LoadGeneratedPRDataFromYAMLFile(path)
+		if err != nil {
+			return errors.Wrapf(err, "failed to load last generated PR data (expected at %s)", path)
+		}
+		sourceDesc = "use-last:" + path
+		title = p.Title
+		body = p.Body
+	} else {
+		sourceDesc = "flags"
+	}
+
+	// Allow explicit overrides even when loading from YAML/use-last.
+	if strings.TrimSpace(extra.Title) != "" {
+		title = extra.Title
+	}
+	if strings.TrimSpace(extra.Body) != "" {
+		body = extra.Body
 	}
 
 	opts := github.CreatePROptions{
-		Title: extra.Title,
-		Body:  extra.Body,
+		Title: title,
+		Body:  body,
 		Base:  extra.Base,
 		Draft: extra.Draft,
 	}
@@ -136,6 +165,7 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 	if extra.DryRun {
 		fmt.Println("Dry-run: would push branch and create PR via GitHub CLI:")
 		fmt.Printf("  repo: %s\n", repoSettings.RepoPath)
+		fmt.Printf("  source: %s\n", sourceDesc)
 		fmt.Printf("  command: git push\n")
 		fmt.Printf("  command: gh %s\n", strings.Join(github.RedactGhArgs(args), " "))
 		fmt.Printf("  title_len=%d body_len=%d base=%q draft=%v\n", len(opts.Title), len(opts.Body), opts.Base, opts.Draft)

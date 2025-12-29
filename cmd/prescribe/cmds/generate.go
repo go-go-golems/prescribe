@@ -19,6 +19,7 @@ import (
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	papi "github.com/go-go-golems/prescribe/internal/api"
 	pexport "github.com/go-go-golems/prescribe/internal/export"
+	"github.com/go-go-golems/prescribe/internal/prdata"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
@@ -262,6 +263,19 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 			fmt.Fprintf(os.Stderr, "\n--- Parsed PR data: failed (%s) ---\n", data.GeneratedPRDataParseError)
 		} else {
 			fmt.Fprintf(os.Stderr, "\n--- Parsed PR data: not available ---\n")
+		}
+	}
+
+	// Persist last generated structured PR data (for `prescribe create --use-last`).
+	data := ctrl.GetData()
+	if data != nil && data.GeneratedPRData != nil {
+		if repoSettings, err := prescribe_layers.GetRepositorySettings(parsedLayers); err == nil {
+			path := prdata.LastGeneratedPRDataPath(repoSettings.RepoPath)
+			if err := prdata.WriteGeneratedPRDataToYAMLFile(path, data.GeneratedPRData); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to write last generated PR data: %v\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "Parsed PR data written to %s\n", path)
+			}
 		}
 	}
 
