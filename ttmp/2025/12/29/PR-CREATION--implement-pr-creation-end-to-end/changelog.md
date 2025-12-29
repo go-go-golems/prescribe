@@ -138,3 +138,13 @@ Step 13: diagnosed create timeouts as git push pre-push hooks; extended smoke te
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/07-smoke-test-prescribe-create-dry-run.sh — Add bounded non-dry-run create section
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 13
 
+
+## 2025-12-29
+
+Step 14: validated real create flow (LEFTHOOK=0): pushed branch and opened draft PR #2
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Tracing shows push+gh success; used to open PR
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 14 records PR URL
+

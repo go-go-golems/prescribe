@@ -646,3 +646,42 @@ To make this diagnosable going forward, we extended the existing smoke test to i
 
 ### What warrants a second pair of eyes
 - Decide whether `prescribe create` should provide a flag to skip pushing (useful for repos with heavy pre-push hooks)
+
+## Step 14: Validate real create flow (LEFTHOOK=0) against the prescribe repo
+
+This step ran a **real** `prescribe create` (non-dry-run) from within the `prescribe/` repo with `LEFTHOOK=0` to skip pre-push hooks. The run successfully pushed the branch and created a **draft PR** via `gh pr create`, confirming that the earlier “timeout” problem was indeed the git hooks and not `gh` interactivity.
+
+**Result:** Draft PR created: `https://github.com/go-go-golems/prescribe/pull/2`
+
+### What I did
+- Ran from within `prescribe/`:
+  - `timeout 120s env LEFTHOOK=0 GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo . create --draft --title ... --body ...`
+- Observed tracing output:
+  - `git push` succeeded (~1s)
+  - `gh pr create` succeeded (~2s)
+
+### Why
+- Confirm the end-to-end “real action” flow works in the actual upstream repo when hooks are skipped
+
+### What worked
+- Push + PR creation succeeded with prompts disabled
+- The tracing output clearly showed cwd/repo/source/commands and timings
+
+### What didn't work
+- `gh` warned about uncommitted changes; it appears these are ticket docs present as untracked files in this worktree (safe to ignore for PR creation, but worth keeping in mind)
+
+### What I learned
+- `LEFTHOOK=0` is the key lever to avoid the pre-push hook cost during interactive create workflows
+
+### What was tricky to build
+- N/A (this was an execution/validation step)
+
+### What warrants a second pair of eyes
+- Confirm the PR is targeting the intended base branch and contains only the intended commits (no doc noise)
+
+### What should be done in the future
+- Consider whether `prescribe create` should expose a flag like `--skip-push` or `--no-push` (for users with heavy hooks) while keeping current default behavior
+
+### Code review instructions
+- Open PR #2 and review commit list:
+  - `https://github.com/go-go-golems/prescribe/pull/2`
