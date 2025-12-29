@@ -441,3 +441,98 @@ This step made `prescribe create` **push the current branch** before attempting 
   - `cmd/prescribe/cmds/create.go` (push+create ordering)
 - Validate with:
   - `cd prescribe && go run ./cmd/prescribe create --dry-run --title \"t\" --body \"b\"`
+
+## Step 9: Support `prescribe create --yaml-file` (dry-run smoke-tested)
+
+This step made the standalone `prescribe create` workflow practical: you can now point the command at a previously-generated YAML file containing `title` and `body`, and it will use that as the PR content source. This matches the clarification note that “standalone create should be able to point to a previously generated yaml and use that”.
+
+We also kept the workflow safe for environments without a GitHub remote by validating everything via `--dry-run`.
+
+**Commit (code):** 457a6e75fac47590a71560aa3c4ce1fab573def6 — "create: support --yaml-file and --use-last (dry-run smoke test)"
+
+### What I did
+- Added `internal/prdata` helper to load `domain.GeneratedPRData` from a YAML file
+- Updated `cmd/prescribe/cmds/create.go`:
+  - `--yaml-file` loads `title`/`body` from the file
+  - explicit `--title`/`--body` override file contents (if provided)
+- Added a smoke test script using `go run`:
+  - `test-scripts/07-smoke-test-prescribe-create-dry-run.sh`
+
+### Why
+- Enable “standalone create” to work from a saved YAML artifact without needing to re-run generation
+
+### What worked
+- `create --dry-run --yaml-file <file>` prints the expected redacted `gh pr create ...` command
+- Full suite still passes: `go test ./... -count=1`
+
+### What didn't work
+- N/A
+
+### What I learned
+- Keeping the YAML parsing in a small `internal/prdata` package makes it easy to reuse for `--use-last` and future “save-on-error” behavior
+
+### What was tricky to build
+- Ensuring flag precedence: allow YAML file as the source but still allow explicit `--title/--body` overrides
+
+### What warrants a second pair of eyes
+- Confirm the chosen YAML contract (only requiring `title` and `body`) is acceptable even though the prompt pack also includes `changelog` and `release_notes`
+
+### What should be done in the future
+- Add support for “edit full YAML” workflow (e.g., open editor) if desired; current behavior supports overrides via flags only
+
+### Code review instructions
+- Start with:
+  - `internal/prdata/prdata.go`
+  - `cmd/prescribe/cmds/create.go`
+  - `test-scripts/07-smoke-test-prescribe-create-dry-run.sh`
+- Validate:
+  - `cd prescribe && bash test-scripts/07-smoke-test-prescribe-create-dry-run.sh`
+
+## Step 10: Support `prescribe create --use-last` (persist via generate; dry-run smoke-tested)
+
+This step enabled a fast “generate once, then create later” workflow: `prescribe generate` now persists the parsed structured PR data to `.pr-builder/last-generated-pr.yaml`, and `prescribe create --use-last` loads that file as the source of `title` and `body`.
+
+Because our smoke test environment doesn’t have a GitHub remote, we validate this behavior via `--dry-run` and a ticket script that writes a synthetic `last-generated-pr.yaml`.
+
+**Commit (code):** 457a6e75fac47590a71560aa3c4ce1fab573def6 — "create: support --yaml-file and --use-last (dry-run smoke test)"
+
+### What I did
+- Added `internal/prdata.WriteGeneratedPRDataToYAMLFile` to persist structured PR YAML
+- Updated `cmd/prescribe/cmds/generate.go` to write parsed PR data to:
+  - `.pr-builder/last-generated-pr.yaml`
+- Updated `cmd/prescribe/cmds/create.go`:
+  - `--use-last` loads `.pr-builder/last-generated-pr.yaml`
+  - still allows `--title/--body` overrides
+- Added a tiny ticket helper to write last-generated-pr.yaml for smoke tests:
+  - `ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/scripts/01-write-last-generated-prdata.go`
+- Extended/added smoke testing to cover `--use-last` in dry-run:
+  - `test-scripts/07-smoke-test-prescribe-create-dry-run.sh`
+
+### Why
+- Match the clarified requirement to allow reuse of last generated PR data (don’t always regenerate)
+
+### What worked
+- `create --dry-run --use-last` prints the expected redacted `gh pr create` invocation
+- Unit test added for YAML roundtrip: `internal/prdata/prdata_test.go`
+
+### What didn't work
+- N/A
+
+### What I learned
+- “Use-last” becomes much simpler and more stable if we treat `.pr-builder/last-generated-pr.yaml` as the single source of truth, instead of trying to reverse-engineer session.yaml (which doesn’t persist generated PR data)
+
+### What was tricky to build
+- Finding a robust persistence point: session.yaml doesn’t contain generated PR data, so `generate` must write it explicitly
+
+### What warrants a second pair of eyes
+- Confirm we should always overwrite `.pr-builder/last-generated-pr.yaml` on generate (vs versioning by timestamp)
+
+### What should be done in the future
+- Decide whether to also save the file on `create` failure (task #11) using the same `internal/prdata` helpers
+
+### Code review instructions
+- Start with:
+  - `cmd/prescribe/cmds/generate.go` (persist parsed PR data)
+  - `cmd/prescribe/cmds/create.go` (use-last loading)
+  - `internal/prdata/prdata.go` (+ test)
+  - `test-scripts/07-smoke-test-prescribe-create-dry-run.sh`

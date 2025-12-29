@@ -101,3 +101,18 @@ Step 8: Push branch before PR creation (commit c1b08979a43533c7e786d2e5b4aa97608
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/git/git.go — Add PushCurrentBranch(ctx) helper
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary Step 8 entry
 
+
+## 2025-12-29
+
+Steps 9-10: implement create --yaml-file and --use-last; add dry-run smoke test (commit 457a6e75fac47590a71560aa3c4ce1fab573def6)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Support --yaml-file and --use-last sources
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/generate.go — Persist last-generated-pr.yaml for --use-last
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/prdata/prdata.go — Read/write PR data YAML
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/prdata/prdata_test.go — Roundtrip test
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/07-smoke-test-prescribe-create-dry-run.sh — Smoke test create dry-run
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary steps 9-10
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/scripts/01-write-last-generated-prdata.go — Ticket helper for smoke test
+
