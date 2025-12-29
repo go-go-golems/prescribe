@@ -395,3 +395,49 @@ This unlocks the next steps: pushing branches before create, loading PR data fro
 
 ### Technical details
 - `internal/github.Service.CreatePR` executes `gh` in `repoPath` and returns combined output on success
+
+## Step 8: Push branch before PR creation
+
+This step made `prescribe create` **push the current branch** before attempting to create the PR via `gh pr create`, matching the clarified workflow (push=yes). To keep behavior conservative, we intentionally do **not** set upstream automatically (no `git push -u ...`); if the branch has no upstream configured, the push will fail and we’ll surface the git error.
+
+**Commit (code):** c1b08979a43533c7e786d2e5b4aa976083d3e221 — "create: push branch before gh pr create"
+
+### What I did
+- Added `(*git.Service).PushCurrentBranch(ctx)` in `internal/git/git.go` (runs `git push` with context)
+- Updated `cmd/prescribe/cmds/create.go` to:
+  - include the push step before `gh pr create`
+  - show the push step in `--dry-run` output
+- Verified behavior via `go run`:
+  - `cd prescribe && go run ./cmd/prescribe create --dry-run --title \"t\" --body \"b\"`
+- Ran module tests:
+  - `cd prescribe && go test ./... -count=1`
+
+### Why
+- The PR creation workflow should be end-to-end: ensure the branch is pushed before opening the PR
+- Keeping upstream configuration manual avoids implicit remote-branch creation semantics beyond “push”
+
+### What worked
+- `--dry-run` now shows both steps: `git push` then `gh pr create ...`
+- Code compiles and tests pass
+
+### What didn't work
+- If a branch has no upstream set, `git push` will fail (expected by design for now)
+
+### What I learned
+- Using plain `git push` is a good “minimal behavior” default that respects existing git configs and forces explicit upstream setup when missing
+
+### What was tricky to build
+- Avoiding accidental “set upstream / create remote branch” behavior while still satisfying “push before create”
+
+### What warrants a second pair of eyes
+- Confirm this interpretation of “create_branch_remote: false” is correct (plain `git push`, no `-u`)
+
+### What should be done in the future
+- If desired, add an explicit flag (e.g., `--set-upstream`) to opt into `git push -u origin HEAD`
+
+### Code review instructions
+- Start with:
+  - `internal/git/git.go` (`PushCurrentBranch`)
+  - `cmd/prescribe/cmds/create.go` (push+create ordering)
+- Validate with:
+  - `cd prescribe && go run ./cmd/prescribe create --dry-run --title \"t\" --body \"b\"`

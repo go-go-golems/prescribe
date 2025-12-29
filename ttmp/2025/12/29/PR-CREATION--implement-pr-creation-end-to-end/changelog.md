@@ -90,3 +90,14 @@ Step 7: Add gh pr create integration + dry-run (commit 88c26c9672deef0d74a211ab1
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/github/github.go — Implement gh pr create wrapper + redaction
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary Step 7 entry
 
+
+## 2025-12-29
+
+Step 8: Push branch before PR creation (commit c1b08979a43533c7e786d2e5b4aa976083d3e221)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Push before gh pr create
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/git/git.go — Add PushCurrentBranch(ctx) helper
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary Step 8 entry
+
