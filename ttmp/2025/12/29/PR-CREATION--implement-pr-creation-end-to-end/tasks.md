@@ -2,7 +2,7 @@
 
 ## TODO
 
-- [ ] Add tasks here
+- [x] Add tasks here
 
 - [x] Create new 'create' command structure: Create prescribe/cmd/prescribe/cmds/create.go with cobra command structure, add to root command initialization, accept flags: --use-last, --yaml-file, --title, --body, --draft, --dry-run, --base
 - [x] Add --create flag to existing generate command: Modify prescribe/cmd/prescribe/cmds/generate.go, add --create flag that triggers PR creation after generation, reuse generation logic then call PR creation

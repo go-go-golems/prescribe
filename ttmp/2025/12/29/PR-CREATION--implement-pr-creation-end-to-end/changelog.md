@@ -189,3 +189,8 @@ Step 18: add safe end-to-end integration test for PR creation (local git remote 
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/test-scripts/README.md — Document new integration script + SKIP_GENERATE mode
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 18 entry
 
+
+## 2025-12-29
+
+Close ticket: PR creation end-to-end complete (integration script 08 + docs).
+
