@@ -158,3 +158,12 @@ Step 15: add generate --create wiring (+ dry-run/base/draft flags) (commit a8769
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/generate.go — Implement generate --create flow
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 15
 
+
+## 2025-12-29
+
+Step 16: full-circle test with PINOCCHIO_PROFILE=gemini-2.5-flash; created draft PR #3
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 16 entry with PR URL + command notes
+
