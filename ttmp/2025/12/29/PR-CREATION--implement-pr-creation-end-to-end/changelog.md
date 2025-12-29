@@ -79,3 +79,14 @@ Step 6: Add prescribe create command skeleton (commit b38e25ee508164c456c31c3d4e
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/root.go — Wire create command into root init
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary Step 6 entry
 
+
+## 2025-12-29
+
+Step 7: Add gh pr create integration + dry-run (commit 88c26c9672deef0d74a211ab1e816e6d4a7c901f)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/cmd/prescribe/cmds/create.go — Call gh integration and support --dry-run
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/internal/github/github.go — Implement gh pr create wrapper + redaction
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary Step 7 entry
+

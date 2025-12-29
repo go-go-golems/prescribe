@@ -336,3 +336,62 @@ It also clarified an important repo detail: **`prescribe/` is its own git worktr
 ### Technical details
 - New command: `prescribe create`
 - Flags implemented (behavior pending): `--use-last`, `--yaml-file`, `--title`, `--body`, `--draft`, `--dry-run`, `--base`
+
+## Step 7: Add `gh pr create` integration (dry-run supported)
+
+This step added a minimal GitHub CLI integration layer so `prescribe create` can construct and (optionally) execute `gh pr create`. To keep it safe and testable locally, it also supports `--dry-run`, which prints the redacted `gh` command without creating anything.
+
+This unlocks the next steps: pushing branches before create, loading PR data from session/YAML, and wiring `generate --create`.
+
+**Commit (code):** 88c26c9672deef0d74a211ab1e816e6d4a7c901f — "create: add gh pr create integration"
+
+### What I did
+- Added `internal/github` package with:
+  - `BuildGhCreatePRArgs` for constructing `gh pr create` args
+  - `CreatePR(ctx, opts)` to execute `gh` via `exec.CommandContext`
+  - redaction helper so error output/prints don’t include full PR body
+- Updated `cmd/prescribe/cmds/create.go` to:
+  - validate required inputs (for now: `--title` + `--body`)
+  - print a redacted command in `--dry-run` mode
+  - run `gh pr create ...` when not in dry-run mode
+- Tested via `go run` (no build artifacts):
+  - `cd prescribe && go run ./cmd/prescribe create --dry-run --title \"test title\" --body \"test body\"`
+- Ran module tests:
+  - `cd prescribe && go test ./... -count=1`
+
+### Why
+- Implement the agreed integration choice (GitHub CLI) with a small, testable abstraction
+- Establish safe local testing (`--dry-run`) before we start pushing branches or creating real PRs
+
+### What worked
+- `--dry-run` prints the intended `gh pr create` invocation with the body redacted
+- `go test ./... -count=1` continues to pass
+- Command wiring stays within existing Glazed/Cobra patterns
+
+### What didn't work
+- `--use-last` / `--yaml-file` are still intentionally unimplemented (tracked as separate tasks)
+
+### What I learned
+- Redacting the `--body` argument is important for logs/errors because PR bodies can be large and may contain sensitive info
+
+### What was tricky to build
+- Avoiding accidental leakage of the full PR body into logs while still keeping the CLI debuggable
+
+### What warrants a second pair of eyes
+- Confirm the `internal/github` surface is the right abstraction boundary (vs putting exec directly into the command)
+- Confirm argument redaction behavior is sufficient (and doesn’t hide too much)
+
+### What should be done in the future
+- Add branch push behavior before create
+- Implement `--use-last` and `--yaml-file` data sources
+- Add error-path persistence of PR YAML to disk on failure
+
+### Code review instructions
+- Start with:
+  - `internal/github/github.go`
+  - `cmd/prescribe/cmds/create.go`
+- Validate quickly:
+  - `cd prescribe && go run ./cmd/prescribe create --dry-run --title \"t\" --body \"b\"`
+
+### Technical details
+- `internal/github.Service.CreatePR` executes `gh` in `repoPath` and returns combined output on success
