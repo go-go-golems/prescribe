@@ -769,3 +769,34 @@ The first attempt used the integrated `generate --create` path and failed at `gi
 ### Code review instructions
 - Review the created PR:
   - `https://github.com/go-go-golems/prescribe/pull/3`
+
+## Step 17: Update user-facing documentation (README + workflow topic)
+
+This step updated the user-facing docs to reflect the new end-to-end PR creation capabilities: `prescribe create` and `prescribe generate --create`, including safe dry-run workflows, YAML sources (`--use-last` / `--yaml-file`), and common gotchas like upstream branches and `lefthook` pre-push hooks.
+
+### What I did
+- Updated `prescribe/README.md` with:
+  - quick start examples for `create` and `generate --create`
+  - a new `create` command section with flags and failure behavior
+  - updated `generate` section to include the new `--create*` flags
+  - refreshed outdated `pr-builder` examples to `prescribe` equivalents in common workflows
+- Updated the help topic `prescribe help how-to-generate-pr-description`:
+  - added “Step 6: Create the PR on GitHub” with both workflows:
+    - generate → create (`--use-last`)
+    - `generate --create` (plus `--create-dry-run`)
+  - documented upstream branch and `LEFTHOOK=0` gotchas
+
+### Why
+- Ensure new users discover the end-to-end workflow without reading code or tickets
+- Prevent common failure modes (no upstream branch; slow push hooks) by documenting them up front
+
+### What worked
+- Docs now match the actual CLI surface we implemented and tested in the `prescribe/` repo
+
+### What warrants a second pair of eyes
+- Confirm the README examples align with your intended “recommended path” (use-last vs yaml-file vs generate --create)
+
+### Code review instructions
+- Start with:
+  - `prescribe/README.md`
+  - `prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md`

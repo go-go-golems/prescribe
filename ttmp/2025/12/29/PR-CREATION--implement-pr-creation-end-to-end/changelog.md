@@ -167,3 +167,14 @@ Step 16: full-circle test with PINOCCHIO_PROFILE=gemini-2.5-flash; created draft
 
 - /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 16 entry with PR URL + command notes
 
+
+## 2025-12-29
+
+Step 17: updated documentation for PR creation workflows (create + generate --create)
+
+### Related Files
+
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/README.md — Document new create/generate--create workflows and flags
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/pkg/doc/topics/02-how-to-generate-pr-description.md — Add PR creation step
+- /home/manuel/workspaces/2025-12-29/prescribe-pr-creation/prescribe/ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/reference/01-diary.md — Diary step 17
+
