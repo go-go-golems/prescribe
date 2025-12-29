@@ -10,6 +10,7 @@ import (
 	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
 	cmd_middlewares "github.com/go-go-golems/glazed/pkg/cmds/middlewares"
 	"github.com/go-go-golems/glazed/pkg/cmds/parameters"
+	"github.com/go-go-golems/prescribe/internal/git"
 	"github.com/go-go-golems/prescribe/internal/github"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
@@ -133,11 +134,20 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 	}
 
 	if extra.DryRun {
-		fmt.Println("Dry-run: would create PR via GitHub CLI:")
+		fmt.Println("Dry-run: would push branch and create PR via GitHub CLI:")
 		fmt.Printf("  repo: %s\n", repoSettings.RepoPath)
+		fmt.Printf("  command: git push\n")
 		fmt.Printf("  command: gh %s\n", strings.Join(github.RedactGhArgs(args), " "))
 		fmt.Printf("  title_len=%d body_len=%d base=%q draft=%v\n", len(opts.Title), len(opts.Body), opts.Base, opts.Draft)
 		return nil
+	}
+
+	gitSvc, err := git.NewService(repoSettings.RepoPath)
+	if err != nil {
+		return err
+	}
+	if err := gitSvc.PushCurrentBranch(ctx); err != nil {
+		return err
 	}
 
 	svc := github.NewService(repoSettings.RepoPath)
