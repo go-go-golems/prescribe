@@ -42,7 +42,16 @@ func ParseGeneratedPRDataFromAssistantText(assistantText string) (*domain.Genera
 		}
 	}
 
-	_, body := parsehelpers.StripCodeFenceBytes([]byte(raw))
+	// Only strip code fences if the *entire* assistant output is fenced.
+	//
+	// Important: The structured YAML contract commonly includes fenced code blocks
+	// inside YAML block scalars (e.g., release_notes.body contains ```bash ... ```).
+	// A naive "find first ``` anywhere" approach will corrupt the YAML by stripping
+	// from the first inner fence instead of an outer wrapper.
+	body := []byte(raw)
+	if strings.HasPrefix(raw, "```") {
+		_, body = parsehelpers.StripCodeFenceBytes([]byte(raw))
+	}
 	if out, err := parseGeneratedPRDataYAML(body); err == nil && isGeneratedPRDataValid(out) {
 		return out, nil
 	}

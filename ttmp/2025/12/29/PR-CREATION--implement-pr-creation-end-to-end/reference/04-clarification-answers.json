@@ -1,0 +1,71 @@
+{
+  "clarification_session": {
+    "timestamp": "2025-12-29T17:02:39Z",
+    "questions_document": "reference/03-clarifying-questions.md"
+  },
+  "answers": {
+    "q1_integration_approach": {
+      "question": "Use GitHub CLI (gh) or GitHub API?",
+      "answer": "Shell out to GitHub CLI (gh pr create)",
+      "request_id": "3e9de36e-7b54-4aaa-8ec6-22b656c76b54"
+    },
+    "q2_cli_surface_design": {
+      "question": "New 'create' command or flag on 'generate'?",
+      "answer": "Both (allow generate --create and standalone create)",
+      "comment": "when using standalone, it should be possible to point to a previously generated yaml and use that",
+      "request_id": "0cfeb7b1-a559-418e-969b-87744b915c37"
+    },
+    "q3_pr_data_source": {
+      "question": "Always generate first, or allow reuse of last generated PR data?",
+      "answer": "Allow reuse of last generated PR data from session (with --use-last flag or similar)",
+      "comment": "allow reuse",
+      "request_id": "b1b73532-f3f2-42f5-aa8e-161c26df9767"
+    },
+    "q4_branch_management": {
+      "question": "Should 'prescribe create' handle branch pushing/creation?",
+      "answer": {
+        "push_branch": true,
+        "create_branch_remote": false,
+        "base_branch_inference": "main (as a --base parameter default)."
+      },
+      "comment": "test",
+      "request_id": "68082e73-79e6-4977-b6a4-a9e5589e2bfe"
+    },
+    "q5_draft_prs": {
+      "question": "Support creating draft PRs?",
+      "answer": {
+        "support_draft": true,
+        "default_to_draft": false,
+        "flag_name": "--draft"
+      },
+      "request_id": "bdc70757-d4a7-4213-bdbb-6eb6c5a1ccc5"
+    },
+    "q6_dry_run": {
+      "question": "Should 'prescribe create' support a dry-run/preview mode?",
+      "answer": "Yes: Support --dry-run flag that shows what would be created",
+      "request_id": "ceaae236-1dda-455f-8feb-ca781c09b91e"
+    },
+    "q7_error_handling": {
+      "question": "What should happen on failure?",
+      "answer": "Exit with error + save generated PR data to file for manual retry",
+      "request_id": "110aa14a-2e45-406f-942b-d6939ed8a557"
+    },
+    "q8_title_body_override": {
+      "question": "Allow user override of generated title/body?",
+      "answer": "Yes: Support --title and --body flags to override generated content",
+      "comment": "We can allow the user to edit the generated yaml data in full.",
+      "request_id": "ac13ac5e-4308-4504-8405-22bde3d1cb5c"
+    }
+  },
+  "summary": {
+    "integration": "GitHub CLI (gh pr create)",
+    "cli_surface": "Both: generate --create and standalone create (with ability to point to previously generated YAML)",
+    "data_source": "Allow reuse of last generated PR data",
+    "branch_handling": "Push branch before creating PR, but don't create branch remotely. Base branch defaults to main (via --base flag default)",
+    "draft_prs": "Supported via --draft flag, but not default",
+    "dry_run": "Supported via --dry-run flag",
+    "error_handling": "Exit with error + save generated PR data to file for manual retry",
+    "title_body_override": "Supported via --title and --body flags, plus full YAML editing capability"
+  }
+}
+

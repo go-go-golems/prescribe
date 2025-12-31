@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	geppettolayers "github.com/go-go-golems/geppetto/pkg/layers"
 	gepsettings "github.com/go-go-golems/geppetto/pkg/steps/ai/settings"
@@ -19,6 +20,9 @@ import (
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
 	papi "github.com/go-go-golems/prescribe/internal/api"
 	pexport "github.com/go-go-golems/prescribe/internal/export"
+	"github.com/go-go-golems/prescribe/internal/git"
+	"github.com/go-go-golems/prescribe/internal/github"
+	"github.com/go-go-golems/prescribe/internal/prdata"
 	"github.com/go-go-golems/prescribe/internal/tokens"
 	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
 	"github.com/pkg/errors"
@@ -40,6 +44,10 @@ type GenerateExtraSettings struct {
 	PrintRenderedTokenCount bool   `glazed.parameter:"print-rendered-token-count"`
 	Stream                  bool   `glazed.parameter:"stream"`
 	Separator               string `glazed.parameter:"separator"`
+	Create                  bool   `glazed.parameter:"create"`
+	CreateDryRun            bool   `glazed.parameter:"create-dry-run"`
+	CreateDraft             bool   `glazed.parameter:"create-draft"`
+	CreateBase              string `glazed.parameter:"create-base"`
 }
 
 func NewGenerateCommand() (*GenerateCommand, error) {
@@ -92,6 +100,30 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		parameters.WithHelp("Separator format for export flags: xml (default), markdown, simple, begin-end, default"),
 		parameters.WithDefault("xml"),
 	)
+	createFlag := parameters.NewParameterDefinition(
+		"create",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("After generating, create the PR via GitHub CLI (gh pr create)"),
+		parameters.WithDefault(false),
+	)
+	createDryRunFlag := parameters.NewParameterDefinition(
+		"create-dry-run",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("With --create: print the create actions (git push + gh ...) but do not execute them"),
+		parameters.WithDefault(false),
+	)
+	createDraftFlag := parameters.NewParameterDefinition(
+		"create-draft",
+		parameters.ParameterTypeBool,
+		parameters.WithHelp("With --create: create the PR as a draft"),
+		parameters.WithDefault(false),
+	)
+	createBaseFlag := parameters.NewParameterDefinition(
+		"create-base",
+		parameters.ParameterTypeString,
+		parameters.WithHelp("With --create: base branch for the PR"),
+		parameters.WithDefault("main"),
+	)
 
 	layersList := []glazed_layers.ParameterLayer{
 		repoLayerExisting,
@@ -103,7 +135,7 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 		"generate",
 		cmds.WithShort("Generate PR description"),
 		cmds.WithLong("Generate a PR description using AI based on the current session."),
-		cmds.WithFlags(extraFlags, exportRenderedFlag, printRenderedTokenCountFlag, streamFlag, separatorFlag),
+		cmds.WithFlags(extraFlags, exportRenderedFlag, printRenderedTokenCountFlag, streamFlag, separatorFlag, createFlag, createDryRunFlag, createDraftFlag, createBaseFlag),
 		cmds.WithLayersList(
 			layersList...,
 		),
@@ -265,6 +297,19 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 		}
 	}
 
+	// Persist last generated structured PR data (for `prescribe create --use-last`).
+	data := ctrl.GetData()
+	if data != nil && data.GeneratedPRData != nil {
+		if repoSettings, err := prescribe_layers.GetRepositorySettings(parsedLayers); err == nil {
+			path := prdata.LastGeneratedPRDataPath(repoSettings.RepoPath)
+			if err := prdata.WriteGeneratedPRDataToYAMLFile(path, data.GeneratedPRData); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to write last generated PR data: %v\n", err)
+			} else {
+				fmt.Fprintf(os.Stderr, "Parsed PR data written to %s\n", path)
+			}
+		}
+	}
+
 	// Output description
 	if genSettings.OutputFile != "" {
 		if err := os.WriteFile(genSettings.OutputFile, []byte(description), 0644); err != nil {
@@ -273,6 +318,58 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 		fmt.Fprintf(os.Stderr, "Description written to %s\n", genSettings.OutputFile)
 	} else {
 		fmt.Println(description)
+	}
+
+	// Optional: create PR from parsed structured data.
+	if extra.Create {
+		repoSettings, err := prescribe_layers.GetRepositorySettings(parsedLayers)
+		if err != nil {
+			return err
+		}
+		data := ctrl.GetData()
+		if data == nil || data.GeneratedPRData == nil {
+			return errors.New("--create requires parsed PR data (GeneratedPRData), but it was not available")
+		}
+
+		opts := github.CreatePROptions{
+			Title: data.GeneratedPRData.Title,
+			Body:  data.GeneratedPRData.Body,
+			Base:  extra.CreateBase,
+			Draft: extra.CreateDraft,
+		}
+		args, err := github.BuildGhCreatePRArgs(opts)
+		if err != nil {
+			return err
+		}
+
+		if extra.CreateDryRun {
+			fmt.Fprintln(os.Stderr, "generate --create-dry-run: would push branch and create PR via GitHub CLI:")
+			fmt.Fprintf(os.Stderr, "  repo: %s\n", repoSettings.RepoPath)
+			fmt.Fprintf(os.Stderr, "  command: git push\n")
+			fmt.Fprintf(os.Stderr, "  command: gh %s\n", strings.Join(github.RedactGhArgs(args), " "))
+			return nil
+		}
+
+		fmt.Fprintln(os.Stderr, "generate --create: pushing branch and creating PR...")
+		gitSvc, err := git.NewService(repoSettings.RepoPath)
+		if err != nil {
+			return err
+		}
+		if err := gitSvc.PushCurrentBranch(ctx); err != nil {
+			return err
+		}
+
+		ghSvc := github.NewService(repoSettings.RepoPath)
+		out, err := ghSvc.CreatePR(ctx, opts)
+		if err != nil {
+			// Save PR data for manual retry.
+			failPath := prdata.FailurePRDataPath(repoSettings.RepoPath, time.Now())
+			if werr := prdata.WriteGeneratedPRDataToYAMLFile(failPath, data.GeneratedPRData); werr == nil {
+				fmt.Fprintf(os.Stderr, "generate --create: saved PR data to %s\n", failPath)
+			}
+			return err
+		}
+		fmt.Fprintln(os.Stderr, out)
 	}
 
 	return nil

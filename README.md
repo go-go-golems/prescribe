@@ -69,6 +69,27 @@ prescribe generate --preset concise
 prescribe generate -o pr-description.md
 ```
 
+### Create a PR (end-to-end)
+
+`prescribe` can now create GitHub PRs via the GitHub CLI (`gh`).
+
+Two common workflows:
+
+```bash
+# A) Generate, then create using the saved structured YAML (recommended)
+prescribe generate
+prescribe create --use-last --dry-run
+prescribe create --use-last --draft
+
+# B) One command: generate + create (dry-run first)
+prescribe generate --create --create-dry-run
+prescribe generate --create --create-draft --create-base main
+```
+
+Notes:
+- If your repo has heavy `git push` hooks, you can skip them for a run with: `LEFTHOOK=0`.
+- For a brand new branch with no upstream, set it once: `git push -u origin HEAD` (or configure `push.autoSetupRemote`).
+
 ### Launch Interactive TUI
 
 ```bash
@@ -179,7 +200,7 @@ prescribe context add --note "This PR is part of the Q1 security improvements"
 Generate PR description using AI.
 
 ```bash
-prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH] [--export-context] [--export-rendered] [--stream] [--separator TYPE]
+prescribe generate [--output-file PATH] [--prompt TEXT] [--preset ID] [--load-session PATH] [--export-context] [--export-rendered] [--stream] [--separator TYPE] [--create] [--create-dry-run] [--create-draft] [--create-base BRANCH]
 ```
 
 Options:
@@ -214,7 +235,43 @@ prescribe generate --load-session /path/to/session.yaml -o pr.md
 
 # Generate with preset
 prescribe generate --preset concise
+
+# Generate and create PR (dry-run)
+prescribe generate --create --create-dry-run
+
+# Generate and create PR (draft)
+prescribe generate --create --create-draft --create-base main
 ```
+
+### PR Creation
+
+#### `create`
+Create a GitHub PR using `gh pr create`.
+
+```bash
+prescribe create [--use-last] [--yaml-file PATH] [--title TITLE] [--body BODY] [--draft] [--dry-run] [--base BRANCH]
+```
+
+Common workflows:
+
+```bash
+# Create from last generation output (stored at .pr-builder/last-generated-pr.yaml)
+prescribe create --use-last --dry-run
+prescribe create --use-last --draft
+
+# Create from a YAML file containing {title, body}
+prescribe create --yaml-file pr.yaml --dry-run
+
+# Override title/body even when using --use-last / --yaml-file
+prescribe create --use-last --title "Override title" --dry-run
+
+# If you want to skip git hooks during push (repo-specific)
+LEFTHOOK=0 prescribe create --use-last --draft
+```
+
+Failure behavior:
+- If `git push` or `gh pr create` fails, `prescribe create` writes a retry artifact:
+  - `.pr-builder/pr-data-<timestamp>.yaml`
 
 ### TUI
 
@@ -280,17 +337,17 @@ Share session configurations across your team:
 
 ```bash
 # Create a session template
-pr-builder init --save
-pr-builder add-filter --name "Exclude generated" --exclude "dist/**" --exclude "build/**"
-pr-builder save .pr-builder/team-template.yaml
+prescribe session init --save
+prescribe filter add --name "Exclude generated" --exclude "dist/**" --exclude "build/**"
+prescribe session save .pr-builder/team-template.yaml
 
 # Commit the template
 git add .pr-builder/team-template.yaml
 git commit -m "Add PR builder template"
 
 # Team members can load it
-pr-builder load .pr-builder/team-template.yaml
-pr-builder generate
+prescribe session load .pr-builder/team-template.yaml
+prescribe generate
 ```
 
 ### CI/CD Integration
@@ -302,17 +359,20 @@ Automate PR description generation in your CI pipeline:
 # .github/scripts/generate-pr-description.sh
 
 # Initialize from current branch
-pr-builder init --save
+prescribe session init --save
 
 # Add filters for your project
-pr-builder add-filter --name "Exclude tests" --exclude "*test*"
-pr-builder add-filter --name "Exclude config" --exclude "*.config.js"
+prescribe filter add --name "Exclude tests" --exclude "*test*"
+prescribe filter add --name "Exclude config" --exclude "*.config.js"
 
 # Generate description
-pr-builder generate -o pr-description.md
+prescribe generate -o pr-description.md
 
-# Use with gh CLI
-gh pr create --title "$(git log -1 --pretty=%s)" --body-file pr-description.md
+# Option A: Use prescribe to create the PR from the last generated YAML
+prescribe create --use-last --draft
+
+# Option B: Use gh directly (still supported)
+# gh pr create --title "$(git log -1 --pretty=%s)" --body-file pr-description.md
 ```
 
 ### Interactive Refinement
@@ -321,11 +381,11 @@ Use the TUI for interactive refinement:
 
 ```bash
 # Start with CLI to set up filters
-pr-builder init --save
-pr-builder add-filter --name "Exclude tests" --exclude "*test*"
+prescribe session init --save
+prescribe filter add --name "Exclude tests" --exclude "*test*"
 
 # Switch to TUI for fine-tuning
-pr-builder tui
+prescribe tui
 
 # Navigate with j/k, toggle files with Space
 # Press 'g' to generate when ready
@@ -386,7 +446,7 @@ Two interfaces to the same core:
 ### Project Structure
 
 ```
-pr-builder/
+prescribe/
 ├── cmd/                    # CLI commands (Cobra)
 │   ├── root.go
 │   ├── init.go
@@ -413,10 +473,9 @@ pr-builder/
 │   └── tui/               # Bubbletea UI
 │       ├── model.go
 │       └── styles.go
-├── test/                  # Test scripts
+├── test-scripts/          # Smoke test scripts (bash; use go run)
 │   ├── setup-test-repo.sh
-│   ├── test-session-cli.sh
-│   └── test-all.sh
+│   └── ...
 ├── main.go
 ├── go.mod
 └── README.md
@@ -439,15 +498,15 @@ pr-builder/
 
 ```bash
 # Build binary
-go build -o pr-builder .
+go build -o prescribe ./cmd/prescribe
 
 # Build with specific version
-go build -ldflags "-X main.version=1.0.0" -o pr-builder .
+go build -ldflags "-X main.version=1.0.0" -o prescribe ./cmd/prescribe
 
 # Cross-compile for different platforms
-GOOS=darwin GOARCH=amd64 go build -o pr-builder-darwin .
-GOOS=linux GOARCH=amd64 go build -o pr-builder-linux .
-GOOS=windows GOARCH=amd64 go build -o pr-builder.exe .
+GOOS=darwin GOARCH=amd64 go build -o prescribe-darwin ./cmd/prescribe
+GOOS=linux GOARCH=amd64 go build -o prescribe-linux ./cmd/prescribe
+GOOS=windows GOARCH=amd64 go build -o prescribe.exe ./cmd/prescribe
 ```
 
 ## Contributing

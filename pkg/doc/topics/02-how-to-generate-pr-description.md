@@ -236,6 +236,43 @@ prescribe generate --export-rendered --separator default
 prescribe generate --export-rendered --separator xml --output-file rendered.xml
 ```
 
+## Step 6: (Optional) Create the PR on GitHub
+
+If you want `prescribe` to create the PR for you, there are two supported workflows.
+
+### A) Generate, then create from the saved structured YAML (`--use-last`)
+
+After a successful generation, `prescribe` writes parsed PR data to:
+
+- `.pr-builder/last-generated-pr.yaml`
+
+You can then create the PR using:
+
+```bash
+# Dry-run first (recommended)
+prescribe create --use-last --dry-run
+
+# Create a draft PR
+prescribe create --use-last --draft
+```
+
+### B) One command: `generate --create`
+
+```bash
+# Safe preview
+prescribe generate --create --create-dry-run
+
+# Create a draft PR (base defaults to main; override if needed)
+prescribe generate --create --create-draft --create-base main
+```
+
+### Notes / gotchas
+
+- **New branches without upstream**: `git push` may fail the first time. Fix by running once:
+  - `git push -u origin HEAD`
+- **Slow `git push` due to hooks**: if your repo has heavy pre-push hooks (e.g. `lefthook`), you can skip them for a run:
+  - `LEFTHOOK=0 prescribe create --use-last --draft`
+
 ## Troubleshooting
 
 When generation fails, it’s usually a session state issue (no included files, wrong branch session, over-filtering) rather than a “model problem”.

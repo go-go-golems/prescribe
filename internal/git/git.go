@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -196,4 +197,19 @@ func (s *Service) ListFiles(ref string) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+// PushCurrentBranch pushes the current branch to its upstream.
+//
+// Note: This intentionally does NOT set upstream (no -u). If the branch has no
+// upstream configured, this will fail and the caller should surface a helpful
+// message.
+func (s *Service) PushCurrentBranch(ctx context.Context) error {
+	cmd := exec.CommandContext(ctx, "git", "push")
+	cmd.Dir = s.repoPath
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return errors.Wrapf(err, "git push failed: %s", strings.TrimSpace(string(out)))
+	}
+	return nil
 }
