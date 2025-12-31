@@ -121,8 +121,8 @@ func NewGenerateCommand() (*GenerateCommand, error) {
 	createBaseFlag := parameters.NewParameterDefinition(
 		"create-base",
 		parameters.ParameterTypeString,
-		parameters.WithHelp("With --create: base branch for the PR"),
-		parameters.WithDefault("main"),
+		parameters.WithHelp("With --create: base branch for the PR (defaults to the session/--target branch)"),
+		parameters.WithDefault(""),
 	)
 
 	layersList := []glazed_layers.ParameterLayer{
@@ -331,10 +331,12 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 			return errors.New("--create requires parsed PR data (GeneratedPRData), but it was not available")
 		}
 
+		base := resolveCreateBase(extra.CreateBase, ctrl.GetData().TargetBranch)
+
 		opts := github.CreatePROptions{
 			Title: data.GeneratedPRData.Title,
 			Body:  data.GeneratedPRData.Body,
-			Base:  extra.CreateBase,
+			Base:  base,
 			Draft: extra.CreateDraft,
 		}
 		args, err := github.BuildGhCreatePRArgs(opts)
@@ -373,6 +375,14 @@ func (c *GenerateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.P
 	}
 
 	return nil
+}
+
+func resolveCreateBase(explicitBase, sessionTarget string) string {
+	base := strings.TrimSpace(explicitBase)
+	if base != "" {
+		return base
+	}
+	return strings.TrimSpace(sessionTarget)
 }
 
 func InitGenerateCmd() error {
