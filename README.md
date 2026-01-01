@@ -83,7 +83,7 @@ prescribe create --use-last --draft
 
 # B) One command: generate + create (dry-run first)
 prescribe generate --create --create-dry-run
-prescribe generate --create --create-draft --create-base main
+prescribe generate --create --create-draft
 ```
 
 Notes:
@@ -240,7 +240,7 @@ prescribe generate --preset concise
 prescribe generate --create --create-dry-run
 
 # Generate and create PR (draft)
-prescribe generate --create --create-draft --create-base main
+prescribe generate --create --create-draft
 ```
 
 ### PR Creation

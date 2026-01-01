@@ -262,8 +262,8 @@ prescribe create --use-last --draft
 # Safe preview
 prescribe generate --create --create-dry-run
 
-# Create a draft PR (base defaults to main; override if needed)
-prescribe generate --create --create-draft --create-base main
+# Create a draft PR (base defaults to the session/--target branch; override if needed)
+prescribe generate --create --create-draft
 ```
 
 ### Notes / gotchas
@@ -314,5 +314,4 @@ These locations are the durable “project configuration surface” of `prescrib
 - **Prompt presets**:
   - `<repo>/.pr-builder/prompts/*.yaml`
   - `~/.pr-builder/prompts/*.yaml`
-
 
