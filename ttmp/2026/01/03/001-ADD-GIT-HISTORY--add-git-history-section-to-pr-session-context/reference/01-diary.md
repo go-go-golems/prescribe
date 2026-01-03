@@ -155,7 +155,7 @@ This step translated the code-path findings into concrete design choices, focusi
 
 This step implemented a minimal end-to-end “Git history section” that flows into the rendered prompt payload (via the existing `.commits` template variable) and into export/debug outputs, then updated the mock-repo smoke scripts to assert it’s present. The design choice here is pragmatic: represent git history as a special `AdditionalContext` item (`type=git_history`) injected at request-build time, then map that to `.commits` instead of treating it like a note.
 
-**Commit (code):** N/A
+**Commit (code):** 362c0f6 — "Context: add git history to prompt and exports"
 
 ### What I did
 - Added `git_history` as a `domain.ContextType` and taught prompt templating to map it to `.commits`.

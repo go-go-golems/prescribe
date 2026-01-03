@@ -54,3 +54,13 @@ Cleaned up ticket index RelatedFiles notes for the new git history implementatio
 
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/index.md — Removed duplicated RelatedFiles notes
 
+
+## 2026-01-03
+
+Committed git history feature implementation (commit 362c0f6).
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/git/git.go — Commit history extraction
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-all.sh — Smoke coverage for history
+
