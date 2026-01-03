@@ -11,7 +11,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-master}"
 
 prescribe() {
 	(
-		cd "$REPO_ROOT" && go run ./cmd/prescribe "$@"
+		cd "$REPO_ROOT" && GOWORK=off go run ./cmd/prescribe "$@"
 	)
 }
 
@@ -41,9 +41,12 @@ prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" session show >/dev/n
 echo "✓ Session init/show works"
 echo ""
 
-echo "Test 4: Generate"
-prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate >/dev/null
-echo "✓ Generate works"
+echo "Test 4: Generate (export rendered payload, includes git history)"
+OUT="$(prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate --export-rendered --separator markdown)"
+echo "$OUT" | grep -Fq "BEGIN COMMITS"
+echo "$OUT" | grep -Fq "feat: enhance authentication"
+echo "$OUT" | grep -Fq "author=\"Other User\""
+echo "✓ Generate export-rendered includes commit history"
 echo ""
 
 echo "=========================================="

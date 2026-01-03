@@ -190,6 +190,19 @@ git commit -m "feat: enhance authentication with validation and audit logging
 - Add audit logging for security events
 - Expand test coverage for auth flows"
 
+# Add another small commit with a different author to exercise history rendering.
+cat > src/auth/token.ts << 'EOFTS'
+export function verifyToken(token: string) {
+  // placeholder implementation for smoke tests
+  return { id: 'user-1', role: 'user' };
+}
+EOFTS
+
+git add src/auth/token.ts
+GIT_AUTHOR_NAME="Other User" GIT_AUTHOR_EMAIL="other@example.com" \
+GIT_COMMITTER_NAME="Other User" GIT_COMMITTER_EMAIL="other@example.com" \
+git commit -m "chore: add token helper"
+
 echo ""
 echo "Test repository created successfully at: $TEST_DIR"
 echo ""

@@ -38,7 +38,7 @@ echo "TEST_REPO_DIR=${TEST_REPO_DIR}" >>"$LOG"
 echo "BASE=${BASE}" >>"$LOG"
 
 prescribe() {
-  ( cd "$PRESCRIBE_ROOT" && go run ./cmd/prescribe "$@" )
+  ( cd "$PRESCRIBE_ROOT" && GOWORK=off go run ./cmd/prescribe "$@" )
 }
 
 # 1) yaml-file mode
@@ -53,7 +53,7 @@ grep -Fq "command: gh pr create --title Hello --body <omitted> --base main" "$LO
 
 # 2) use-last mode (write .pr-builder/last-generated-pr.yaml via ticket helper)
 run_quiet "write last-generated-pr.yaml (ticket helper)" bash -c \
-  "cd \"$PRESCRIBE_ROOT\" && go run ./ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/scripts/01-write-last-generated-prdata.go --repo . --title LastTitle --body LastBody"
+  "cd \"$PRESCRIBE_ROOT\" && GOWORK=off go run ./ttmp/2025/12/29/PR-CREATION--implement-pr-creation-end-to-end/scripts/01-write-last-generated-prdata.go --repo . --title LastTitle --body LastBody"
 
 run_quiet "create --dry-run --use-last" prescribe create --dry-run --use-last
 grep -Fq "source: use-last:" "$LOG"
@@ -77,10 +77,9 @@ echo "done"
 run_quiet "setup small test repo (no remote)" env TEST_REPO_DIR="$TEST_REPO_DIR" bash "${PRESCRIBE_ROOT}/test-scripts/setup-test-repo.sh"
 
 run_quiet "create (non-dry-run; expected failure at git push)" bash -c \
-  "cd \"$PRESCRIBE_ROOT\" && timeout 10s env LEFTHOOK=0 GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 go run ./cmd/prescribe --repo \"$TEST_REPO_DIR\" create --yaml-file \"$YAML_FILE\" || true"
+  "cd \"$PRESCRIBE_ROOT\" && timeout 10s env LEFTHOOK=0 GIT_TERMINAL_PROMPT=0 GH_PROMPT_DISABLED=1 GOWORK=off go run ./cmd/prescribe --repo \"$TEST_REPO_DIR\" create --yaml-file \"$YAML_FILE\" || true"
 
 grep -Fq "prescribe create: command: git push" "$LOG"
 grep -Fq "prescribe create: command: gh pr create" "$LOG"
 grep -Fq "saved PR data to" "$LOG"
-
 

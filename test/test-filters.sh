@@ -8,7 +8,7 @@ PRESCRIBE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Build a local binary for speed/reproducibility (override with PRESCRIBE_BIN if desired).
 PRESCRIBE_BIN="${PRESCRIBE_BIN:-/tmp/prescribe}"
 if [ ! -x "$PRESCRIBE_BIN" ]; then
-  (cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
+  (cd "$PRESCRIBE_ROOT" && GOWORK=off go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
 fi
 
 echo "========================================="

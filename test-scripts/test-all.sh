@@ -14,7 +14,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-master}"
 
 prescribe() {
 	(
-		cd "$REPO_ROOT" && go run ./cmd/prescribe "$@"
+		cd "$REPO_ROOT" && GOWORK=off go run ./cmd/prescribe "$@"
 	)
 }
 
@@ -60,8 +60,12 @@ echo ""
 
 echo "=== PHASE 5: Generation ==="
 echo ""
-prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate --output-file /tmp/prescribe-pr.md
-echo "Generated description at /tmp/prescribe-pr.md"
+OUT_FILE="/tmp/prescribe-pr.md"
+prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate --export-rendered --separator markdown --output-file "$OUT_FILE"
+grep -Fq "BEGIN COMMITS" "$OUT_FILE"
+grep -Fq "feat: enhance authentication" "$OUT_FILE"
+grep -Fq "author=\"Other User\"" "$OUT_FILE"
+echo "Generated rendered payload (with git history) at $OUT_FILE"
 
 echo ""
 echo "=========================================="

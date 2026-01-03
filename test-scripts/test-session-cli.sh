@@ -13,7 +13,7 @@ SESSION_FILE="$TEST_REPO_DIR/.pr-builder/session.yaml"
 
 prescribe() {
 	(
-		cd "$REPO_ROOT" && go run ./cmd/prescribe "$@"
+		cd "$REPO_ROOT" && GOWORK=off go run ./cmd/prescribe "$@"
 	)
 }
 
@@ -54,8 +54,11 @@ echo "✓ Loaded $CUSTOM_SESSION"
 echo ""
 
 echo "Test 5: Generate using loaded session"
-prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate >/dev/null
-echo "✓ Generate works"
+OUT="$(prescribe --repo "$TEST_REPO_DIR" --target "$TARGET_BRANCH" generate --export-rendered --separator markdown)"
+echo "$OUT" | grep -Fq "BEGIN COMMITS"
+echo "$OUT" | grep -Fq "feat: enhance authentication"
+echo "$OUT" | grep -Fq "author=\"Other User\""
+echo "✓ Generate export-rendered includes commit history"
 echo ""
 
 echo "=========================================="

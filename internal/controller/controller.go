@@ -267,6 +267,22 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		}
 	}
 
+	additionalContext := append([]domain.ContextItem{}, c.data.AdditionalContext...)
+	if c.gitService != nil {
+		history, err := c.gitService.BuildCommitHistoryText(c.data.TargetBranch, c.data.SourceBranch, 30)
+		if err != nil {
+			return api.GenerateDescriptionRequest{}, err
+		}
+		if strings.TrimSpace(history) != "" {
+			additionalContext = append(additionalContext, domain.ContextItem{
+				Type:    domain.ContextTypeGitHistory,
+				Path:    fmt.Sprintf("%s..%s", c.data.TargetBranch, c.data.SourceBranch),
+				Content: history,
+				Tokens:  tokens.Count(history),
+			})
+		}
+	}
+
 	return api.GenerateDescriptionRequest{
 		SourceBranch:      c.data.SourceBranch,
 		TargetBranch:      c.data.TargetBranch,
@@ -275,7 +291,7 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		Title:             c.data.Title,
 		Description:       c.data.Description,
 		Files:             includedFiles,
-		AdditionalContext: c.data.AdditionalContext,
+		AdditionalContext: additionalContext,
 		Prompt:            c.data.CurrentPrompt,
 	}, nil
 }

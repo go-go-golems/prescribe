@@ -55,6 +55,18 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 		sep = SeparatorXML
 	}
 
+	gitHistory := ""
+	for _, ctx := range req.AdditionalContext {
+		if ctx.Type == domain.ContextTypeGitHistory && strings.TrimSpace(ctx.Content) != "" {
+			if gitHistory == "" {
+				gitHistory = strings.TrimRight(ctx.Content, "\n")
+			} else {
+				gitHistory += "\n\n" + strings.TrimRight(ctx.Content, "\n")
+			}
+			continue
+		}
+	}
+
 	switch sep {
 	case SeparatorMarkdown:
 		var b strings.Builder
@@ -64,7 +76,7 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 		b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
 
 		if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
-			b.WriteString("## Commits\n\n")
+			b.WriteString("## Commit refs\n\n")
 			if strings.TrimSpace(req.SourceCommit) != "" {
 				b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
 			}
@@ -72,6 +84,12 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 				b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
 			}
 			b.WriteString("\n")
+		}
+
+		if strings.TrimSpace(gitHistory) != "" {
+			b.WriteString("## Git history\n\n```text\n")
+			b.WriteString(strings.TrimRight(gitHistory, "\n"))
+			b.WriteString("\n```\n\n")
 		}
 
 		b.WriteString("## System\n\n```text\n")
@@ -93,6 +111,11 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 			b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
 		}
 		b.WriteString("\n")
+		if strings.TrimSpace(gitHistory) != "" {
+			b.WriteString("--- START GIT HISTORY ---\n")
+			b.WriteString(strings.TrimRight(gitHistory, "\n"))
+			b.WriteString("\n--- END GIT HISTORY ---\n\n")
+		}
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
 		b.WriteString("--- START USER PROMPT ---\n")
@@ -111,6 +134,11 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 			b.WriteString(fmt.Sprintf("TARGET_COMMIT: %s\n", req.TargetCommit))
 		}
 		b.WriteString("\n")
+		if strings.TrimSpace(gitHistory) != "" {
+			b.WriteString("--- BEGIN GIT HISTORY ---\n")
+			b.WriteString(strings.TrimRight(gitHistory, "\n"))
+			b.WriteString("\n--- END GIT HISTORY ---\n\n")
+		}
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n--- END SYSTEM PROMPT ---\n\n")
 		b.WriteString("--- BEGIN USER PROMPT ---\n")
@@ -129,6 +157,11 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 			b.WriteString(fmt.Sprintf("Target commit: %s\n", req.TargetCommit))
 		}
 		b.WriteString("\n")
+		if strings.TrimSpace(gitHistory) != "" {
+			b.WriteString("Git history:\n")
+			b.WriteString(strings.TrimRight(gitHistory, "\n"))
+			b.WriteString("\n\n")
+		}
 		b.WriteString(strings.TrimRight(systemPrompt, "\n"))
 		b.WriteString("\n\nUser:\n")
 		b.WriteString(strings.TrimRight(userPrompt, "\n"))
@@ -149,6 +182,12 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 		b.WriteString(fmt.Sprintf("<target_commit>%s</target_commit>\n", xmlEscape(req.TargetCommit)))
 		b.WriteString("</commits>\n")
 
+		if strings.TrimSpace(gitHistory) != "" {
+			b.WriteString("<git_history><![CDATA[")
+			b.WriteString(xmlCDATA(gitHistory))
+			b.WriteString("]]></git_history>\n")
+		}
+
 		b.WriteString("<llm_payload>\n")
 		b.WriteString("<system><![CDATA[")
 		b.WriteString(xmlCDATA(systemPrompt))
@@ -165,6 +204,20 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 func buildXML(req api.GenerateDescriptionRequest) string {
 	var b strings.Builder
 
+	gitHistory := ""
+	nonHistoryContext := make([]domain.ContextItem, 0, len(req.AdditionalContext))
+	for _, ctx := range req.AdditionalContext {
+		if ctx.Type == domain.ContextTypeGitHistory && strings.TrimSpace(ctx.Content) != "" {
+			if gitHistory == "" {
+				gitHistory = strings.TrimRight(ctx.Content, "\n")
+			} else {
+				gitHistory += "\n\n" + strings.TrimRight(ctx.Content, "\n")
+			}
+			continue
+		}
+		nonHistoryContext = append(nonHistoryContext, ctx)
+	}
+
 	b.WriteString("<prescribe>\n")
 	b.WriteString("<branches>\n")
 	b.WriteString(fmt.Sprintf("<source>%s</source>\n", xmlEscape(req.SourceBranch)))
@@ -174,6 +227,12 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 	b.WriteString(fmt.Sprintf("<source_commit>%s</source_commit>\n", xmlEscape(req.SourceCommit)))
 	b.WriteString(fmt.Sprintf("<target_commit>%s</target_commit>\n", xmlEscape(req.TargetCommit)))
 	b.WriteString("</commits>\n")
+
+	if strings.TrimSpace(gitHistory) != "" {
+		b.WriteString("<git_history><![CDATA[")
+		b.WriteString(xmlCDATA(gitHistory))
+		b.WriteString("]]></git_history>\n")
+	}
 
 	b.WriteString("<prompt>\n")
 	b.WriteString("<text>\n")
@@ -216,9 +275,9 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 	}
 	b.WriteString("</files>\n")
 
-	if len(req.AdditionalContext) > 0 {
-		b.WriteString(fmt.Sprintf("<context count=\"%d\">\n", len(req.AdditionalContext)))
-		for _, ctx := range req.AdditionalContext {
+	if len(nonHistoryContext) > 0 {
+		b.WriteString(fmt.Sprintf("<context count=\"%d\">\n", len(nonHistoryContext)))
+		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
 			case domain.ContextTypeNote:
 				b.WriteString("<item type=\"note\">\n<text>\n")
@@ -257,12 +316,26 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 	// (call sites can choose markdown explicitly)
 	var b strings.Builder
 
+	gitHistory := ""
+	nonHistoryContext := make([]domain.ContextItem, 0, len(req.AdditionalContext))
+	for _, ctx := range req.AdditionalContext {
+		if ctx.Type == domain.ContextTypeGitHistory && strings.TrimSpace(ctx.Content) != "" {
+			if gitHistory == "" {
+				gitHistory = strings.TrimRight(ctx.Content, "\n")
+			} else {
+				gitHistory += "\n\n" + strings.TrimRight(ctx.Content, "\n")
+			}
+			continue
+		}
+		nonHistoryContext = append(nonHistoryContext, ctx)
+	}
+
 	b.WriteString("# Prescribe generation context\n\n")
 	b.WriteString("## Branches\n\n")
 	b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
 	b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
 	if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
-		b.WriteString("## Commits\n\n")
+		b.WriteString("## Commit refs\n\n")
 		if strings.TrimSpace(req.SourceCommit) != "" {
 			b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
 		}
@@ -270,6 +343,12 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 			b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
 		}
 		b.WriteString("\n")
+	}
+
+	if strings.TrimSpace(gitHistory) != "" {
+		b.WriteString("## Git history\n\n```text\n")
+		b.WriteString(strings.TrimRight(gitHistory, "\n"))
+		b.WriteString("\n```\n\n")
 	}
 
 	b.WriteString("## Prompt\n\n")
@@ -300,9 +379,9 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 		}
 	}
 
-	if len(req.AdditionalContext) > 0 {
-		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(req.AdditionalContext)))
-		for _, ctx := range req.AdditionalContext {
+	if len(nonHistoryContext) > 0 {
+		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(nonHistoryContext)))
+		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
 			case domain.ContextTypeNote:
 				b.WriteString("- ")

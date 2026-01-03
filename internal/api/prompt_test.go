@@ -24,6 +24,7 @@ func TestCompilePrompt_pinocchioStyleCombinedPrompt_rendersTemplates(t *testing.
 		AdditionalContext: []domain.ContextItem{
 			{Type: domain.ContextTypeNote, Content: "note-1"},
 			{Type: domain.ContextTypeFile, Path: "README.md", Content: "# Hello\n"},
+			{Type: domain.ContextTypeGitHistory, Path: "main..feature", Content: "<commits><commit sha=\"abc123\" author=\"me\" date=\"2026-01-03\"><subject>test</subject></commit></commits>\n"},
 		},
 	}
 
@@ -45,6 +46,9 @@ func TestCompilePrompt_pinocchioStyleCombinedPrompt_rendersTemplates(t *testing.
 	}
 	if !strings.Contains(user, "README.md") || !strings.Contains(user, "# Hello") {
 		t.Fatalf("expected rendered prompt to contain context file mapping, got:\n%s", user)
+	}
+	if !strings.Contains(user, "BEGIN COMMITS") || !strings.Contains(user, "<commits>") {
+		t.Fatalf("expected rendered prompt to contain commits block mapping, got:\n%s", user)
 	}
 }
 

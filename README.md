@@ -13,7 +13,7 @@ PR Builder provides a powerful, session-based workflow for creating high-quality
 - **Interactive TUI**: Navigate and edit with keyboard shortcuts
 - **CLI Commands**: Scriptable interface for automation
 - **Token Counting**: Track context window usage
-- **Git Integration**: Automatically detects changes from git
+- **Git Integration**: Automatically detects changes from git and includes a commit history summary in the prompt context
 
 ## Installation
 
@@ -194,6 +194,22 @@ prescribe context add <file-path>
 prescribe context add --note "This PR is part of the Q1 security improvements"
 ```
 
+### Git History (Commits)
+
+By default, `prescribe generate` (and the `--export-*` modes) include a **Git history** summary for the PR range `target..source`:
+- up to 30 commits
+- non-merge commits only
+- author, date, subject, and a diffstat summary
+
+This is wired into the default prompt pack via the `.commits` variable (rendered inside a `--- BEGIN COMMITS` / `--- END COMMITS` block).
+
+To inspect what will be sent to the model (no inference required):
+
+```bash
+prescribe generate --export-rendered --separator markdown | grep -E "BEGIN COMMITS|Git history"
+prescribe generate --export-context --separator markdown | grep -E "Git history"
+```
+
 ### Generation
 
 #### `generate`
@@ -328,6 +344,8 @@ prompt:
   preset: detailed  # or use 'template' for custom
   # template: "Custom prompt text here"
 ```
+
+Note: Git history is currently **derived from git at generation time** (based on `source_branch`/`target_branch`) and is not persisted in `session.yaml`.
 
 ## Use Cases
 

@@ -80,8 +80,9 @@ type ContextItem struct {
 type ContextType string
 
 const (
-	ContextTypeFile ContextType = "file"
-	ContextTypeNote ContextType = "note"
+	ContextTypeFile       ContextType = "file"
+	ContextTypeNote       ContextType = "note"
+	ContextTypeGitHistory ContextType = "git_history"
 )
 
 // PromptPreset represents a prompt template

@@ -1,3 +1,10 @@
-topics: []
+topics:
+    - slug: git
+      description: Git integration and history
+    - slug: pr
+      description: Pull request generation flow
+    - slug: context
+      description: Context assembly for LLM sessions
 docTypes: []
 intent: []
+status: []

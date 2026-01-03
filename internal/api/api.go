@@ -488,7 +488,7 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 	}
 
 	if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
-		b.WriteString("## Commits\n\n")
+		b.WriteString("## Commit refs\n\n")
 		if strings.TrimSpace(req.SourceCommit) != "" {
 			b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
 		}
@@ -522,9 +522,30 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 		}
 	}
 
-	if len(req.AdditionalContext) > 0 {
-		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(req.AdditionalContext)))
-		for _, ctx := range req.AdditionalContext {
+	gitHistory := ""
+	nonHistoryContext := make([]domain.ContextItem, 0, len(req.AdditionalContext))
+	for _, ctx := range req.AdditionalContext {
+		if ctx.Type == domain.ContextTypeGitHistory && strings.TrimSpace(ctx.Content) != "" {
+			if gitHistory == "" {
+				gitHistory = strings.TrimRight(ctx.Content, "\n")
+			} else {
+				gitHistory += "\n\n" + strings.TrimRight(ctx.Content, "\n")
+			}
+			continue
+		}
+		nonHistoryContext = append(nonHistoryContext, ctx)
+	}
+
+	if strings.TrimSpace(gitHistory) != "" {
+		b.WriteString("## Git history\n\n")
+		b.WriteString("```text\n")
+		b.WriteString(strings.TrimRight(gitHistory, "\n"))
+		b.WriteString("\n```\n\n")
+	}
+
+	if len(nonHistoryContext) > 0 {
+		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(nonHistoryContext)))
+		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
 			case domain.ContextTypeNote:
 				b.WriteString("- ")

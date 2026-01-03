@@ -1,6 +1,6 @@
 module github.com/go-go-golems/prescribe
 
-go 1.25.5
+go 1.25.3
 
 require (
 	github.com/atotto/clipboard v0.1.4

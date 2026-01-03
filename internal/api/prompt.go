@@ -39,6 +39,7 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 	codeFiles := make([]templateFile, 0)
 	contextFiles := make([]templateFile, 0)
 	var noteParts []string
+	var commitsParts []string
 
 	for _, f := range req.Files {
 		switch f.Type {
@@ -96,6 +97,10 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 			if strings.TrimSpace(c.Content) != "" {
 				noteParts = append(noteParts, strings.TrimSpace(c.Content))
 			}
+		case domain.ContextTypeGitHistory:
+			if strings.TrimSpace(c.Content) != "" {
+				commitsParts = append(commitsParts, strings.TrimRight(c.Content, "\n"))
+			}
 		default:
 			if strings.TrimSpace(c.Content) != "" {
 				noteParts = append(noteParts, strings.TrimSpace(c.Content))
@@ -123,7 +128,7 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 		"description":       description,
 		"title":             title,
 		"issue":             "",
-		"commits":           "",
+		"commits":           strings.TrimSpace(strings.Join(commitsParts, "\n\n")),
 		"additional_system": "",
 		"additional":        []string{},
 

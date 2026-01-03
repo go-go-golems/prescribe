@@ -231,6 +231,36 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 		}
 	}
 
+	// Git history is currently derived at generation time (not persisted in session.yaml).
+	// To keep token-count aligned with what `generate` will send, we compute it via the canonical request builder.
+	if req, err := ctrl.BuildGenerateDescriptionRequest(); err == nil {
+		for _, ac := range req.AdditionalContext {
+			if ac.Type != domain.ContextTypeGitHistory {
+				continue
+			}
+			eff := effectiveContextContent(ac)
+			if strings.TrimSpace(eff) == "" {
+				continue
+			}
+			effTokens := tokens.Count(eff)
+			storedTotal += ac.Tokens
+			effectiveTotal += effTokens
+
+			row := types.NewRow(
+				types.MRP("kind", "git_history"),
+				types.MRP("encoding", encoding),
+				types.MRP("path", ac.Path),
+				types.MRP("tokens_stored", ac.Tokens),
+				types.MRP("tokens_effective", effTokens),
+				types.MRP("tokens_delta", ac.Tokens-effTokens),
+				types.MRP("bytes_effective", len(eff)),
+			)
+			if err := gp.AddRow(ctx, row); err != nil {
+				return err
+			}
+		}
+	}
+
 	// Summary row (matches session show semantics for "stored_total": visible+included files + all additional context)
 	summary := types.NewRow(
 		types.MRP("kind", "total"),

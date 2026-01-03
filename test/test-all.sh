@@ -10,7 +10,7 @@ PRESCRIBE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Build a local binary for speed/reproducibility (override with PRESCRIBE_BIN if desired).
 PRESCRIBE_BIN_DEFAULT="/tmp/prescribe-$(cd "$PRESCRIBE_ROOT" && git rev-parse --short HEAD 2>/dev/null || echo dev)"
 PRESCRIBE_BIN="${PRESCRIBE_BIN:-$PRESCRIBE_BIN_DEFAULT}"
-(cd "$PRESCRIBE_ROOT" && go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
+(cd "$PRESCRIBE_ROOT" && GOWORK=off go build -o "$PRESCRIBE_BIN" ./cmd/prescribe)
 
 echo "=========================================="
 echo "PR Builder - Complete Test Suite"
@@ -133,16 +133,19 @@ test -s "$CTX_DEFAULT"
 grep -q "<prescribe>" "$CTX_DEFAULT"
 grep -Eq "<source_commit>[0-9a-f]{7,40}</source_commit>" "$CTX_DEFAULT"
 grep -Eq "<target_commit>[0-9a-f]{7,40}</target_commit>" "$CTX_DEFAULT"
+grep -q "<git_history>" "$CTX_DEFAULT"
 
 $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator xml >"$CTX_XML"
 test -s "$CTX_XML"
 grep -q "<prescribe>" "$CTX_XML"
 grep -Eq "<source_commit>[0-9a-f]{7,40}</source_commit>" "$CTX_XML"
 grep -Eq "<target_commit>[0-9a-f]{7,40}</target_commit>" "$CTX_XML"
+grep -q "<git_history>" "$CTX_XML"
 
 $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator markdown >"$CTX_MD"
 test -s "$CTX_MD"
 grep -q "# Prescribe generation context" "$CTX_MD"
+grep -q "## Git history" "$CTX_MD"
 
 $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator simple >"$CTX_SIMPLE"
 test -s "$CTX_SIMPLE"
@@ -161,6 +164,7 @@ test -s "$CTX_OUTPUT_FILE"
 grep -q "<prescribe>" "$CTX_OUTPUT_FILE"
 grep -Eq "<source_commit>[0-9a-f]{7,40}</source_commit>" "$CTX_OUTPUT_FILE"
 grep -Eq "<target_commit>[0-9a-f]{7,40}</target_commit>" "$CTX_OUTPUT_FILE"
+grep -q "<git_history>" "$CTX_OUTPUT_FILE"
 
 echo ""
 
@@ -175,16 +179,20 @@ test -s "$RENDERED_XML"
 grep -q "<llm_payload>" "$RENDERED_XML"
 grep -Eq "<source_commit>[0-9a-f]{7,40}</source_commit>" "$RENDERED_XML"
 grep -Eq "<target_commit>[0-9a-f]{7,40}</target_commit>" "$RENDERED_XML"
+grep -q "<git_history>" "$RENDERED_XML"
 
 $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown >"$RENDERED_MD"
 test -s "$RENDERED_MD"
 grep -q "# Prescribe LLM payload (rendered)" "$RENDERED_MD"
+grep -q "BEGIN COMMITS" "$RENDERED_MD"
+grep -q "author=\\\"Other User\\\"" "$RENDERED_MD"
 
 $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator xml --output-file "$RENDERED_OUTPUT_FILE"
 test -s "$RENDERED_OUTPUT_FILE"
 grep -q "<llm_payload>" "$RENDERED_OUTPUT_FILE"
 grep -Eq "<source_commit>[0-9a-f]{7,40}</source_commit>" "$RENDERED_OUTPUT_FILE"
 grep -Eq "<target_commit>[0-9a-f]{7,40}</target_commit>" "$RENDERED_OUTPUT_FILE"
+grep -q "<git_history>" "$RENDERED_OUTPUT_FILE"
 
 echo ""
 
