@@ -254,3 +254,13 @@ Step 20: migrate filter group to root.go registration (commit 63a59bb)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/filter/root.go — New filter group root.go registration
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire filter group via constructor
 
+
+## 2026-01-04
+
+Step 21: migrate session group to root.go registration (commit c1cb156)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire session group via constructor
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/session/root.go — New session group root.go registration
+

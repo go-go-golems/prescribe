@@ -30,6 +30,8 @@ RelatedFiles:
       Note: `filter` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/filter/preset/root.go
       Note: `filter preset` subgroup root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/session/root.go
+      Note: `session` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/root.go
       Note: Root command wiring; attaches group constructors
     - Path: cmd/prescribe/cmds/context/git/list.go
@@ -730,3 +732,23 @@ Behavior is intended to remain identical; this is primarily mechanical wiring an
 
 ### What should be done in the future
 - Repeat the same migration for `session`, `file`, and `tokens` groups.
+
+## Step 21: Migrate `session` group to root.go registration (no Init)
+
+This step migrates the `session` command group to constructor-based registration and removes the remaining `Init()`/global `*cobra.Command` pattern from the session subtree. The verbs were already Glazed; this change focuses on wiring and the target file layout invariant (`root.go` owns registration).
+
+**Commit (code):** c1cb156 — "CLI: session command without Init()"
+
+### What I did
+- Added `cmd/prescribe/cmds/session/root.go` (`NewSessionCmd`) and removed `cmd/prescribe/cmds/session/session.go` (`Init()` + globals).
+- Converted session verb initializers to constructors returning `*cobra.Command` (`New*...CobraCommand` pattern).
+- Updated `cmd/prescribe/cmds/root.go` to attach the session group via `session.NewSessionCmd()` (removing the `session.Init()` call path).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Keeping the root wiring simple while converting a mix of `BareCommand` and `GlazeCommand` verbs to constructor-returning cobra commands.
+
+### What warrants a second pair of eyes
+- Confirm `session token-count` and `session show` table outputs are unchanged after the constructor refactor.

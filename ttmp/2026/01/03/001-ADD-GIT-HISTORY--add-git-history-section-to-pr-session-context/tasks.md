@@ -62,7 +62,7 @@
 - [ ] For each group, replace `Init()` with `New<Group>Cmd()` in `<group>/root.go` and update root imports:
 - [x] `context`
 - [x] `filter`
-  - [ ] `session`
+- [x] `session`
   - [ ] `file`
   - [ ] `tokens`
 - [ ] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
@@ -96,7 +96,7 @@
 ### Phase 3: Other groups
 
 - [x] Migrate `filter` group to directory-per-subgroup (including `preset` subtree) with one file per verb.
-- [ ] Migrate `session` group to one file per verb and root.go registration.
+- [x] Migrate `session` group to one file per verb and root.go registration.
 - [ ] Migrate `file` group to one file per verb and root.go registration.
 - [ ] Migrate `tokens` group to one file per verb and root.go registration.
 
