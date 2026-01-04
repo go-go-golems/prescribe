@@ -178,3 +178,18 @@ Step 14: split context git add subtree into cmd/prescribe/cmds/context/git/add (
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/legacy.go — Remove add subtree after split
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — Register add subgroup from new package
 
+
+## 2026-01-04
+
+Step 15: split context git history subtree into cmd/prescribe/cmds/context/git/history (commit 2b88e7a)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/disable.go — New verb file
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/enable.go — New verb file
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/helpers.go — Shared effective config helper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/root.go — New subgroup root.go
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/set.go — New verb file
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/show.go — New verb file
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — Register history subgroup from new package
+

@@ -16,8 +16,16 @@ RelatedFiles:
       Note: Constructor-based Glazed BareCommand wiring
     - Path: cmd/prescribe/cmds/context/git/root.go
       Note: `context git` registration (subgroup root.go) during CLI refactor
-    - Path: cmd/prescribe/cmds/context/git/legacy.go
-      Note: Temporary monolithic `context git` verbs kept for incremental split into per-verb packages
+    - Path: cmd/prescribe/cmds/context/git/history/root.go
+      Note: `context git history` subgroup root.go (registration) during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/history/show.go
+      Note: `context git history show` verb
+    - Path: cmd/prescribe/cmds/context/git/history/enable.go
+      Note: `context git history enable` verb
+    - Path: cmd/prescribe/cmds/context/git/history/disable.go
+      Note: `context git history disable` verb
+    - Path: cmd/prescribe/cmds/context/git/history/set.go
+      Note: `context git history set` verb
     - Path: cmd/prescribe/cmds/context/git/list.go
       Note: `context git list` split into one-verb file during CLI refactor
     - Path: cmd/prescribe/cmds/context/git/remove.go
@@ -576,3 +584,28 @@ This step moves the `context git add ...` subtree into `cmd/prescribe/cmds/conte
 
 ### What should be done in the future
 - Extract `context git history` into its own `history/` subgroup package and delete `git/legacy.go`.
+
+## Step 15: Split `context git history` into a dedicated subgroup package
+
+This step completes the filesystem split of the `context git` subtree by extracting `history` into `cmd/prescribe/cmds/context/git/history/` with its own `root.go` and one file per verb (show/enable/disable/set). With that done, the last remaining “legacy” file is removed.
+
+Behavior remains unchanged; the remaining work for this subtree is converting the Cobra-only verbs to Glazed-style commands.
+
+**Commit (code):** 2b88e7a — "CLI: split context git history subtree"
+
+### What I did
+- Created `cmd/prescribe/cmds/context/git/history/` and moved history verb implementations into separate files.
+- Updated `cmd/prescribe/cmds/context/git/root.go` to register `history` via `history.NewHistoryCmd()`.
+- Removed `cmd/prescribe/cmds/context/git/legacy.go`.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Keeping the history config logic (`effectiveGitHistoryConfig`) shared without reintroducing a monolithic file.
+
+### What warrants a second pair of eyes
+- Confirm there are no subtle behavior changes in `history enable/disable/set` output or defaults, since we split one combined helper into separate files.
+
+### What should be done in the future
+- Convert `context git` verbs to Glazed `BareCommand`/`GlazeCommand` as appropriate and remove any remaining plain-cobra wiring in this subtree.

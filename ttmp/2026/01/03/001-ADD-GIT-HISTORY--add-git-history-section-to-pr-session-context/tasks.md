@@ -75,7 +75,7 @@
 - [x] Replace `cmd/prescribe/cmds/context/*.go` with:
 - [x] `cmd/prescribe/cmds/context/root.go` (registers `add`, `git`)
 - [x] `cmd/prescribe/cmds/context/add.go` (BareCommand)
-- [ ] Split `context git` tree into subpackages:
+- [x] Split `context git` tree into subpackages:
 - [x] `cmd/prescribe/cmds/context/git/root.go` (registers `list/remove/clear/add/history`)
 - [x] `cmd/prescribe/cmds/context/git/list.go`
 - [x] `cmd/prescribe/cmds/context/git/remove.go`
@@ -85,11 +85,11 @@
 - [x] `cmd/prescribe/cmds/context/git/add/commit_patch.go`
 - [x] `cmd/prescribe/cmds/context/git/add/file_at.go`
 - [x] `cmd/prescribe/cmds/context/git/add/file_diff.go`
-  - [ ] `cmd/prescribe/cmds/context/git/history/root.go`
-  - [ ] `cmd/prescribe/cmds/context/git/history/show.go`
-  - [ ] `cmd/prescribe/cmds/context/git/history/enable.go`
-  - [ ] `cmd/prescribe/cmds/context/git/history/disable.go`
-  - [ ] `cmd/prescribe/cmds/context/git/history/set.go`
+- [x] `cmd/prescribe/cmds/context/git/history/root.go`
+- [x] `cmd/prescribe/cmds/context/git/history/show.go`
+- [x] `cmd/prescribe/cmds/context/git/history/enable.go`
+- [x] `cmd/prescribe/cmds/context/git/history/disable.go`
+- [x] `cmd/prescribe/cmds/context/git/history/set.go`
 - [ ] Ensure all `context` verbs are Glazed commands (BareCommand unless/where we deliberately return rows).
 - [x] Remove old `cmd/prescribe/cmds/context/context.go` and monolithic `cmd/prescribe/cmds/context/git.go`.
 
