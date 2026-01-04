@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context/git"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,7 @@ func NewContextCmd() (*cobra.Command, error) {
 		return nil, errors.Wrap(err, "failed to build context add command")
 	}
 
-	gitCmd, err := NewGitCmd()
+	gitCmd, err := git.NewGitCmd()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build context git command")
 	}
