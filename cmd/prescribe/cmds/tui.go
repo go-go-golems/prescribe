@@ -18,8 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var tuiCmd *cobra.Command
-
 type TuiCommand struct {
 	*cmds.CommandDescription
 }
@@ -88,10 +86,10 @@ func (c *TuiCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Parsed
 	return nil
 }
 
-func InitTuiCmd() error {
+func NewTuiCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewTuiCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
@@ -100,9 +98,8 @@ func InitTuiCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	tuiCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

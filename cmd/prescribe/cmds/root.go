@@ -46,14 +46,17 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().StringP("target", "t", "", "Target branch (default: main or master)")
 
 	// Explicit initialization of subcommand trees (no init() ordering reliance).
-	if err := InitGenerateCmd(); err != nil {
-		return errors.Wrap(err, "failed to init generate command")
+	generateCmd, err := NewGenerateCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build generate command")
 	}
-	if err := InitCreateCmd(); err != nil {
-		return errors.Wrap(err, "failed to init create command")
+	createCmd, err := NewCreateCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build create command")
 	}
-	if err := InitTuiCmd(); err != nil {
-		return errors.Wrap(err, "failed to init tui command")
+	tuiCmd, err := NewTuiCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build tui command")
 	}
 
 	// Command groups
@@ -88,9 +91,7 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.AddCommand(contextCmd)
 
 	// Root-level commands (generate, create, tui)
-	rootCmd.AddCommand(generateCmd)
-	rootCmd.AddCommand(createCmd)
-	rootCmd.AddCommand(tuiCmd)
+	rootCmd.AddCommand(generateCmd, createCmd, tuiCmd)
 
 	return nil
 }
