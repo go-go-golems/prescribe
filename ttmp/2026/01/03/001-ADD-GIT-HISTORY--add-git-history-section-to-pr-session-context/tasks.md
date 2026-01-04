@@ -50,10 +50,10 @@
 
 ### Design + Prep
 
-- [ ] Confirm command type rule: use Glazed `BareCommand` for non-table output; use `GlazeCommand` for tabular/structured output.
-- [ ] Finalize target directory layout (`cmd/prescribe/cmds/<group>/<subgroup...>/root.go` + one file per verb).
-- [ ] Enumerate current commands → target file paths (mapping table in design doc).
-- [ ] Decide standard “leaf constructor” naming: `New<Verb>CobraCommand()` returning `*cobra.Command`.
+- [x] Confirm command type rule: use Glazed `BareCommand` for non-table output; use `GlazeCommand` for tabular/structured output.
+- [x] Finalize target directory layout (`cmd/prescribe/cmds/<group>/<subgroup...>/root.go` + one file per verb).
+- [x] Enumerate current commands → target file paths (mapping table in design doc).
+- [x] Decide standard “leaf constructor” naming: `New<Verb>CobraCommand()` returning `*cobra.Command`.
 - [x] Add/extend smoke test that walks `prescribe --help` and key subgroup `--help` outputs (tree visibility).
 
 ### Phase 1: Root wiring (no Init methods)
@@ -107,4 +107,4 @@
 - [x] `bash test-scripts/test-cli.sh`
 - [x] `bash test-scripts/test-all.sh`
 - [x] Ensure no CLI behavior regressions (help text, flag names, default behavior).
-- [ ] Update README CLI layout references if any paths/usage changed.
+- [x] Update README CLI layout references if any paths/usage changed.

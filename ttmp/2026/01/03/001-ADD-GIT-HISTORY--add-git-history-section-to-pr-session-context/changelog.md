@@ -307,3 +307,14 @@ Step 25: add smoke assertions for CLI help tree visibility (commit 9d20406)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test/test-cli.sh — Assert subgroup help output contains expected commands
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Check off help-tree and wiring tasks
 
+
+## 2026-01-04
+
+Step 26: finalize CLI refactor design doc (command type rule, layout, mapping, constructors) (commit f20787a)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md — Update rules + mapping to match landed refactor
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/reference/01-diary.md — Record Step 26 with docs commit hash
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Check off remaining CLI refactor design tasks
+

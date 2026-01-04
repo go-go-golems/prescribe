@@ -823,3 +823,28 @@ This step adds explicit smoke assertions that key command groups and subgroups a
 
 ### What warrants a second pair of eyes
 - N/A (test-only step)
+
+## Step 26: Finalize CLI refactor design doc (rules + mapping)
+
+This step closes out the remaining “CLI refactor design” tasks by updating the design doc to reflect the now-landed Glazed-first layout and constructor conventions. The goal is to make the doc a durable source of truth for future command additions: where files live, how registration works, and when to use Bare vs Glaze command types.
+
+I also sanity-checked the project `README.md` for any references to old CLI wiring/layout patterns; there were no internal-layout references to update.
+
+**Commit (docs):** f20787a — "Docs: finalize CLI refactor design doc"
+
+### What I did
+- Updated the CLI refactor design doc with:
+  - explicit `BareCommand` vs `GlazeCommand` decision rule,
+  - finalized directory layout (including root-level verbs),
+  - constructor naming conventions,
+  - a mapping table from CLI commands → file paths.
+- Ran:
+  - `GOWORK=off go test ./...`
+- Checked tasks:
+  - `docmgr task check --ticket 001-ADD-GIT-HISTORY --id 35,36,37,38,80`
+
+### What was tricky to build
+- N/A (docs-only step)
+
+### What warrants a second pair of eyes
+- Confirm the mapping table stays aligned with any future CLI additions (new verbs/subgroups should update the table as part of the change).
