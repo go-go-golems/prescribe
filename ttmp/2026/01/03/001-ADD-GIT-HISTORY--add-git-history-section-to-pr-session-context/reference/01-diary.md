@@ -34,6 +34,8 @@ RelatedFiles:
       Note: `session` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/file/root.go
       Note: `file` group migrated to root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/tokens/root.go
+      Note: `tokens` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/root.go
       Note: Root command wiring; attaches group constructors
     - Path: cmd/prescribe/cmds/context/git/list.go
@@ -765,6 +767,20 @@ This step migrates the small `file` command group (currently just `file toggle`)
 - Added `cmd/prescribe/cmds/file/root.go` (`NewFileCmd`) and removed `cmd/prescribe/cmds/file/file.go` (`Init()` + globals).
 - Updated `cmd/prescribe/cmds/file/toggle.go` to export a Cobra constructor and removed the global `ToggleFileCmd`.
 - Updated `cmd/prescribe/cmds/root.go` to attach the file group via `file.NewFileCmd()` (removing the `file.Init()` call path).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+## Step 23: Migrate `tokens` group to root.go registration (no Init)
+
+This step migrates the `tokens` command group (`tokens count-xml`) to constructor-based registration and removes the last `Init()`/global command pattern from the tokens subtree.
+
+**Commit (code):** 2994fdd — "CLI: tokens command without Init()"
+
+### What I did
+- Added `cmd/prescribe/cmds/tokens/root.go` (`NewTokensCmd`) and removed `cmd/prescribe/cmds/tokens/tokens.go` (`Init()` + globals).
+- Updated `cmd/prescribe/cmds/tokens/count_xml.go` to export a Cobra constructor and removed the global `CountXMLCmd`.
+- Updated `cmd/prescribe/cmds/root.go` to attach the tokens group via `tokens.NewTokensCmd()` (removing the `tokens.Init()` call path).
 - Ran:
   - `GOWORK=off go test ./...`
   - `bash test-scripts/test-cli.sh`

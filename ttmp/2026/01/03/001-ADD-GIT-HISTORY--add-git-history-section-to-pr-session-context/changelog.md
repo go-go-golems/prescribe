@@ -274,3 +274,13 @@ Step 22: migrate file group to root.go registration (commit 2a9d8d8)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/file/root.go — New file group root.go registration
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire file group via constructor
 
+
+## 2026-01-04
+
+Step 23: migrate tokens group to root.go registration (commit 2994fdd)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire tokens group via constructor
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/tokens/root.go — New tokens group root.go registration
+

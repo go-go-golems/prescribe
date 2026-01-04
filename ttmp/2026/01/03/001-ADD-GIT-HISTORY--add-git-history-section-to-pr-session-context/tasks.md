@@ -64,7 +64,7 @@
 - [x] `filter`
 - [x] `session`
 - [x] `file`
-  - [ ] `tokens`
+- [x] `tokens`
 - [ ] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
   - [ ] `generate`
   - [ ] `create`
@@ -98,7 +98,7 @@
 - [x] Migrate `filter` group to directory-per-subgroup (including `preset` subtree) with one file per verb.
 - [x] Migrate `session` group to one file per verb and root.go registration.
 - [x] Migrate `file` group to one file per verb and root.go registration.
-- [ ] Migrate `tokens` group to one file per verb and root.go registration.
+- [x] Migrate `tokens` group to one file per verb and root.go registration.
 
 ### Phase 4: Cleanup + Validation
 
