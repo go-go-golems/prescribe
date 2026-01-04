@@ -10,12 +10,12 @@ DocType: design-doc
 Intent: long-term
 Owners: []
 RelatedFiles:
-    - Path: cmd/prescribe/cmds/context/git.go
-      Note: Example of Cobra-only nested command file to migrate
+    - Path: cmd/prescribe/cmds/context/git/root.go
+      Note: Example of new directory-per-subgroup registration root (context git)
     - Path: cmd/prescribe/cmds/generate.go
       Note: Example of Glazed command pattern
     - Path: cmd/prescribe/cmds/root.go
-      Note: Root command tree wiring (imports group Init)
+      Note: Root command tree wiring (explicit constructors; no group Init ordering reliance)
 ExternalSources: []
 Summary: Standardize on Glazed command pattern for all verbs and reorganize command code into a directory-per-subgroup, one-file-per-verb layout.
 LastUpdated: 2026-01-04T15:56:23.765933657-05:00
@@ -42,7 +42,7 @@ This yields a CLI that is easier to navigate, test, and extend, and sets the sta
 
 We want to evolve `prescribe` without the CLI becoming the bottleneck. Today:
 - Command implementations follow multiple patterns (Glazed vs plain Cobra), which makes it harder to add new commands consistently.
-- Nested command trees sometimes live in a single large file (e.g., `cmd/prescribe/cmds/context/git.go`), which:
+- Historically, nested command trees lived in a single large file (e.g., `cmd/prescribe/cmds/context/git.go`), which:
   - discourages fine-grained tests and review,
   - makes “one change per PR” harder,
   - makes it harder to see “what commands exist” by browsing the filesystem.
@@ -59,12 +59,12 @@ We want:
 ### 1) Standardize all verbs on Glazed commands
 
 Use the “Build Your First Glazed Command” patterns (`glaze help build-first-command`) as the baseline:
-- every verb has a `New...Command()` constructor returning a `*cmds.CommandDescription` wrapper
-- every verb is integrated into Cobra using `cli.BuildCobraCommand(...)`
+- every verb file defines a `New...Command()` constructor returning a Glazed command struct embedding `*cmds.CommandDescription`
+- every verb file exports a `New<Verb>CobraCommand()` constructor that integrates with Cobra via `cli.BuildCobraCommand(...)`
 
 Command types:
-- **GlazeCommand** (`RunIntoGlazeProcessor`) for commands that output rows (list/show/token-count/etc).
-- **BareCommand** (`Run`) for commands with non-table output (init/save/toggle/add/etc).
+- Default to **BareCommand** (`Run`) for action/printf-style output.
+- Use **GlazeCommand** (`RunIntoGlazeProcessor`) only when the command’s primary output is structured rows intended for `--output ...` formats (list/show/token-count/etc).
 
 Even for “plain text” verbs, keeping the Glazed wrapper gives a consistent place to:
 - define flags using `parameters.NewParameterDefinition` or `schema.NewSection`,
@@ -77,6 +77,8 @@ Adopt a strict filesystem-to-CLI mapping:
 
 ```
 cmd/prescribe/cmds/
+  root.go                             # root command wiring (groups + root-level verbs)
+  <root-verb>.go                      # root-level verbs (generate/create/tui)
   <group>/
     root.go                           # defines the group command and registers subcommands
     <subgroup>/
@@ -114,13 +116,24 @@ Registration flow (top-down, no Init methods):
 
 This makes it mechanically obvious where a verb lives and how it is wired.
 
+### 4) Constructor naming conventions (final)
+
+Group and subgroup constructors:
+- `New<Group>Cmd() (*cobra.Command, error)` in `cmd/prescribe/cmds/<group>/root.go`
+- `New<Subgroup>Cmd() (*cobra.Command, error)` in `cmd/prescribe/cmds/<group>/<subgroup>/root.go`
+
+Leaf verb constructors:
+- `New<Verb>CobraCommand() (*cobra.Command, error)` in `cmd/prescribe/cmds/<group>/.../<verb>.go`
+- If the file defines a Glazed command struct, name it `New<Something>Command()` (e.g. `NewFilterListCommand()`), returning the Glazed command implementation that embeds `*cmds.CommandDescription`.
+
 ### 4) Standard layers (repo/session) and command settings
 
 We should standardize “common layers” usage:
 - repo/target settings: `prescribe_layers.NewRepositoryLayer()` + `WrapAsExistingCobraFlagsLayer(...)`
 - optional command settings/debug: adopt Glazed’s command settings layer where appropriate (see tutorial)
 
-Note: many existing commands already have a consistent repo layer pattern; the main gap is converting the remaining Cobra-only verbs (currently `context git ...`) to use the same Glazed layer approach.
+Note: most verbs should include the repository layer, but because `repo`/`target` are persistent flags on the root command you typically want `WrapAsExistingCobraFlagsLayer(...)` to avoid "flag redefined" errors while still parsing inherited values.
+As of the current refactor state, all commands in the migrated groups follow this pattern; use the mapping table below as the source-of-truth template for new verbs/subgroups.
 
 ### 5) Testing and ergonomics
 
@@ -156,16 +169,50 @@ We should add a minimal “command tree smoke” test:
 ## Implementation Plan
 
 1) **Document the mapping**
-   - For each existing command, record its target path.
-   - Example mapping targets:
-     - `context add` → `cmd/prescribe/cmds/context/add.go`
-     - `context git list` → `cmd/prescribe/cmds/context/git/list.go`
-     - `context git history show` → `cmd/prescribe/cmds/context/git/history/show.go`
-     - `filter preset save` → `cmd/prescribe/cmds/filter/preset/save.go`
-     - Group root files:
-       - `cmd/prescribe/cmds/context/root.go`
-       - `cmd/prescribe/cmds/context/git/root.go`
-       - `cmd/prescribe/cmds/context/git/history/root.go`
+   - Mapping table (current refactor target state):
+
+| CLI command | Type | File | Constructor |
+| --- | --- | --- | --- |
+| `prescribe generate` | Bare | `cmd/prescribe/cmds/generate.go` | `NewGenerateCobraCommand()` |
+| `prescribe create` | Bare | `cmd/prescribe/cmds/create.go` | `NewCreateCobraCommand()` |
+| `prescribe tui` | Bare | `cmd/prescribe/cmds/tui.go` | `NewTuiCobraCommand()` |
+| `prescribe context` | Group | `cmd/prescribe/cmds/context/root.go` | `NewContextCmd()` |
+| `prescribe context add` | Bare | `cmd/prescribe/cmds/context/add.go` | `NewAddCobraCommand()` |
+| `prescribe context git` | Group | `cmd/prescribe/cmds/context/git/root.go` | `NewGitCmd()` |
+| `prescribe context git list` | Bare | `cmd/prescribe/cmds/context/git/list.go` | `NewListCobraCommand()` |
+| `prescribe context git remove` | Bare | `cmd/prescribe/cmds/context/git/remove.go` | `NewRemoveCobraCommand()` |
+| `prescribe context git clear` | Bare | `cmd/prescribe/cmds/context/git/clear.go` | `NewClearCobraCommand()` |
+| `prescribe context git add` | Group | `cmd/prescribe/cmds/context/git/add/root.go` | `NewAddCmd()` |
+| `prescribe context git add commit` | Bare | `cmd/prescribe/cmds/context/git/add/commit.go` | `NewCommitCobraCommand()` |
+| `prescribe context git add commit-patch` | Bare | `cmd/prescribe/cmds/context/git/add/commit_patch.go` | `NewCommitPatchCobraCommand()` |
+| `prescribe context git add file-at` | Bare | `cmd/prescribe/cmds/context/git/add/file_at.go` | `NewFileAtCobraCommand()` |
+| `prescribe context git add file-diff` | Bare | `cmd/prescribe/cmds/context/git/add/file_diff.go` | `NewFileDiffCobraCommand()` |
+| `prescribe context git history` | Group | `cmd/prescribe/cmds/context/git/history/root.go` | `NewHistoryCmd()` |
+| `prescribe context git history show` | Bare | `cmd/prescribe/cmds/context/git/history/show.go` | `NewShowCobraCommand()` |
+| `prescribe context git history enable` | Bare | `cmd/prescribe/cmds/context/git/history/enable.go` | `NewEnableCobraCommand()` |
+| `prescribe context git history disable` | Bare | `cmd/prescribe/cmds/context/git/history/disable.go` | `NewDisableCobraCommand()` |
+| `prescribe context git history set` | Bare | `cmd/prescribe/cmds/context/git/history/set.go` | `NewSetCobraCommand()` |
+| `prescribe filter` | Group | `cmd/prescribe/cmds/filter/root.go` | `NewFilterCmd()` |
+| `prescribe filter add` | Bare | `cmd/prescribe/cmds/filter/add.go` | `NewAddCobraCommand()` |
+| `prescribe filter remove` | Bare | `cmd/prescribe/cmds/filter/remove.go` | `NewRemoveCobraCommand()` |
+| `prescribe filter clear` | Bare | `cmd/prescribe/cmds/filter/clear.go` | `NewClearCobraCommand()` |
+| `prescribe filter list` | Glaze | `cmd/prescribe/cmds/filter/list.go` | `NewListCobraCommand()` |
+| `prescribe filter show` | Glaze | `cmd/prescribe/cmds/filter/show.go` | `NewShowCobraCommand()` |
+| `prescribe filter test` | Glaze | `cmd/prescribe/cmds/filter/test.go` | `NewTestCobraCommand()` |
+| `prescribe filter preset` | Group | `cmd/prescribe/cmds/filter/preset/root.go` | `NewPresetCmd()` |
+| `prescribe filter preset list` | Glaze | `cmd/prescribe/cmds/filter/preset/list.go` | `NewListCobraCommand()` |
+| `prescribe filter preset save` | Bare | `cmd/prescribe/cmds/filter/preset/save.go` | `NewSaveCobraCommand()` |
+| `prescribe filter preset apply` | Bare | `cmd/prescribe/cmds/filter/preset/apply.go` | `NewApplyCobraCommand()` |
+| `prescribe session` | Group | `cmd/prescribe/cmds/session/root.go` | `NewSessionCmd()` |
+| `prescribe session init` | Bare | `cmd/prescribe/cmds/session/init.go` | `NewInitCobraCommand()` |
+| `prescribe session load` | Bare | `cmd/prescribe/cmds/session/load.go` | `NewLoadCobraCommand()` |
+| `prescribe session save` | Bare | `cmd/prescribe/cmds/session/save.go` | `NewSaveCobraCommand()` |
+| `prescribe session show` | Glaze | `cmd/prescribe/cmds/session/show.go` | `NewShowCobraCommand()` |
+| `prescribe session token-count` | Glaze | `cmd/prescribe/cmds/session/token_count.go` | `NewTokenCountCobraCommand()` |
+| `prescribe file` | Group | `cmd/prescribe/cmds/file/root.go` | `NewFileCmd()` |
+| `prescribe file toggle` | Bare | `cmd/prescribe/cmds/file/toggle.go` | `NewToggleCobraCommand()` |
+| `prescribe tokens` | Group | `cmd/prescribe/cmds/tokens/root.go` | `NewTokensCmd()` |
+| `prescribe tokens count-xml` | Glaze | `cmd/prescribe/cmds/tokens/count_xml.go` | `NewCountXMLCobraCommand()` |
 
 2) **Move nested `context git ...` from single Cobra file into subpackages**
    - Convert verbs to Glazed commands:
@@ -204,33 +251,3 @@ We should add a minimal “command tree smoke” test:
 - Example Glazed commands already in-tree:
   - `cmd/prescribe/cmds/generate.go`
   - `cmd/prescribe/cmds/session/show.go`
-- Current Cobra-only nested tree to migrate:
-  - `cmd/prescribe/cmds/context/git.go`
-
-## Problem Statement
-
-<!-- Describe the problem this design addresses -->
-
-## Proposed Solution
-
-<!-- Describe the proposed solution in detail -->
-
-## Design Decisions
-
-<!-- Document key design decisions and rationale -->
-
-## Alternatives Considered
-
-<!-- List alternative approaches that were considered and why they were rejected -->
-
-## Implementation Plan
-
-<!-- Outline the steps to implement this design -->
-
-## Open Questions
-
-<!-- List any unresolved questions or concerns -->
-
-## References
-
-<!-- Link to related documents, RFCs, or external resources -->
