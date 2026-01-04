@@ -54,18 +54,18 @@
 - [ ] Finalize target directory layout (`cmd/prescribe/cmds/<group>/<subgroup...>/root.go` + one file per verb).
 - [ ] Enumerate current commands → target file paths (mapping table in design doc).
 - [ ] Decide standard “leaf constructor” naming: `New<Verb>CobraCommand()` returning `*cobra.Command`.
-- [ ] Add/extend smoke test that walks `prescribe --help` and key subgroup `--help` outputs (tree visibility).
+- [x] Add/extend smoke test that walks `prescribe --help` and key subgroup `--help` outputs (tree visibility).
 
 ### Phase 1: Root wiring (no Init methods)
 
 - [x] Migrate `cmd/prescribe/cmds/root.go` to use group constructors (no `Init()` pattern); keep behavior identical.
-- [ ] For each group, replace `Init()` with `New<Group>Cmd()` in `<group>/root.go` and update root imports:
+- [x] For each group, replace `Init()` with `New<Group>Cmd()` in `<group>/root.go` and update root imports:
 - [x] `context`
 - [x] `filter`
 - [x] `session`
 - [x] `file`
 - [x] `tokens`
-- [ ] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
+- [x] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
 - [x] `generate`
 - [x] `create`
 - [x] `tui`
@@ -103,8 +103,8 @@
 ### Phase 4: Cleanup + Validation
 
 - [x] Ensure `GOWORK=off go test ./...` passes after each group migration.
-- [ ] Run smoke scripts after major milestones:
+- [x] Run smoke scripts after major milestones:
 - [x] `bash test-scripts/test-cli.sh`
 - [x] `bash test-scripts/test-all.sh`
-- [ ] Ensure no CLI behavior regressions (help text, flag names, default behavior).
+- [x] Ensure no CLI behavior regressions (help text, flag names, default behavior).
 - [ ] Update README CLI layout references if any paths/usage changed.

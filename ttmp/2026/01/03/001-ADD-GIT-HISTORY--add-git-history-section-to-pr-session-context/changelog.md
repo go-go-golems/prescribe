@@ -296,3 +296,14 @@ Step 24: remove Init*Cmd globals for root-level verbs (commit 3905d13)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Root-level verbs now constructed directly (no Init/globals)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/tui.go — Expose NewTuiCobraCommand instead of InitTuiCmd
 
+
+## 2026-01-04
+
+Step 25: add smoke assertions for CLI help tree visibility (commit 9d20406)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-cli.sh — Assert subgroup help output contains expected commands
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test/test-cli.sh — Assert subgroup help output contains expected commands
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Check off help-tree and wiring tasks
+

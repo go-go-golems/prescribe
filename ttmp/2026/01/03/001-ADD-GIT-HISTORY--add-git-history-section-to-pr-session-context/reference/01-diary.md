@@ -806,3 +806,20 @@ This step removes the remaining `InitGenerateCmd/InitCreateCmd/InitTuiCmd` patte
 
 ### What warrants a second pair of eyes
 - Confirm the custom middleware chain for `generate` (profiles/config/env precedence) is unchanged after moving into a constructor-returning function.
+
+## Step 25: Add smoke coverage for `--help` subtree visibility
+
+This step adds explicit smoke assertions that key command groups and subgroups appear in `--help` output. This is aimed at catching registration regressions during the refactor (missing `AddCommand(...)`, wrong package import, etc.) without needing to exercise every verb.
+
+**Commit (code):** 9d20406 — "Test: assert CLI help tree"
+
+### What I did
+- Extended smoke scripts to verify `prescribe --help` and key subgroup `--help` outputs contain expected subcommands (context git/history, filter preset, session, file, tokens).
+- Ran:
+  - `bash test-scripts/test-cli.sh`
+  - `bash test/test-cli.sh`
+- Checked tasks:
+  - `docmgr task check --ticket 001-ADD-GIT-HISTORY --id 39,41,47,76,79`
+
+### What warrants a second pair of eyes
+- N/A (test-only step)
