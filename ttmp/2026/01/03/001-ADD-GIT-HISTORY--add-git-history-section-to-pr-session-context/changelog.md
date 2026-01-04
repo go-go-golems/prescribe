@@ -193,3 +193,15 @@ Step 15: split context git history subtree into cmd/prescribe/cmds/context/git/h
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/show.go — New verb file
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — Register history subgroup from new package
 
+
+## 2026-01-04
+
+Step 16: convert context git list/remove/clear to Glazed BareCommands (commit f85d61e)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/clear.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/list.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/remove.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — Register Glazed-built cobra verbs
+

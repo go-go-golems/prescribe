@@ -609,3 +609,25 @@ Behavior remains unchanged; the remaining work for this subtree is converting th
 
 ### What should be done in the future
 - Convert `context git` verbs to Glazed `BareCommand`/`GlazeCommand` as appropriate and remove any remaining plain-cobra wiring in this subtree.
+
+## Step 16: Convert `context git` leaf verbs to Glazed BareCommands
+
+This step converts the `context git list/remove/clear` verbs from plain Cobra handlers to Glazed `BareCommand` implementations, keeping their current stdout output behavior intact. This aligns the subtree with the Glazed-first refactor rules without forcing a “table output” change for the list command.
+
+**Commit (code):** f85d61e — "CLI: glaze context git list/remove/clear"
+
+### What I did
+- Reimplemented `list`, `remove`, and `clear` as Glazed `BareCommand`s with the existing repo/target flag layer.
+- Updated `cmd/prescribe/cmds/context/git/root.go` to register the new Cobra commands built from Glazed descriptions.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Preserving behavior while swapping from `helpers.NewInitializedController(cmd)` (cobra flags) to `helpers.NewInitializedControllerFromParsedLayers(parsedLayers)` (Glazed layers).
+
+### What warrants a second pair of eyes
+- Confirm the Glazed parser wiring doesn’t unintentionally change flag precedence (persistent vs local flags) for `--repo` and `--target`.
+
+### What should be done in the future
+- Convert the remaining `context git` verbs (`add ...` and `history ...`) to Glazed commands and then check off the “all context verbs are Glazed” task.
