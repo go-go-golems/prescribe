@@ -224,6 +224,14 @@ type commitHistoryEntry struct {
 	FilesChanged int
 	Additions    int
 	Deletions    int
+
+	FileStats []commitFileStat
+}
+
+type commitFileStat struct {
+	Path      string
+	Additions int
+	Deletions int
 }
 
 func parseCommitHistoryLogNumstat(out string) ([]commitHistoryEntry, error) {
@@ -277,16 +285,20 @@ func parseCommitHistoryLogNumstat(out string) ([]commitHistoryEntry, error) {
 				e.FilesChanged++
 			}
 
+			fs := commitFileStat{Path: path}
 			if addStr != "-" {
 				if v, err := strconv.Atoi(addStr); err == nil {
 					e.Additions += v
+					fs.Additions = v
 				}
 			}
 			if delStr != "-" {
 				if v, err := strconv.Atoi(delStr); err == nil {
 					e.Deletions += v
+					fs.Deletions = v
 				}
 			}
+			e.FileStats = append(e.FileStats, fs)
 		}
 
 		entries = append(entries, e)
@@ -313,11 +325,11 @@ func xmlEscapeText(s string) string {
 // BuildCommitHistoryText returns a compact, parseable commit history snippet suitable for prompt context.
 //
 // The output is "XML-ish" but intended as plain text; it is not a full XML document.
-func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, maxCommits int) (string, error) {
+func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, cfg domain.GitHistoryConfig) (string, error) {
 	if strings.TrimSpace(targetRef) == "" || strings.TrimSpace(sourceRef) == "" {
 		return "", nil
 	}
-	if maxCommits <= 0 {
+	if cfg.MaxCommits <= 0 {
 		return "", nil
 	}
 
@@ -327,18 +339,22 @@ func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, maxCommits
 	// Important: place the record separator at the *start* of each commit so the following
 	// numstat lines belong to that record when splitting.
 	//
-	// We default to excluding merge commits to keep the context smaller and higher-signal.
 	format := "%x1e%H%x1f%an%x1f%ad%x1f%s"
-	cmd := exec.Command(
-		"git",
+	args := []string{
 		"log",
-		"--no-merges",
 		"--date=iso-strict",
-		fmt.Sprintf("--max-count=%d", maxCommits),
+		fmt.Sprintf("--max-count=%d", cfg.MaxCommits),
 		fmt.Sprintf("--pretty=format:%s", format),
-		"--numstat",
-		rangeSpec,
-	)
+	}
+	if cfg.FirstParent {
+		args = append(args, "--first-parent")
+	}
+	if !cfg.IncludeMerges {
+		args = append(args, "--no-merges")
+	}
+	args = append(args, "--numstat", rangeSpec)
+
+	cmd := exec.Command("git", args...)
 	cmd.Dir = s.repoPath
 	out, err := cmd.Output()
 	if err != nil {
@@ -354,7 +370,7 @@ func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, maxCommits
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<commits range=\"%s\" max=\"%d\">\n", xmlEscapeAttr(rangeSpec), maxCommits))
+	b.WriteString(fmt.Sprintf("<commits range=\"%s\" max=\"%d\">\n", xmlEscapeAttr(rangeSpec), cfg.MaxCommits))
 	for _, e := range entries {
 		sha := e.ShortHash
 		if sha == "" {
@@ -373,6 +389,18 @@ func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, maxCommits
 			e.Additions,
 			e.Deletions,
 		))
+		if cfg.IncludeNumstat && len(e.FileStats) > 0 {
+			b.WriteString("<numstat>\n")
+			for _, fs := range e.FileStats {
+				b.WriteString(fmt.Sprintf(
+					"<file path=\"%s\" additions=\"%d\" deletions=\"%d\"/>\n",
+					xmlEscapeAttr(fs.Path),
+					fs.Additions,
+					fs.Deletions,
+				))
+			}
+			b.WriteString("</numstat>\n")
+		}
 		b.WriteString("</commit>\n")
 	}
 	b.WriteString("</commits>\n")

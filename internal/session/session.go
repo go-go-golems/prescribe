@@ -20,6 +20,11 @@ type Session struct {
 	SourceBranch string `yaml:"source_branch"`
 	TargetBranch string `yaml:"target_branch"`
 
+	// Derived git history configuration
+	GitHistory *GitHistoryConfig `yaml:"git_history,omitempty"`
+	// Derived git context item configuration (reference-based; materialized at generation time)
+	GitContext []GitContextItemConfig `yaml:"git_context,omitempty"`
+
 	// Optional PR metadata
 	Title       string `yaml:"title,omitempty"`
 	Description string `yaml:"description,omitempty"`
@@ -35,6 +40,24 @@ type Session struct {
 
 	// Prompt
 	Prompt PromptConfig `yaml:"prompt"`
+}
+
+// GitHistoryConfig represents the persisted git history settings in the session.
+type GitHistoryConfig struct {
+	Enabled        bool `yaml:"enabled"`
+	MaxCommits     int  `yaml:"max_commits"`
+	IncludeMerges  bool `yaml:"include_merges"`
+	FirstParent    bool `yaml:"first_parent"`
+	IncludeNumstat bool `yaml:"include_numstat"`
+}
+
+type GitContextItemConfig struct {
+	Kind  string   `yaml:"kind"`
+	Ref   string   `yaml:"ref,omitempty"`
+	From  string   `yaml:"from,omitempty"`
+	To    string   `yaml:"to,omitempty"`
+	Path  string   `yaml:"path,omitempty"`
+	Paths []string `yaml:"paths,omitempty"`
 }
 
 // FileConfig represents a file's configuration in the session
@@ -72,15 +95,43 @@ type PromptConfig struct {
 
 // NewSession creates a new session from PR data
 func NewSession(data *domain.PRData) *Session {
+	defaultGitHistory := domain.DefaultGitHistoryConfig()
+	effectiveGitHistory := defaultGitHistory
+	if data.GitHistory != nil {
+		effectiveGitHistory = *data.GitHistory
+	}
+
 	session := &Session{
 		Version:      "1.0",
 		SourceBranch: data.SourceBranch,
 		TargetBranch: data.TargetBranch,
-		Title:        data.Title,
-		Description:  data.Description,
-		Files:        make([]FileConfig, 0),
-		Filters:      make([]FilterConfig, 0),
-		Context:      make([]ContextConfig, 0),
+		GitHistory: &GitHistoryConfig{
+			Enabled:        effectiveGitHistory.Enabled,
+			MaxCommits:     effectiveGitHistory.MaxCommits,
+			IncludeMerges:  effectiveGitHistory.IncludeMerges,
+			FirstParent:    effectiveGitHistory.FirstParent,
+			IncludeNumstat: effectiveGitHistory.IncludeNumstat,
+		},
+		Title:       data.Title,
+		Description: data.Description,
+		Files:       make([]FileConfig, 0),
+		Filters:     make([]FilterConfig, 0),
+		Context:     make([]ContextConfig, 0),
+	}
+
+	// Convert git context items
+	if len(data.GitContext) > 0 {
+		session.GitContext = make([]GitContextItemConfig, 0, len(data.GitContext))
+		for _, item := range data.GitContext {
+			session.GitContext = append(session.GitContext, GitContextItemConfig{
+				Kind:  string(item.Kind),
+				Ref:   item.Ref,
+				From:  item.From,
+				To:    item.To,
+				Path:  item.Path,
+				Paths: append([]string{}, item.Paths...),
+			})
+		}
 	}
 
 	// Convert files
@@ -225,6 +276,32 @@ func (s *Session) ApplyToData(data *domain.PRData, repoPath string) error {
 			Path:    cc.Path,
 			Content: cc.Content,
 			Tokens:  tokens_,
+		})
+	}
+
+	// Apply git history config (compatibility: missing block => nil, handled as "enabled defaults" downstream)
+	if s.GitHistory != nil {
+		data.GitHistory = &domain.GitHistoryConfig{
+			Enabled:        s.GitHistory.Enabled,
+			MaxCommits:     s.GitHistory.MaxCommits,
+			IncludeMerges:  s.GitHistory.IncludeMerges,
+			FirstParent:    s.GitHistory.FirstParent,
+			IncludeNumstat: s.GitHistory.IncludeNumstat,
+		}
+	} else {
+		data.GitHistory = nil
+	}
+
+	// Apply git context items (reference-based)
+	data.GitContext = make([]domain.GitContextItem, 0, len(s.GitContext))
+	for _, item := range s.GitContext {
+		data.GitContext = append(data.GitContext, domain.GitContextItem{
+			Kind:  domain.GitContextItemKind(item.Kind),
+			Ref:   item.Ref,
+			From:  item.From,
+			To:    item.To,
+			Path:  item.Path,
+			Paths: append([]string{}, item.Paths...),
 		})
 	}
 

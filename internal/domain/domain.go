@@ -80,10 +80,56 @@ type ContextItem struct {
 type ContextType string
 
 const (
-	ContextTypeFile       ContextType = "file"
-	ContextTypeNote       ContextType = "note"
-	ContextTypeGitHistory ContextType = "git_history"
+	ContextTypeFile           ContextType = "file"
+	ContextTypeNote           ContextType = "note"
+	ContextTypeGitHistory     ContextType = "git_history"
+	ContextTypeGitCommit      ContextType = "git_commit"
+	ContextTypeGitCommitPatch ContextType = "git_commit_patch"
+	ContextTypeGitFileAtRef   ContextType = "git_file_at_ref"
+	ContextTypeGitFileDiff    ContextType = "git_file_diff"
 )
+
+// GitHistoryConfig controls derived git history inclusion at generation time.
+//
+// This is persisted in session.yaml (as `git_history:`), but the derived history
+// text itself is not stored.
+type GitHistoryConfig struct {
+	Enabled        bool
+	MaxCommits     int
+	IncludeMerges  bool
+	FirstParent    bool
+	IncludeNumstat bool
+}
+
+func DefaultGitHistoryConfig() GitHistoryConfig {
+	return GitHistoryConfig{
+		Enabled:        true,
+		MaxCommits:     30,
+		IncludeMerges:  false,
+		FirstParent:    false,
+		IncludeNumstat: false,
+	}
+}
+
+type GitContextItemKind string
+
+const (
+	GitContextItemKindCommit      GitContextItemKind = "commit"
+	GitContextItemKindCommitPatch GitContextItemKind = "commit_patch"
+	GitContextItemKindFileAtRef   GitContextItemKind = "file_at_ref"
+	GitContextItemKindFileDiff    GitContextItemKind = "file_diff"
+)
+
+// GitContextItem is a reference-based config item persisted in session.yaml (as `git_context:`).
+// It is materialized into an explicit AdditionalContext item at generation/export time.
+type GitContextItem struct {
+	Kind  GitContextItemKind
+	Ref   string
+	From  string
+	To    string
+	Path  string
+	Paths []string
+}
 
 // PromptPreset represents a prompt template
 type PromptPreset struct {
@@ -115,6 +161,8 @@ type PRData struct {
 	// Files
 	ChangedFiles      []FileChange
 	AdditionalContext []ContextItem
+	GitHistory        *GitHistoryConfig
+	GitContext        []GitContextItem
 
 	// Filters
 	ActiveFilters []Filter

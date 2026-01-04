@@ -101,6 +101,14 @@ func buildTemplateVars(req GenerateDescriptionRequest) map[string]any {
 			if strings.TrimSpace(c.Content) != "" {
 				commitsParts = append(commitsParts, strings.TrimRight(c.Content, "\n"))
 			}
+		case domain.ContextTypeGitCommit, domain.ContextTypeGitCommitPatch, domain.ContextTypeGitFileAtRef, domain.ContextTypeGitFileDiff:
+			if strings.TrimSpace(c.Content) != "" {
+				label := c.Path
+				if strings.TrimSpace(label) == "" {
+					label = string(c.Type)
+				}
+				contextFiles = append(contextFiles, templateFile{Path: label, Content: strings.TrimRight(c.Content, "\n")})
+			}
 		default:
 			if strings.TrimSpace(c.Content) != "" {
 				noteParts = append(noteParts, strings.TrimSpace(c.Content))

@@ -143,6 +143,29 @@ echo ""
 echo "✓ Export rendered payload works"
 echo ""
 
+echo "Test 6b: Disable git history removes commits block"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git history disable >/dev/null
+OUT_NO_COMMITS="$($PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown)"
+if echo "$OUT_NO_COMMITS" | grep -Fq "BEGIN COMMITS"; then
+  echo "Expected commit history to be disabled, but BEGIN COMMITS was present"
+  exit 1
+fi
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git history enable >/dev/null
+echo "✓ Disabling git history removes commit history"
+echo ""
+
+echo "Test 6c: Add explicit git_context item appears in exports"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git add commit HEAD >/dev/null
+CTX_GIT="/tmp/prescribe-context.git.xml"
+rm -f "$CTX_GIT"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator xml >"$CTX_GIT"
+test -s "$CTX_GIT"
+grep -q "<git_commit" "$CTX_GIT"
+OUT_GIT_CTX="$($PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown)"
+echo "$OUT_GIT_CTX" | grep -Fq "<git_commit"
+echo "✓ git_context item appears in export-context and export-rendered"
+echo ""
+
 echo "Test 7: Generate with output file (optional)"
 echo "===================="
 if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then

@@ -196,6 +196,30 @@ grep -q "<git_history>" "$RENDERED_OUTPUT_FILE"
 
 echo ""
 
+echo "6.0c: Disable git history removes commits block"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git history disable >/dev/null
+OUT_NO_COMMITS="$($PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown)"
+if echo "$OUT_NO_COMMITS" | grep -Fq "BEGIN COMMITS"; then
+  echo "Expected commit history to be disabled, but BEGIN COMMITS was present"
+  exit 1
+fi
+echo "✓ Commit history disabled"
+
+echo ""
+echo "6.0d: Add explicit git_context item appears in exports"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git add commit HEAD >/dev/null
+CTX_GIT="/tmp/prescribe-context.git.xml"
+rm -f "$CTX_GIT"
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-context --separator xml >"$CTX_GIT"
+test -s "$CTX_GIT"
+grep -q "<git_commit" "$CTX_GIT"
+OUT_GIT_CTX="$($PRESCRIBE_BIN -r "$REPO_DIR" -t master generate --export-rendered --separator markdown)"
+echo "$OUT_GIT_CTX" | grep -Fq "<git_commit"
+echo "✓ git_context item appears in export-context and export-rendered"
+
+echo ""
+$PRESCRIBE_BIN -r "$REPO_DIR" -t master context git history enable >/dev/null
+
 echo "6.1: Generate with default prompt"
 if [ "${PRESCRIBE_RUN_GENERATE:-}" = "1" ]; then
   $PRESCRIBE_BIN -r "$REPO_DIR" -t master generate -o /tmp/pr-default.md

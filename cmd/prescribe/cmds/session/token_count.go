@@ -235,7 +235,12 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 	// To keep token-count aligned with what `generate` will send, we compute it via the canonical request builder.
 	if req, err := ctrl.BuildGenerateDescriptionRequest(); err == nil {
 		for _, ac := range req.AdditionalContext {
-			if ac.Type != domain.ContextTypeGitHistory {
+			isDerivedGit := ac.Type == domain.ContextTypeGitHistory ||
+				ac.Type == domain.ContextTypeGitCommit ||
+				ac.Type == domain.ContextTypeGitCommitPatch ||
+				ac.Type == domain.ContextTypeGitFileAtRef ||
+				ac.Type == domain.ContextTypeGitFileDiff
+			if !isDerivedGit {
 				continue
 			}
 			eff := effectiveContextContent(ac)
@@ -247,8 +252,9 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 			effectiveTotal += effTokens
 
 			row := types.NewRow(
-				types.MRP("kind", "git_history"),
+				types.MRP("kind", "git_derived"),
 				types.MRP("encoding", encoding),
+				types.MRP("context_type", string(ac.Type)),
 				types.MRP("path", ac.Path),
 				types.MRP("tokens_stored", ac.Tokens),
 				types.MRP("tokens_effective", effTokens),

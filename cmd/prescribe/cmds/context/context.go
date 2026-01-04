@@ -23,7 +23,12 @@ func Init() error {
 			return
 		}
 
-		ContextCmd.AddCommand(AddCmd)
+		if err := InitGitCmd(); err != nil {
+			initErr = err
+			return
+		}
+
+		ContextCmd.AddCommand(AddCmd, GitCmd)
 	})
 	return initErr
 }

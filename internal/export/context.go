@@ -279,6 +279,9 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 		b.WriteString(fmt.Sprintf("<context count=\"%d\">\n", len(nonHistoryContext)))
 		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
+			case domain.ContextTypeGitHistory:
+				// nonHistoryContext excludes git history; keep a case to satisfy exhaustive lint.
+				continue
 			case domain.ContextTypeNote:
 				b.WriteString("<item type=\"note\">\n<text>\n")
 				b.WriteString(xmlEscape(strings.TrimSpace(ctx.Content)))
@@ -292,6 +295,15 @@ func buildXML(req api.GenerateDescriptionRequest) string {
 				b.WriteString(itemTag)
 				b.WriteString(xmlEscape(strings.TrimRight(ctx.Content, "\n")))
 				b.WriteString("\n</content>\n</item>\n")
+			case domain.ContextTypeGitCommit, domain.ContextTypeGitCommitPatch, domain.ContextTypeGitFileAtRef, domain.ContextTypeGitFileDiff:
+				itemTag := fmt.Sprintf("<item type=\"%s\"", xmlEscape(string(ctx.Type)))
+				if strings.TrimSpace(ctx.Path) != "" {
+					itemTag += fmt.Sprintf(" path=\"%s\"", xmlEscape(ctx.Path))
+				}
+				itemTag += ">\n<content><![CDATA["
+				b.WriteString(itemTag)
+				b.WriteString(xmlCDATA(strings.TrimRight(ctx.Content, "\n")))
+				b.WriteString("]]></content>\n</item>\n")
 			default:
 				b.WriteString("<item>\n<text>\n")
 				b.WriteString(xmlEscape(strings.TrimSpace(ctx.Content)))
@@ -383,6 +395,9 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(nonHistoryContext)))
 		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
+			case domain.ContextTypeGitHistory:
+				// nonHistoryContext excludes git history; keep a case to satisfy exhaustive lint.
+				continue
 			case domain.ContextTypeNote:
 				b.WriteString("- ")
 				b.WriteString(strings.TrimSpace(ctx.Content))
@@ -391,6 +406,15 @@ func buildMarkdown(req api.GenerateDescriptionRequest) string {
 				label := ctx.Path
 				if label == "" {
 					label = "file"
+				}
+				b.WriteString(fmt.Sprintf("### %s\n\n", label))
+				b.WriteString("```text\n")
+				b.WriteString(strings.TrimRight(ctx.Content, "\n"))
+				b.WriteString("\n```\n\n")
+			case domain.ContextTypeGitCommit, domain.ContextTypeGitCommitPatch, domain.ContextTypeGitFileAtRef, domain.ContextTypeGitFileDiff:
+				label := ctx.Path
+				if strings.TrimSpace(label) == "" {
+					label = string(ctx.Type)
 				}
 				b.WriteString(fmt.Sprintf("### %s\n\n", label))
 				b.WriteString("```text\n")

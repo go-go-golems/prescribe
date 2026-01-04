@@ -547,6 +547,9 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(nonHistoryContext)))
 		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
+			case domain.ContextTypeGitHistory:
+				// nonHistoryContext excludes git history; keep a case to satisfy exhaustive lint.
+				continue
 			case domain.ContextTypeNote:
 				b.WriteString("- ")
 				b.WriteString(strings.TrimSpace(ctx.Content))
@@ -555,6 +558,15 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 				label := ctx.Path
 				if label == "" {
 					label = "file"
+				}
+				b.WriteString(fmt.Sprintf("### %s\n\n", label))
+				b.WriteString("```text\n")
+				b.WriteString(strings.TrimRight(ctx.Content, "\n"))
+				b.WriteString("\n```\n\n")
+			case domain.ContextTypeGitCommit, domain.ContextTypeGitCommitPatch, domain.ContextTypeGitFileAtRef, domain.ContextTypeGitFileDiff:
+				label := ctx.Path
+				if strings.TrimSpace(label) == "" {
+					label = string(ctx.Type)
 				}
 				b.WriteString(fmt.Sprintf("### %s\n\n", label))
 				b.WriteString("```text\n")
