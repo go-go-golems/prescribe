@@ -9,12 +9,24 @@ func NewAddCmd() (*cobra.Command, error) {
 		Short: "Add a git_context item",
 	}
 
-	cmd.AddCommand(
-		newCommitCmd(),
-		newCommitPatchCmd(),
-		newFileAtCmd(),
-		newFileDiffCmd(),
-	)
+	commitCmd, err := NewCommitCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	commitPatchCmd, err := NewCommitPatchCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	fileAtCmd, err := NewFileAtCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	fileDiffCmd, err := NewFileDiffCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.AddCommand(commitCmd, commitPatchCmd, fileAtCmd, fileDiffCmd)
 
 	return cmd, nil
 }
