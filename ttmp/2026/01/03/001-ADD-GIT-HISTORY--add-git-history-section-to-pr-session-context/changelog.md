@@ -64,3 +64,35 @@ Committed git history feature implementation (commit 362c0f6).
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/git/git.go — Commit history extraction
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-all.sh — Smoke coverage for history
 
+
+## 2026-01-03
+
+Added design doc proposing session.yaml `git_history` config and `prescribe context git history ...` verbs for explicit, controllable history inclusion.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/01-session-git-history-config-and-context-git-verbs.md — Schema + CLI UX proposal
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Added follow-up implementation tasks
+
+## 2026-01-03
+
+Extended design: add session.yaml git_context list and prescribe context git verbs for adding specific commits, commit patches, file-at-ref snapshots, and file diffs.
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/01-session-git-history-config-and-context-git-verbs.md — Added git_context schema + verb proposals
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/reference/01-diary.md — Added Step 6 design notes
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Added git_context follow-up tasks
+
+## 2026-01-04
+
+Step 7: Implement session git_history + git_context controls (commit 53272bb)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git.go — CLI verbs for context git history + git_context items
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/controller/controller.go — Conditional history injection + materialize git_context at request build
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/git/context_items.go — Materialize commit/patch/file-at/file-diff with caps and truncation markers
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/session/session.go — Persist git_history and git_context in session.yaml
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-cli.sh — Smoke coverage for disabling history and explicit git_context items
+

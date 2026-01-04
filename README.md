@@ -203,11 +203,35 @@ By default, `prescribe generate` (and the `--export-*` modes) include a **Git hi
 
 This is wired into the default prompt pack via the `.commits` variable (rendered inside a `--- BEGIN COMMITS` / `--- END COMMITS` block).
 
+Git history inclusion is controlled by session config (`git_history:` in `session.yaml`) and can be managed via:
+
+```bash
+prescribe context git history show
+prescribe context git history disable
+prescribe context git history enable
+prescribe context git history set --max-commits 50 --include-merges=true --first-parent=true
+```
+
 To inspect what will be sent to the model (no inference required):
 
 ```bash
 prescribe generate --export-rendered --separator markdown | grep -E "BEGIN COMMITS|Git history"
 prescribe generate --export-context --separator markdown | grep -E "Git history"
+```
+
+### Explicit Git Context (Commits, Patches, File Diffs)
+
+In addition to history, you can add explicit git-derived artifacts as additional context items. These are stored as refs/paths in `session.yaml` (`git_context:`) and materialized at generation time (diff blobs are not stored in YAML):
+
+```bash
+prescribe context git add commit HEAD
+prescribe context git add commit-patch HEAD --path src/auth/login.ts
+prescribe context git add file-at master README.md
+prescribe context git add file-diff --from master --to HEAD --path src/auth/login.ts
+
+prescribe context git list
+prescribe context git remove 0
+prescribe context git clear
 ```
 
 ### Generation
@@ -343,9 +367,30 @@ context:
 prompt:
   preset: detailed  # or use 'template' for custom
   # template: "Custom prompt text here"
+
+git_history:
+  enabled: true
+  max_commits: 30
+  include_merges: false
+  first_parent: false
+  include_numstat: false
+
+git_context:
+  - kind: commit
+    ref: HEAD
+  - kind: commit_patch
+    ref: HEAD
+    paths: ["src/auth/login.ts"]
+  - kind: file_at_ref
+    ref: master
+    path: README.md
+  - kind: file_diff
+    from: master
+    to: HEAD
+    path: src/auth/login.ts
 ```
 
-Note: Git history is currently **derived from git at generation time** (based on `source_branch`/`target_branch`) and is not persisted in `session.yaml`.
+Note: Git history and `git_context` items are **derived from git at generation/export time**; `session.yaml` stores configuration (refs/paths), not the full diff blobs.
 
 ## Use Cases
 

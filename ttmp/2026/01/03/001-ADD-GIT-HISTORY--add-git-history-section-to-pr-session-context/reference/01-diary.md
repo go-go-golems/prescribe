@@ -10,14 +10,26 @@ DocType: reference
 Intent: long-term
 Owners: []
 RelatedFiles:
+    - Path: README.md
+      Note: Document git_history and git_context usage
+    - Path: cmd/prescribe/cmds/context/git.go
+      Note: context git command tree
     - Path: internal/api/prompt.go
       Note: Confirms .commits currently empty
     - Path: internal/controller/controller.go
-      Note: Where generation request is assembled
+      Note: |-
+        Where generation request is assembled
+        Conditionally inject and materialize git context
+    - Path: internal/domain/domain.go
+      Note: Add git_history/git_context domain types
+    - Path: internal/git/context_items.go
+      Note: Git materialization + truncation
     - Path: internal/git/git.go
       Note: Commit history extraction and formatting
     - Path: internal/prompts/assets/create-pull-request.yaml
       Note: Prompt contract for commit history
+    - Path: internal/session/session.go
+      Note: Persist git_history/git_context schema
     - Path: test-scripts/test-all.sh
       Note: Updated smoke suite to assert git history presence
     - Path: test/test-cli.sh
@@ -28,6 +40,7 @@ LastUpdated: 2026-01-03T16:00:33.996872013-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -199,3 +212,131 @@ This step implemented a minimal end-to-end “Git history section” that flows 
   - `internal/api/prompt.go` (`buildTemplateVars` mapping `.commits`)
   - `internal/export/context.go` (Git history formatting)
   - `test-scripts/` and `test/` (smoke coverage)
+
+## Step 5: Design explicit session.yaml controls + `context git` verbs
+
+This step focuses on making Git history inclusion *session-configurable* rather than implicitly always-on. The current implementation derives and injects a default history snippet at request-build time, which is convenient but not controllable or shareable as a session template. The outcome is a design for a `git_history:` block in `session.yaml` and a proposed `prescribe context git history ...` command group to mutate that config.
+
+**Commit (code):** N/A
+
+### What I did
+- Audited how `session.yaml` is serialized (`internal/session/session.go`) and how CLI `context` subcommands mutate and save sessions (`cmd/prescribe/cmds/context/add.go` + controller save/load).
+- Drafted a `git_history:` schema and a `context git history` verb set (show/enable/disable/set) in a design doc.
+
+### Why
+- Git history can be token-expensive and noisy; teams want deterministic control (commit count, merge handling) and the ability to share those settings via committed sessions.
+
+### What worked
+- There is a clean extension point: representing git history as a derived source controlled by session config and injected by `BuildGenerateDescriptionRequest()` keeps export/token-count/prompt mapping consistent.
+
+### What didn't work
+- N/A (design-only step)
+
+### What I learned
+- The current session schema has no “derived context sources” concept; adding one likely requires a top-level config block rather than overloading the `context:` list with large stored content.
+
+### What was tricky to build
+- Preserving backwards-compatible behavior for existing sessions: deciding whether “missing git_history” implies enabled defaults or disabled.
+
+### What warrants a second pair of eyes
+- CLI UX naming and scope: should this live under `prescribe context git ...` (discoverable) or under `prescribe session ...` (more “config-y”)?
+
+### What should be done in the future
+- Implement the proposed schema + commands, then add smoke coverage asserting that disabling history removes the `BEGIN COMMITS` block in `--export-rendered`.
+
+### Code review instructions
+- Read `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/01-session-git-history-config-and-context-git-verbs.md`.
+
+## Step 6: Extend the design to support adding specific commits and diffs
+
+This step expands the “git context” concept beyond history summaries. The key insight is that users often need to attach *specific* git artifacts (a particular commit, commit patch, file-at-ref snapshot, or a file diff) as explicit context. These should be persisted as a reference-based `git_context:` list in `session.yaml`, and managed via `prescribe context git ...` verbs, rather than being stored as large literal blobs.
+
+**Commit (code):** N/A
+
+### What I did
+- Designed a `git_context:` session list schema to represent explicit git-derived items without storing the derived content.
+- Proposed CLI verbs for adding/removing/listing items, including file-scoped and commit-scoped diff options.
+- Added token-budget guidance and truncation expectations for patch/diff items.
+
+### Why
+- History summaries are not enough when the review narrative depends on a particular intermediate commit or when only one file’s evolution matters.
+- Persisting “refs + paths” keeps sessions small, stable, and reviewable.
+
+### What worked
+- The existing architecture already supports derived injection at request-build time; `git_context` can follow the same pattern as `git_history`.
+
+### What didn't work
+- N/A (design-only step)
+
+### What I learned
+- Trying to represent commit/file diffs as regular `context:` items would quickly bloat `session.yaml` and become stale; a dedicated derived schema is the right abstraction.
+
+### What was tricky to build
+- Avoiding prompt contract churn: the design keeps `.commits` for history, and treats explicit items as strongly delimited “Additional Context” (or optionally appended to `.diff` when appropriate).
+
+### What warrants a second pair of eyes
+- UX shape of the verbs (naming + argument order) and whether we should support path filtering and patch truncation in the first iteration.
+
+### What should be done in the future
+- Implement `git_context` end-to-end (schema, controller injection, CLI verbs) and add smoke tests verifying a commit/file-diff item appears in exports.
+
+### Code review instructions
+- Start in `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/01-session-git-history-config-and-context-git-verbs.md` (section “Explicit git-derived context items”).
+
+## Step 7: Implement session-controlled git history + explicit git context items
+
+This step turns the design into working code: `git_history:` and `git_context:` are now first-class session schema elements, with CLI verbs to mutate them and controller plumbing to materialize them into the generation request. The result is that commit history is no longer “always-on implicit”; it’s explicitly controllable per session, and you can also attach specific git artifacts (commit metadata, commit patches, file-at-ref, file diffs) as additional context without storing huge blobs in YAML.
+
+The implementation keeps the existing prompt contract stable: `.commits` still represents derived history, while explicit git artifacts appear as strongly-delimited additional context items with distinct context types so exports and token counting can reason about them cleanly.
+
+**Commit (code):** 53272bb — "Context: session git history + git context items"
+
+### What I did
+- Extended domain/session schema:
+  - added `git_history:` config (enabled/max_commits/include_merges/first_parent/include_numstat)
+  - added `git_context:` list (kind + refs/paths only; no embedded diff blobs)
+- Added CLI verbs:
+  - `prescribe context git history show|enable|disable|set`
+  - `prescribe context git add ...`, `list`, `remove`, `clear`
+- Updated request building:
+  - conditional git history injection based on session config (compat: missing block => enabled defaults)
+  - materialized `git_context` items at generation time with strong delimiters and truncation markers
+- Updated prompt/export/token-count:
+  - mapped explicit git context items into `.context` so they show up under “Additional Context”
+  - exported git items with stable CDATA payloads in XML export
+  - token-count now reports derived git items in the same pass as derived history
+- Updated smoke scripts to assert:
+  - disabling history removes `BEGIN COMMITS`
+  - a configured `git_context` commit item appears in export output
+
+### Why
+- Git history is useful but can be noisy/token-expensive; session-level control makes the behavior deterministic and shareable.
+- “Refs + paths” keeps `session.yaml` small and reviewable while still allowing deterministic regeneration of diffs/patches at export/generate time.
+
+### What worked
+- `GOWORK=off go test ./...` passes.
+- `test-scripts/test-cli.sh` and `test-scripts/test-all.sh` pass with the new disable + git_context assertions.
+
+### What didn't work
+- Pre-commit lint initially failed under `go.work` due to a go version mismatch; commit/test workflows need `GOWORK=off` for module-only builds.
+- The `exhaustive` linter required adding explicit switch cases for the new `ContextType` values in fallback/export formatters, even when the value is logically excluded by an upstream filter.
+
+### What I learned
+- `pflag`’s `Changed` bit is critical for config setters: it allows “set true/false” updates without accidentally overwriting fields that the user didn’t touch.
+
+### What was tricky to build
+- Truncation semantics: caps need to be applied to the large diff bodies while keeping the outer delimiters intact so exports remain parseable and reviewers can see what was truncated.
+
+### What warrants a second pair of eyes
+- The default caps for `git_context` diff/patch items (bytes/tokens) and whether the truncation marker format should be standardized across other exporters.
+- Whether `commit_patch` should default to include commit metadata (currently patch is diff-only; metadata is a separate item).
+
+### What should be done in the future
+- Consider adding per-item config knobs (e.g., include_numstat on commit items, patch caps, and diff formatting options) if users need finer-grained control. N/A if current UX is sufficient.
+
+### Code review instructions
+- Start in `internal/session/session.go` (schema) and `cmd/prescribe/cmds/context/git.go` (CLI verbs), then follow:
+  - `internal/controller/controller.go` (request materialization)
+  - `internal/git/context_items.go` (git plumbing + truncation)
+  - `internal/api/prompt.go` + `internal/export/context.go` (render/export behavior)
+  - `test-scripts/test-cli.sh` (smoke coverage)
