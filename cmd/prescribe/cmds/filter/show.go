@@ -14,9 +14,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ShowFilteredCmd is built by InitShowFilteredCmd() and registered by filter/filter.go.
-var ShowFilteredCmd *cobra.Command
-
 type FilterShowCommand struct {
 	*cmds.CommandDescription
 }
@@ -79,10 +76,10 @@ func (c *FilterShowCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func InitShowFilteredCmd() error {
+func NewShowCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterShowCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -92,9 +89,8 @@ func InitShowFilteredCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ShowFilteredCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

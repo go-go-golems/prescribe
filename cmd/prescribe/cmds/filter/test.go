@@ -17,17 +17,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func InitTestFilterCmd() error {
-	cmd, err := buildTestFilterCmd()
-	if err != nil {
-		return err
-	}
-	TestFilterCmd = cmd
-	return nil
-}
-
-var TestFilterCmd *cobra.Command
-
 const filterTestSlug = "filter-test"
 
 type FilterTestSettings struct {
@@ -174,7 +163,7 @@ func buildRules(exclude []string, include []string) []domain.FilterRule {
 	return rules
 }
 
-func buildTestFilterCmd() (*cobra.Command, error) {
+func NewTestCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterTestCommand()
 	if err != nil {
 		return nil, err
