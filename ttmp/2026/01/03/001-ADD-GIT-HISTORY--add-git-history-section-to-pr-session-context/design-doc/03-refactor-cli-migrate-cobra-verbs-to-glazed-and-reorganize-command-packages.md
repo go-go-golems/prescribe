@@ -78,12 +78,12 @@ Adopt a strict filesystem-to-CLI mapping:
 ```
 cmd/prescribe/cmds/
   <group>/
-    <verb>.go                         # if group has only a few flat verbs (optional)
-    root/
-      <verb>.go                       # if we want all verbs under a subgroup consistently
+    root.go                           # defines the group command and registers subcommands
     <subgroup>/
+      root.go                         # defines the subgroup command and registers subcommands
       <verb>.go
       <subgroup2>/
+        root.go
         <verb>.go
 ```
 
@@ -92,26 +92,25 @@ Interpretation of the user’s desired shape `cmd/prescribe/cmds/$GROUP/$GROUP2/
 - `$GROUP2` is the subgroup path (possibly multiple segments: `git/history`).
 - `$VERB.go` is the leaf command file (one verb per file).
 
-For verbs that are directly under a group, we standardize on:
-- `cmd/prescribe/cmds/<group>/root/<verb>.go`
-
-This keeps the rule consistent and avoids ambiguity about whether `cmd/prescribe/cmds/<group>/<verb>.go` is “a group file” or “a verb file”.
+For verbs directly under a group, place them next to the group’s `root.go`:
+- `cmd/prescribe/cmds/<group>/<verb>.go`
 
 ### 3) Package structure and registration
 
 Each directory becomes its own Go package to avoid giant files while keeping import structure simple.
 
-Example for `prescribe context git history show`:
-- `cmd/prescribe/cmds/context/context.go` (package `context`): defines `ContextCmd` and `Init()`.
-- `cmd/prescribe/cmds/context/git/git.go` (package `git`): defines `GitCmd` and `Init()`.
-- `cmd/prescribe/cmds/context/git/history/history.go` (package `history`): defines `HistoryCmd` and `Init()`.
-- `cmd/prescribe/cmds/context/git/history/show.go` (package `history`): defines `ShowCommand` + `InitShowCmd()` (Glazed).
+**Important update:** group files are *only* `root.go` and they do all command registration. We do **not** use `Init()` methods (or any `Init...()` registration helpers). The registration is done by constructing the cobra.Command tree directly in `root.go`.
 
-Registration flow (top-down):
-- root init calls `context.Init()` (as today).
-- `context.Init()` calls `git.Init()` and adds `git.GitCmd` as a subcommand.
-- `git.Init()` calls `history.Init()` and adds `history.HistoryCmd`.
-- `history.Init()` calls `InitShowCmd/InitEnableCmd/InitDisableCmd/InitSetCmd` and adds leaf commands.
+Example for `prescribe context git history show`:
+- `cmd/prescribe/cmds/context/root.go` (package `context`): defines `NewContextCmd()` and registers `add` + `git` subcommands.
+- `cmd/prescribe/cmds/context/git/root.go` (package `git`): defines `NewGitCmd()` and registers `list/remove/clear/add` + `history` subgroup.
+- `cmd/prescribe/cmds/context/git/history/root.go` (package `history`): defines `NewHistoryCmd()` and registers `show/enable/disable/set`.
+- `cmd/prescribe/cmds/context/git/history/show.go` (package `history`): defines the Glazed `show` verb and exports `NewShowCobraCommand()` (or similar) returning `*cobra.Command`.
+
+Registration flow (top-down, no Init methods):
+- `cmd/prescribe/cmds/root.go` calls constructors for top-level groups and attaches them:
+  - `rootCmd.AddCommand(context.NewContextCmd(...))`, `rootCmd.AddCommand(session.NewSessionCmd(...))`, etc.
+- each group’s `root.go` constructor registers its verbs/subgroups using `AddCommand(...)`.
 
 This makes it mechanically obvious where a verb lives and how it is wired.
 
@@ -140,11 +139,8 @@ We should add a minimal “command tree smoke” test:
 2) **Directory-per-subgroup, file-per-verb**
    - Rationale: mirrors the CLI structure; reduces large files; improves discoverability and review diffs.
 
-3) **Top-down `Init()` registration**
-   - Rationale: avoids init() ordering reliance; matches current `root.go` pattern.
-
-4) **Use `root/` as the canonical subgroup for “flat” verbs**
-   - Rationale: enforces the user-requested `$GROUP/$GROUP2/$VERB.go` shape consistently.
+3) **`root.go` owns registration (no `Init()` methods)**
+   - Rationale: keeps registration local to the package; avoids scattered init helpers and ordering reliance.
 
 ## Alternatives Considered
 
@@ -162,20 +158,25 @@ We should add a minimal “command tree smoke” test:
 1) **Document the mapping**
    - For each existing command, record its target path.
    - Example mapping targets:
-     - `context add` → `cmd/prescribe/cmds/context/root/add.go`
-     - `context git list` → `cmd/prescribe/cmds/context/git/root/list.go`
+     - `context add` → `cmd/prescribe/cmds/context/add.go`
+     - `context git list` → `cmd/prescribe/cmds/context/git/list.go`
      - `context git history show` → `cmd/prescribe/cmds/context/git/history/show.go`
      - `filter preset save` → `cmd/prescribe/cmds/filter/preset/save.go`
+     - Group root files:
+       - `cmd/prescribe/cmds/context/root.go`
+       - `cmd/prescribe/cmds/context/git/root.go`
+       - `cmd/prescribe/cmds/context/git/history/root.go`
 
 2) **Move nested `context git ...` from single Cobra file into subpackages**
    - Convert verbs to Glazed commands:
      - repo layer + args/flags as parameter layers
      - `Run()` uses `helpers.NewInitializedControllerFromParsedLayers`
      - load default session, mutate, save
+   - Replace `InitGitCmd` style code with `NewGitCmd()` in `root.go` files.
 
 3) **Restructure other groups**
    - Mechanical moves into the new directory layout.
-   - Keep group `Init()` functions and command variable names stable where possible.
+   - Replace group `Init()` functions with `New<Group>Cmd()` constructors in `root.go`.
 
 4) **Update root registration imports**
    - `cmd/prescribe/cmds/root.go` should import only top-level group packages (`context`, `filter`, `session`, `file`, `tokens`) as it does today.

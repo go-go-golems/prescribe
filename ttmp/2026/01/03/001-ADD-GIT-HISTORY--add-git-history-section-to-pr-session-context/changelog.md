@@ -120,3 +120,13 @@ Docs: design CLI refactor to Glazed-first command layout
 
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md — Plan to migrate remaining Cobra-only verbs and reorganize cmd layout
 
+
+## 2026-01-04
+
+Docs: refine Glazed-first CLI refactor (root.go registration; no Init methods)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md — Update registration plan to root.go ownership and remove Init pattern
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/reference/01-diary.md — Record Step 10 design update
+

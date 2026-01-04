@@ -437,3 +437,23 @@ The immediate motivation is that nested subcommand trees (like `context git hist
 
 ### Code review instructions
 - Read: `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md`
+
+## Step 10: Update CLI refactor design (root.go registration, no Init methods)
+
+This step updates the CLI refactor design based on an explicit constraint: group files are just `root.go`, and those files perform all subcommand registration. We should not use `Init()` methods (or `Init*Cmd` helper patterns) in the new structure.
+
+The practical impact is that command trees become self-contained constructors per package: `root.go` builds and wires the cobra.Command subtree by calling verb constructors and `AddCommand(...)` directly. This keeps registration code local and eliminates init ordering concerns.
+
+**Commit (code):** N/A (docs only)
+
+### What I did
+- Updated the CLI refactor design doc to:
+  - include `root.go` files at each group/subgroup level,
+  - remove the `Init()`-based registration plan,
+  - adjust example path mappings to match `root.go` ownership.
+
+### Why
+- The `Init()` pattern spreads registration logic across many files and depends on call ordering from parents; `root.go` ownership makes the CLI tree easier to reason about and less error-prone during refactors.
+
+### What warrants a second pair of eyes
+- Confirm whether leaf verb files should expose `New<Verb>CobraCommand()` (return `*cobra.Command`) or expose the Glazed command constructor and let `root.go` do `cli.BuildCobraCommand(...)` consistently.
