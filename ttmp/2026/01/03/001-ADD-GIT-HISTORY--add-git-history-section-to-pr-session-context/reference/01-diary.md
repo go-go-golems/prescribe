@@ -34,12 +34,17 @@ RelatedFiles:
       Note: Updated smoke suite to assert git history presence
     - Path: test/test-cli.sh
       Note: Export tests assert git_history and BEGIN COMMITS
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md
+      Note: Architecture snapshot for plugin refactor
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md
+      Note: Provider/registry design proposal
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-01-03T16:00:33.996872013-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -340,3 +345,51 @@ The implementation keeps the existing prompt contract stable: `.commits` still r
   - `internal/git/context_items.go` (git plumbing + truncation)
   - `internal/api/prompt.go` + `internal/export/context.go` (render/export behavior)
   - `test-scripts/test-cli.sh` (smoke coverage)
+
+## Step 8: Document current architecture + propose plugin-based context providers
+
+This step captures where `prescribe` is architecturally today (layers, critical seams, and current couplings) and turns that into a concrete proposal for evolving toward a plugin-style “context provider” system. The key goal is to make it easy to add new derived context sources (beyond git history/artifacts) without growing controller/export/prompt code into an unmaintainable set of hard-coded feature branches.
+
+The outcome is two ticket-scoped docs: an architecture snapshot and a design doc describing a provider interface + context-type registry, with an incremental migration plan that preserves existing behavior.
+
+**Commit (code):** N/A (docs only)
+
+### What I did
+- Wrote an architecture analysis explaining the current data flows and boundaries:
+  - domain/session/controller/api/export/cli responsibilities
+  - how “literal” vs “derived” context already behaves like a plugin concept
+- Wrote a design doc proposing:
+  - an internal (compile-time) provider interface run by the controller
+  - a registry that routes context types into prompt lanes + export renderers
+  - a migration plan that refactors existing git_history/git_context into providers first
+
+### Why
+- Derived context sources are multiplying; we need a stable extension surface that doesn’t require editing a half-dozen switches per new context type.
+- A provider pipeline keeps `BuildGenerateDescriptionRequest()` as the canonical “what we send” builder while modularizing “how additional context is derived”.
+
+### What worked
+- docmgr workflows for adding/relating docs are straightforward and keep the ticket index navigable.
+
+### What didn't work
+- N/A (documentation-only step)
+
+### What I learned
+- The system already has the critical seam needed for a plugin system: the canonical request builder (`BuildGenerateDescriptionRequest()`). The main missing piece is a registry to centralize routing decisions currently spread across prompt/export/token-count.
+
+### What was tricky to build
+- Keeping the “plugin” definition concrete: distinguishing an internal provider registry (practical) from runtime-dynamic plugins (operationally complex and likely unnecessary).
+
+### What warrants a second pair of eyes
+- Confirm the desired “plugin level” (in-tree providers only vs out-of-tree compile-time provider packs vs runtime loading).
+- Confirm whether provider output should ever be allowed to influence prompt variables beyond existing lanes (`.commits`, `.context`, `.diff`).
+
+### What should be done in the future
+- If we adopt this, open a dedicated refactor ticket:
+  - add provider interface + provider runner
+  - add context type registry
+  - port git_history/git_context to providers
+
+### Code review instructions
+- Read these docs:
+  - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md`
+  - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md`

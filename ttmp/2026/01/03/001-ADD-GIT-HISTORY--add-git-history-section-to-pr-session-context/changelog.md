@@ -96,3 +96,13 @@ Step 7: Implement session git_history + git_context controls (commit 53272bb)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/internal/session/session.go — Persist git_history and git_context in session.yaml
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-cli.sh — Smoke coverage for disabling history and explicit git_context items
 
+
+## 2026-01-04
+
+Docs: architecture analysis + plugin-based context provider design
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md — Document current architecture and modularization seams
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md — Propose provider/registry architecture and migration plan
+

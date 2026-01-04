@@ -21,17 +21,19 @@ RelatedFiles:
     - Path: internal/api/prompt.go
       Note: Maps git_history AdditionalContext to .commits prompt variable
     - Path: internal/controller/controller.go
-      Note: Injects git_history context item into GenerateDescriptionRequest
+      Note: Canonical request builder; conditionally injects git_history and materializes git_context into AdditionalContext
     - Path: internal/domain/domain.go
-      Note: Adds ContextTypeGitHistory constant
+      Note: Domain model for git_history config, git_context items, and git-derived ContextType values
     - Path: internal/export/context.go
       Note: Renders Git history section in export-context and export-rendered outputs
+    - Path: internal/git/context_items.go
+      Note: Git artifact context materialization helpers
     - Path: internal/git/git.go
       Note: Builds git commit history text via git log --numstat
     - Path: internal/prompts/assets/create-pull-request.yaml
       Note: Embedded prompt pack; defines the .commits variable contract
     - Path: internal/session/session.go
-      Note: Session YAML schema; only supports file/note context items today
+      Note: Session YAML schema including git_history config + git_context item list
     - Path: test-scripts/setup-test-repo.sh
       Note: Mock repo now creates multiple commits/authors for history coverage
     - Path: test-scripts/test-all.sh
@@ -44,12 +46,18 @@ RelatedFiles:
       Note: Full suite asserts git_history and BEGIN COMMITS
     - Path: test/test-cli.sh
       Note: Export context/rendered tests assert git_history and BEGIN COMMITS
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md
+      Note: Current architecture overview and modularization seams
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md
+      Note: Design for provider/registry plugin architecture
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-01-03T16:00:15.725599907-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
+
 
 
 
