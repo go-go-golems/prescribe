@@ -18,6 +18,12 @@ RelatedFiles:
       Note: `context git` registration (subgroup root.go) during CLI refactor
     - Path: cmd/prescribe/cmds/context/git/legacy.go
       Note: Temporary monolithic `context git` verbs kept for incremental split into per-verb packages
+    - Path: cmd/prescribe/cmds/context/git/list.go
+      Note: `context git list` split into one-verb file during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/remove.go
+      Note: `context git remove` split into one-verb file during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/clear.go
+      Note: `context git clear` split into one-verb file during CLI refactor
     - Path: cmd/prescribe/cmds/context/root.go
       Note: First group migrated to root.go registration
     - Path: internal/api/prompt.go
@@ -517,3 +523,24 @@ This is intentionally incremental. The verbs are still implemented in a temporar
 ### What should be done in the future
 - Split the leaf verbs into `list.go`, `remove.go`, `clear.go`.
 - Split `add` and `history` into their own subpackages (`add/root.go`, `history/root.go`), one file per verb, and convert the verbs to Glazed commands.
+
+## Step 13: Split `context git` leaf verbs into one-file-per-verb
+
+This step pulls the `list`, `remove`, and `clear` verbs out of the temporary monolithic file into `cmd/prescribe/cmds/context/git/{list,remove,clear}.go`. The goal is still mechanical: move code into the target layout without changing behavior, so subsequent commits can focus on converting the remaining verbs and splitting the `add` and `history` subtrees.
+
+**Commit (code):** c77b536 — "CLI: split context git list/remove/clear"
+
+### What I did
+- Moved `context git list/remove/clear` cobra command constructors into their own files.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Keeping the registration wiring in `git/root.go` unchanged while moving the implementations across files.
+
+### What warrants a second pair of eyes
+- Verify the new files don’t accidentally diverge in help text/flags, and that `git/legacy.go` no longer contains duplicate definitions.
+
+### What should be done in the future
+- Split `add` and `history` into subpackages and remove the remaining “legacy” file.

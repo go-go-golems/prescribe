@@ -151,3 +151,15 @@ Step 12: move context git into cmd/prescribe/cmds/context/git (commit f92d96f)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — New context git subgroup root.go (registration)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/root.go — Wire context git via new subpackage constructor
 
+
+## 2026-01-04
+
+Step 13: split context git leaf verbs into list/remove/clear files (commit c77b536)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/clear.go — New file for context git clear
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/legacy.go — Remove list/remove/clear implementations after split
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/list.go — New file for context git list
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/remove.go — New file for context git remove
+

@@ -77,9 +77,9 @@
 - [x] `cmd/prescribe/cmds/context/add.go` (BareCommand)
 - [ ] Split `context git` tree into subpackages:
 - [x] `cmd/prescribe/cmds/context/git/root.go` (registers `list/remove/clear/add/history`)
-  - [ ] `cmd/prescribe/cmds/context/git/list.go`
-  - [ ] `cmd/prescribe/cmds/context/git/remove.go`
-  - [ ] `cmd/prescribe/cmds/context/git/clear.go`
+- [x] `cmd/prescribe/cmds/context/git/list.go`
+- [x] `cmd/prescribe/cmds/context/git/remove.go`
+- [x] `cmd/prescribe/cmds/context/git/clear.go`
   - [ ] `cmd/prescribe/cmds/context/git/add/root.go`
   - [ ] `cmd/prescribe/cmds/context/git/add/commit.go`
   - [ ] `cmd/prescribe/cmds/context/git/add/commit_patch.go`
