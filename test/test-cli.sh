@@ -32,6 +32,47 @@ echo ""
 echo "✓ Help command works"
 echo ""
 
+echo "Test 1b: Help tree (subcommands visible)"
+echo "===================="
+
+OUT_HELP_ROOT="$($PRESCRIBE_BIN --help)"
+echo "$OUT_HELP_ROOT" | grep -Eq "\\bcontext\\b"
+echo "$OUT_HELP_ROOT" | grep -Eq "\\bfilter\\b"
+echo "$OUT_HELP_ROOT" | grep -Eq "\\bsession\\b"
+echo "$OUT_HELP_ROOT" | grep -Eq "\\bfile\\b"
+echo "$OUT_HELP_ROOT" | grep -Eq "\\btokens\\b"
+
+OUT_HELP_CONTEXT_GIT="$($PRESCRIBE_BIN context git --help)"
+echo "$OUT_HELP_CONTEXT_GIT" | grep -Eq "\\bhistory\\b"
+echo "$OUT_HELP_CONTEXT_GIT" | grep -Eq "\\badd\\b"
+echo "$OUT_HELP_CONTEXT_GIT" | grep -Eq "\\blist\\b"
+
+OUT_HELP_CONTEXT_GIT_HISTORY="$($PRESCRIBE_BIN context git history --help)"
+echo "$OUT_HELP_CONTEXT_GIT_HISTORY" | grep -Eq "\\bshow\\b"
+echo "$OUT_HELP_CONTEXT_GIT_HISTORY" | grep -Eq "\\benable\\b"
+echo "$OUT_HELP_CONTEXT_GIT_HISTORY" | grep -Eq "\\bdisable\\b"
+echo "$OUT_HELP_CONTEXT_GIT_HISTORY" | grep -Eq "\\bset\\b"
+
+OUT_HELP_FILTER_PRESET="$($PRESCRIBE_BIN filter preset --help)"
+echo "$OUT_HELP_FILTER_PRESET" | grep -Eq "\\blist\\b"
+echo "$OUT_HELP_FILTER_PRESET" | grep -Eq "\\bsave\\b"
+echo "$OUT_HELP_FILTER_PRESET" | grep -Eq "\\bapply\\b"
+
+OUT_HELP_SESSION="$($PRESCRIBE_BIN session --help)"
+echo "$OUT_HELP_SESSION" | grep -Eq "\\binit\\b"
+echo "$OUT_HELP_SESSION" | grep -Eq "\\bshow\\b"
+echo "$OUT_HELP_SESSION" | grep -Eq "\\btoken-count\\b"
+
+OUT_HELP_FILE="$($PRESCRIBE_BIN file --help)"
+echo "$OUT_HELP_FILE" | grep -Eq "\\btoggle\\b"
+
+OUT_HELP_TOKENS="$($PRESCRIBE_BIN tokens --help)"
+echo "$OUT_HELP_TOKENS" | grep -Eq "\\bcount-xml\\b"
+
+echo ""
+echo "✓ Help tree works"
+echo ""
+
 echo "Test 2: Show version"
 echo "===================="
 $PRESCRIBE_BIN --version
