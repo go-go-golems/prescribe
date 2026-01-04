@@ -25,10 +25,23 @@ func NewGitCmd() (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	listCmd, err := NewListCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	removeCmd, err := NewRemoveCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	clearCmd, err := NewClearCobraCommand()
+	if err != nil {
+		return nil, err
+	}
 	gitCmd.AddCommand(
-		newGitContextListCmd(),
-		newGitContextRemoveCmd(),
-		newGitContextClearCmd(),
+		listCmd,
+		removeCmd,
+		clearCmd,
 		addCmd,
 	)
 	return gitCmd, nil
