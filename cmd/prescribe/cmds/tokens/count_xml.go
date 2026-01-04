@@ -17,9 +17,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CountXMLCmd is built by InitCountXMLCmd() and registered by tokens/tokens.go.
-var CountXMLCmd *cobra.Command
-
 type CountXMLSettings struct {
 	File           string `glazed.parameter:"file"`
 	IncludePerFile bool   `glazed.parameter:"per-file"`
@@ -318,10 +315,10 @@ func (c *CountXMLCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func InitCountXMLCmd() error {
+func NewCountXMLCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewCountXMLCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -331,9 +328,8 @@ func InitCountXMLCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	CountXMLCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }
