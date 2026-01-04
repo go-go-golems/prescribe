@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var AddCmd *cobra.Command
-
 const contextAddSlug = "context-add"
 
 type ContextAddSettings struct {
@@ -138,10 +136,10 @@ func (c *ContextAddCommand) Run(ctx context.Context, parsedLayers *glazed_layers
 	return nil
 }
 
-func InitAddCmd() error {
+func NewAddCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewContextAddCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -151,9 +149,8 @@ func InitAddCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	AddCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

@@ -55,9 +55,6 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	if err := file.Init(); err != nil {
 		return errors.Wrap(err, "failed to init file commands")
 	}
-	if err := context.Init(); err != nil {
-		return errors.Wrap(err, "failed to init context commands")
-	}
 	if err := tokens.Init(); err != nil {
 		return errors.Wrap(err, "failed to init tokens commands")
 	}
@@ -75,8 +72,13 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.AddCommand(filter.FilterCmd)
 	rootCmd.AddCommand(session.SessionCmd)
 	rootCmd.AddCommand(file.FileCmd)
-	rootCmd.AddCommand(context.ContextCmd)
 	rootCmd.AddCommand(tokens.TokensCmd)
+
+	contextCmd, err := context.NewContextCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build context command")
+	}
+	rootCmd.AddCommand(contextCmd)
 
 	// Root-level commands (generate, create, tui)
 	rootCmd.AddCommand(generateCmd)

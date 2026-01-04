@@ -10,11 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GitCmd groups git-derived context commands (git history config + explicit git context items).
-var GitCmd *cobra.Command
-
-func InitGitCmd() error {
-	GitCmd = &cobra.Command{
+func NewGitCmd() (*cobra.Command, error) {
+	gitCmd := &cobra.Command{
 		Use:   "git",
 		Short: "Manage git-derived context",
 		Long:  "Manage git-derived context (history and explicit git artifacts) for the current session.",
@@ -33,14 +30,14 @@ func InitGitCmd() error {
 		newGitHistorySetCmd(),
 	)
 
-	GitCmd.AddCommand(historyCmd)
-	GitCmd.AddCommand(
+	gitCmd.AddCommand(historyCmd)
+	gitCmd.AddCommand(
 		newGitContextListCmd(),
 		newGitContextRemoveCmd(),
 		newGitContextClearCmd(),
 		newGitContextAddCmd(),
 	)
-	return nil
+	return gitCmd, nil
 }
 
 func effectiveGitHistoryConfig(data *domain.PRData) (domain.GitHistoryConfig, bool) {
