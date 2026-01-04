@@ -80,11 +80,11 @@
 - [x] `cmd/prescribe/cmds/context/git/list.go`
 - [x] `cmd/prescribe/cmds/context/git/remove.go`
 - [x] `cmd/prescribe/cmds/context/git/clear.go`
-  - [ ] `cmd/prescribe/cmds/context/git/add/root.go`
-  - [ ] `cmd/prescribe/cmds/context/git/add/commit.go`
-  - [ ] `cmd/prescribe/cmds/context/git/add/commit_patch.go`
-  - [ ] `cmd/prescribe/cmds/context/git/add/file_at.go`
-  - [ ] `cmd/prescribe/cmds/context/git/add/file_diff.go`
+- [x] `cmd/prescribe/cmds/context/git/add/root.go`
+- [x] `cmd/prescribe/cmds/context/git/add/commit.go`
+- [x] `cmd/prescribe/cmds/context/git/add/commit_patch.go`
+- [x] `cmd/prescribe/cmds/context/git/add/file_at.go`
+- [x] `cmd/prescribe/cmds/context/git/add/file_diff.go`
   - [ ] `cmd/prescribe/cmds/context/git/history/root.go`
   - [ ] `cmd/prescribe/cmds/context/git/history/show.go`
   - [ ] `cmd/prescribe/cmds/context/git/history/enable.go`

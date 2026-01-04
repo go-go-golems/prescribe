@@ -24,6 +24,16 @@ RelatedFiles:
       Note: `context git remove` split into one-verb file during CLI refactor
     - Path: cmd/prescribe/cmds/context/git/clear.go
       Note: `context git clear` split into one-verb file during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/add/root.go
+      Note: `context git add` subgroup root.go (registration) during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/add/commit.go
+      Note: `context git add commit` verb
+    - Path: cmd/prescribe/cmds/context/git/add/commit_patch.go
+      Note: `context git add commit-patch` verb
+    - Path: cmd/prescribe/cmds/context/git/add/file_at.go
+      Note: `context git add file-at` verb
+    - Path: cmd/prescribe/cmds/context/git/add/file_diff.go
+      Note: `context git add file-diff` verb
     - Path: cmd/prescribe/cmds/context/root.go
       Note: First group migrated to root.go registration
     - Path: internal/api/prompt.go
@@ -544,3 +554,25 @@ This step pulls the `list`, `remove`, and `clear` verbs out of the temporary mon
 
 ### What should be done in the future
 - Split `add` and `history` into subpackages and remove the remaining “legacy” file.
+
+## Step 14: Split `context git add` into a dedicated subgroup package
+
+This step moves the `context git add ...` subtree into `cmd/prescribe/cmds/context/git/add/` with its own `root.go` registration file and one file per verb. Behavior remains unchanged; the primary goal is to align with the refactor layout so the remaining `history` subtree can be extracted the same way and the temporary legacy file can be deleted.
+
+**Commit (code):** 01df25e — "CLI: split context git add subtree"
+
+### What I did
+- Created `cmd/prescribe/cmds/context/git/add/` with `root.go` and verb files (`commit`, `commit-patch`, `file-at`, `file-diff`).
+- Updated `cmd/prescribe/cmds/context/git/root.go` to register the subgroup via `add.NewAddCmd()`.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Preserving cobra flag behavior (`--path` repeatable, required flags) while moving the verbs across package boundaries.
+
+### What warrants a second pair of eyes
+- Confirm the `add` subgroup’s help/usage text still matches expectations (especially verb naming with hyphens) and that the registration order is acceptable.
+
+### What should be done in the future
+- Extract `context git history` into its own `history/` subgroup package and delete `git/legacy.go`.
