@@ -102,9 +102,9 @@
 
 ### Phase 4: Cleanup + Validation
 
-- [ ] Ensure `GOWORK=off go test ./...` passes after each group migration.
+- [x] Ensure `GOWORK=off go test ./...` passes after each group migration.
 - [ ] Run smoke scripts after major milestones:
-  - [ ] `bash test-scripts/test-cli.sh`
-  - [ ] `bash test-scripts/test-all.sh`
+- [x] `bash test-scripts/test-cli.sh`
+- [x] `bash test-scripts/test-all.sh`
 - [ ] Ensure no CLI behavior regressions (help text, flag names, default behavior).
 - [ ] Update README CLI layout references if any paths/usage changed.

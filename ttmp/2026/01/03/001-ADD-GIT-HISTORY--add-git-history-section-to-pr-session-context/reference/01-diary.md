@@ -675,3 +675,23 @@ This step converts the remaining `context git history` verbs to Glazed `BareComm
 
 ### What should be done in the future
 - Decide whether any `context git list` output should be promoted to a Glazed table output (GlazeCommand) once we want consistent `--output` support for listing commands.
+
+## Step 19: Run full smoke suite after `context git` Glazed migration
+
+This step is a validation checkpoint after completing the `context git` file split and Glazed conversion. The goal is to ensure there are no behavior regressions in the broader smoke flows that exercise sessions, filters, file toggles, additional context, and generation exports.
+
+**Commit (code):** N/A
+
+### What I did
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+  - `bash test-scripts/test-all.sh`
+- Checked tasks:
+  - `docmgr task check --ticket 001-ADD-GIT-HISTORY --id 75,77,78`
+
+### What worked
+- The full smoke suite passes with the refactored `context git` command tree and Glazed wrappers.
+
+### What warrants a second pair of eyes
+- N/A (validation-only step)
