@@ -14,10 +14,10 @@ RelatedFiles:
       Note: Document git_history and git_context usage
     - Path: cmd/prescribe/cmds/context/add.go
       Note: Constructor-based Glazed BareCommand wiring
-    - Path: cmd/prescribe/cmds/context/git.go
-      Note: |-
-        context git command tree
-        Temporary constructor wrapper before splitting into per-verb subpackages
+    - Path: cmd/prescribe/cmds/context/git/root.go
+      Note: `context git` registration (subgroup root.go) during CLI refactor
+    - Path: cmd/prescribe/cmds/context/git/legacy.go
+      Note: Temporary monolithic `context git` verbs kept for incremental split into per-verb packages
     - Path: cmd/prescribe/cmds/context/root.go
       Note: First group migrated to root.go registration
     - Path: internal/api/prompt.go
@@ -489,3 +489,31 @@ Behavior should remain identical: flags and outputs are unchanged, and smoke tes
 
 ### What warrants a second pair of eyes
 - Confirm that the constructor naming and error handling patterns (`NewXCmd` returning `(*cobra.Command, error)`) are acceptable as the standard for the broader refactor.
+
+## Step 12: Move `context git` into a dedicated subpackage
+
+This step begins the actual `context git ...` split by moving the git subtree into `cmd/prescribe/cmds/context/git/` and introducing a `root.go` group file. The immediate goal is mechanical: keep behavior identical while establishing the directory-per-subgroup layout that future verb splits can build on.
+
+This is intentionally incremental. The verbs are still implemented in a temporary “legacy” file so we can land the package move as a small diff before splitting one verb per file and converting the remaining Cobra-only handlers to Glazed.
+
+**Commit (code):** f92d96f — "CLI: move context git into subpackage"
+
+### What I did
+- Moved the `context git` cobra subtree into `cmd/prescribe/cmds/context/git/` and created `root.go` to own registration.
+- Updated `cmd/prescribe/cmds/context/root.go` to attach the git subtree via `git.NewGitCmd()` (no cross-package Init patterns).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### Why
+- Establish the target filesystem layout (`.../context/git/root.go`) before splitting verbs and subgroups, keeping each commit reviewable.
+
+### What was tricky to build
+- Avoiding import cycles while changing package boundaries and keeping the `context` group constructor simple.
+
+### What warrants a second pair of eyes
+- Confirm the new package boundary is the right one (`context/git` as its own package) and that there are no remaining references to the removed `cmd/prescribe/cmds/context/git.go`.
+
+### What should be done in the future
+- Split the leaf verbs into `list.go`, `remove.go`, `clear.go`.
+- Split `add` and `history` into their own subpackages (`add/root.go`, `history/root.go`), one file per verb, and convert the verbs to Glazed commands.

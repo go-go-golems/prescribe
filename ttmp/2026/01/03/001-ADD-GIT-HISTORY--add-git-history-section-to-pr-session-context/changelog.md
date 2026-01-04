@@ -140,3 +140,14 @@ Step 11: Start CLI refactor — context group uses constructors (commit eeab311)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/root.go — New context group root.go registration (no Init)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Root now attaches context via NewContextCmd
 
+
+## 2026-01-04
+
+Step 12: move context git into cmd/prescribe/cmds/context/git (commit f92d96f)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/legacy.go — Temporary landing spot for existing verbs before per-verb split
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — New context git subgroup root.go (registration)
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/root.go — Wire context git via new subpackage constructor
+

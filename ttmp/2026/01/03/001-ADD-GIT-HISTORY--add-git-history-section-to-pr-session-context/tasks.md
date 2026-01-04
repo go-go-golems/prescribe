@@ -76,7 +76,7 @@
 - [x] `cmd/prescribe/cmds/context/root.go` (registers `add`, `git`)
 - [x] `cmd/prescribe/cmds/context/add.go` (BareCommand)
 - [ ] Split `context git` tree into subpackages:
-  - [ ] `cmd/prescribe/cmds/context/git/root.go` (registers `list/remove/clear/add/history`)
+- [x] `cmd/prescribe/cmds/context/git/root.go` (registers `list/remove/clear/add/history`)
   - [ ] `cmd/prescribe/cmds/context/git/list.go`
   - [ ] `cmd/prescribe/cmds/context/git/remove.go`
   - [ ] `cmd/prescribe/cmds/context/git/clear.go`
@@ -91,7 +91,7 @@
   - [ ] `cmd/prescribe/cmds/context/git/history/disable.go`
   - [ ] `cmd/prescribe/cmds/context/git/history/set.go`
 - [ ] Ensure all `context` verbs are Glazed commands (BareCommand unless/where we deliberately return rows).
-- [ ] Remove old `cmd/prescribe/cmds/context/context.go` and monolithic `cmd/prescribe/cmds/context/git.go`.
+- [x] Remove old `cmd/prescribe/cmds/context/context.go` and monolithic `cmd/prescribe/cmds/context/git.go`.
 
 ### Phase 3: Other groups
 
