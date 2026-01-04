@@ -32,6 +32,8 @@ RelatedFiles:
       Note: `filter preset` subgroup root.go registration (no Init)
     - Path: cmd/prescribe/cmds/session/root.go
       Note: `session` group migrated to root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/file/root.go
+      Note: `file` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/root.go
       Note: Root command wiring; attaches group constructors
     - Path: cmd/prescribe/cmds/context/git/list.go
@@ -752,3 +754,17 @@ This step migrates the `session` command group to constructor-based registration
 
 ### What warrants a second pair of eyes
 - Confirm `session token-count` and `session show` table outputs are unchanged after the constructor refactor.
+
+## Step 22: Migrate `file` group to root.go registration (no Init)
+
+This step migrates the small `file` command group (currently just `file toggle`) to constructor-based registration and removes the remaining `Init()`/global command pattern in the file subtree.
+
+**Commit (code):** 2a9d8d8 — "CLI: file command without Init()"
+
+### What I did
+- Added `cmd/prescribe/cmds/file/root.go` (`NewFileCmd`) and removed `cmd/prescribe/cmds/file/file.go` (`Init()` + globals).
+- Updated `cmd/prescribe/cmds/file/toggle.go` to export a Cobra constructor and removed the global `ToggleFileCmd`.
+- Updated `cmd/prescribe/cmds/root.go` to attach the file group via `file.NewFileCmd()` (removing the `file.Init()` call path).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`

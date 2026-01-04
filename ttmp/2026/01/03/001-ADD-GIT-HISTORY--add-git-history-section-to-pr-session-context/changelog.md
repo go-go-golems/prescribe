@@ -264,3 +264,13 @@ Step 21: migrate session group to root.go registration (commit c1cb156)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire session group via constructor
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/session/root.go — New session group root.go registration
 
+
+## 2026-01-04
+
+Step 22: migrate file group to root.go registration (commit 2a9d8d8)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/file/root.go — New file group root.go registration
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire file group via constructor
+
