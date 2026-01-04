@@ -64,7 +64,7 @@ Use the “Build Your First Glazed Command” patterns (`glaze help build-first-
 
 Command types:
 - **GlazeCommand** (`RunIntoGlazeProcessor`) for commands that output rows (list/show/token-count/etc).
-- **BareCommand** (`Run`) for commands that perform actions and print human output (init/save/toggle/add/etc).
+- **BareCommand** (`Run`) for commands with non-table output (init/save/toggle/add/etc).
 
 Even for “plain text” verbs, keeping the Glazed wrapper gives a consistent place to:
 - define flags using `parameters.NewParameterDefinition` or `schema.NewSection`,

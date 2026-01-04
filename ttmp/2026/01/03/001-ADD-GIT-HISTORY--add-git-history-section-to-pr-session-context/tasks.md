@@ -45,3 +45,66 @@
 
 - [x] Update `README.md` session format example to include `git_history:` and `git_context:` (after implementation)
 - [x] Add `README.md` usage examples for `prescribe context git history ...` and `prescribe context git add ...`
+
+## Next: CLI Refactor (Glazed-first, root.go registration)
+
+### Design + Prep
+
+- [ ] Confirm command type rule: use Glazed `BareCommand` for non-table output; use `GlazeCommand` for tabular/structured output.
+- [ ] Finalize target directory layout (`cmd/prescribe/cmds/<group>/<subgroup...>/root.go` + one file per verb).
+- [ ] Enumerate current commands → target file paths (mapping table in design doc).
+- [ ] Decide standard “leaf constructor” naming: `New<Verb>CobraCommand()` returning `*cobra.Command`.
+- [ ] Add/extend smoke test that walks `prescribe --help` and key subgroup `--help` outputs (tree visibility).
+
+### Phase 1: Root wiring (no Init methods)
+
+- [x] Migrate `cmd/prescribe/cmds/root.go` to use group constructors (no `Init()` pattern); keep behavior identical.
+- [ ] For each group, replace `Init()` with `New<Group>Cmd()` in `<group>/root.go` and update root imports:
+- [x] `context`
+  - [ ] `filter`
+  - [ ] `session`
+  - [ ] `file`
+  - [ ] `tokens`
+- [ ] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
+  - [ ] `generate`
+  - [ ] `create`
+  - [ ] `tui`
+
+### Phase 2: Context group (split subtrees, one file per verb)
+
+- [x] Replace `cmd/prescribe/cmds/context/*.go` with:
+- [x] `cmd/prescribe/cmds/context/root.go` (registers `add`, `git`)
+- [x] `cmd/prescribe/cmds/context/add.go` (BareCommand)
+- [ ] Split `context git` tree into subpackages:
+  - [ ] `cmd/prescribe/cmds/context/git/root.go` (registers `list/remove/clear/add/history`)
+  - [ ] `cmd/prescribe/cmds/context/git/list.go`
+  - [ ] `cmd/prescribe/cmds/context/git/remove.go`
+  - [ ] `cmd/prescribe/cmds/context/git/clear.go`
+  - [ ] `cmd/prescribe/cmds/context/git/add/root.go`
+  - [ ] `cmd/prescribe/cmds/context/git/add/commit.go`
+  - [ ] `cmd/prescribe/cmds/context/git/add/commit_patch.go`
+  - [ ] `cmd/prescribe/cmds/context/git/add/file_at.go`
+  - [ ] `cmd/prescribe/cmds/context/git/add/file_diff.go`
+  - [ ] `cmd/prescribe/cmds/context/git/history/root.go`
+  - [ ] `cmd/prescribe/cmds/context/git/history/show.go`
+  - [ ] `cmd/prescribe/cmds/context/git/history/enable.go`
+  - [ ] `cmd/prescribe/cmds/context/git/history/disable.go`
+  - [ ] `cmd/prescribe/cmds/context/git/history/set.go`
+- [ ] Ensure all `context` verbs are Glazed commands (BareCommand unless/where we deliberately return rows).
+- [ ] Remove old `cmd/prescribe/cmds/context/context.go` and monolithic `cmd/prescribe/cmds/context/git.go`.
+
+### Phase 3: Other groups
+
+- [ ] Migrate `filter` group to directory-per-subgroup (including `preset` subtree) with one file per verb.
+- [ ] Migrate `session` group to one file per verb and root.go registration.
+- [ ] Migrate `file` group to one file per verb and root.go registration.
+- [ ] Migrate `tokens` group to one file per verb and root.go registration.
+
+### Phase 4: Cleanup + Validation
+
+- [ ] Ensure `GOWORK=off go test ./...` passes after each group migration.
+- [ ] Run smoke scripts after major milestones:
+  - [ ] `bash test-scripts/test-cli.sh`
+  - [ ] `bash test-scripts/test-all.sh`
+- [ ] Ensure no CLI behavior regressions (help text, flag names, default behavior).
+- [ ] Update README CLI layout references if any paths/usage changed.

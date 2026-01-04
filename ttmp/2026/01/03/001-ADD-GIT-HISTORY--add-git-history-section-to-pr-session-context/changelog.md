@@ -130,3 +130,13 @@ Docs: refine Glazed-first CLI refactor (root.go registration; no Init methods)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md — Update registration plan to root.go ownership and remove Init pattern
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/reference/01-diary.md — Record Step 10 design update
 
+
+## 2026-01-04
+
+Step 11: Start CLI refactor — context group uses constructors (commit eeab311)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/root.go — New context group root.go registration (no Init)
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Root now attaches context via NewContextCmd
+

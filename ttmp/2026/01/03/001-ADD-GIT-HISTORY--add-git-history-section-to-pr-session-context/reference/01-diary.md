@@ -12,8 +12,14 @@ Owners: []
 RelatedFiles:
     - Path: README.md
       Note: Document git_history and git_context usage
+    - Path: cmd/prescribe/cmds/context/add.go
+      Note: Constructor-based Glazed BareCommand wiring
     - Path: cmd/prescribe/cmds/context/git.go
-      Note: context git command tree
+      Note: |-
+        context git command tree
+        Temporary constructor wrapper before splitting into per-verb subpackages
+    - Path: cmd/prescribe/cmds/context/root.go
+      Note: First group migrated to root.go registration
     - Path: internal/api/prompt.go
       Note: Confirms .commits currently empty
     - Path: internal/controller/controller.go
@@ -46,6 +52,7 @@ LastUpdated: 2026-01-03T16:00:33.996872013-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -457,3 +464,28 @@ The practical impact is that command trees become self-contained constructors pe
 
 ### What warrants a second pair of eyes
 - Confirm whether leaf verb files should expose `New<Verb>CobraCommand()` (return `*cobra.Command`) or expose the Glazed command constructor and let `root.go` do `cli.BuildCobraCommand(...)` consistently.
+
+## Step 11: Start CLI refactor — remove Init() from `context` group
+
+This step begins the CLI refactor implementation by migrating the `context` group to constructor-based registration (no `Init()` method, no package-level `*Cmd` globals). The intent is to make the command tree wiring local to group `root.go` files, which is the prerequisite for later splitting `context git ...` into one-file-per-verb subpackages and converting all remaining Cobra-only handlers into Glazed commands.
+
+Behavior should remain identical: flags and outputs are unchanged, and smoke tests still pass.
+
+**Commit (code):** eeab311 — "CLI: context command without Init()"
+
+### What I did
+- Removed `cmd/prescribe/cmds/context/context.go` and replaced it with `cmd/prescribe/cmds/context/root.go` (`NewContextCmd()` registers subcommands).
+- Refactored `cmd/prescribe/cmds/context/add.go` to export a constructor (`NewAddCobraCommand`) instead of `InitAddCmd` + `AddCmd` global.
+- Refactored `cmd/prescribe/cmds/context/git.go` to export a constructor (`NewGitCmd`) instead of `InitGitCmd` + `GitCmd` global.
+- Updated `cmd/prescribe/cmds/root.go` to add the context group via `context.NewContextCmd()` (stopping the `context.Init()` call path).
+
+### Why
+- Establish the “root.go owns registration” invariant in real code, starting with a small/contained group.
+- Reduce implicit init ordering and global mutable command vars, making the CLI tree easier to restructure safely.
+
+### What worked
+- `GOWORK=off go test ./...` passes.
+- `bash test-scripts/test-cli.sh` passes after the change.
+
+### What warrants a second pair of eyes
+- Confirm that the constructor naming and error handling patterns (`NewXCmd` returning `(*cobra.Command, error)`) are acceptable as the standard for the broader refactor.
