@@ -2,6 +2,7 @@ package git
 
 import (
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context/git/add"
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context/git/history"
 	"github.com/spf13/cobra"
 )
 
@@ -13,18 +14,10 @@ func NewGitCmd() (*cobra.Command, error) {
 		Long:  "Manage git-derived context (history and explicit git artifacts) for the current session.",
 	}
 
-	historyCmd := &cobra.Command{
-		Use:   "history",
-		Short: "Manage derived git history",
-		Long:  "Show and configure derived git history inclusion for generation (stored in session.yaml).",
+	historyCmd, err := history.NewHistoryCmd()
+	if err != nil {
+		return nil, err
 	}
-
-	historyCmd.AddCommand(
-		newGitHistoryShowCmd(),
-		newGitHistoryEnableCmd(true),
-		newGitHistoryEnableCmd(false),
-		newGitHistorySetCmd(),
-	)
 
 	gitCmd.AddCommand(historyCmd)
 
