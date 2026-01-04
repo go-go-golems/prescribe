@@ -66,9 +66,9 @@
 - [x] `file`
 - [x] `tokens`
 - [ ] For root-level verbs, decide whether they live under `cmd/prescribe/cmds/root/` subgroup or remain in `cmd/prescribe/cmds/` with constructors:
-  - [ ] `generate`
-  - [ ] `create`
-  - [ ] `tui`
+- [x] `generate`
+- [x] `create`
+- [x] `tui`
 
 ### Phase 2: Context group (split subtrees, one file per verb)
 

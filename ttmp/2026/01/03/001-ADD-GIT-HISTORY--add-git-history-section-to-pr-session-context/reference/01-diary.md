@@ -36,6 +36,12 @@ RelatedFiles:
       Note: `file` group migrated to root.go registration (no Init)
     - Path: cmd/prescribe/cmds/tokens/root.go
       Note: `tokens` group migrated to root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/generate.go
+      Note: Root-level `generate` verb (Glazed) constructor wiring
+    - Path: cmd/prescribe/cmds/create.go
+      Note: Root-level `create` verb (Glazed) constructor wiring
+    - Path: cmd/prescribe/cmds/tui.go
+      Note: Root-level `tui` verb (Glazed) constructor wiring
     - Path: cmd/prescribe/cmds/root.go
       Note: Root command wiring; attaches group constructors
     - Path: cmd/prescribe/cmds/context/git/list.go
@@ -784,3 +790,19 @@ This step migrates the `tokens` command group (`tokens count-xml`) to constructo
 - Ran:
   - `GOWORK=off go test ./...`
   - `bash test-scripts/test-cli.sh`
+
+## Step 24: Remove `Init*Cmd` globals for root-level verbs (`generate`, `create`, `tui`)
+
+This step removes the remaining `InitGenerateCmd/InitCreateCmd/InitTuiCmd` pattern and the associated package-level command variables for the root-level verbs. The command implementations remain Glazed-first; this is purely a constructor/wiring cleanup to match the new CLI refactor invariants.
+
+**Commit (code):** 3905d13 — "CLI: root verbs without Init()"
+
+### What I did
+- Replaced `InitGenerateCmd/InitCreateCmd/InitTuiCmd` with `NewGenerateCobraCommand/NewCreateCobraCommand/NewTuiCobraCommand`.
+- Updated `cmd/prescribe/cmds/root.go` to build and register these verbs via constructors (no globals).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-all.sh`
+
+### What warrants a second pair of eyes
+- Confirm the custom middleware chain for `generate` (profiles/config/env precedence) is unchanged after moving into a constructor-returning function.
