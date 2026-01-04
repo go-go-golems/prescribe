@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ToggleFileCmd *cobra.Command
-
 type FileToggleSettings struct {
 	Path string `glazed.parameter:"path"`
 }
@@ -119,10 +117,10 @@ func (c *FileToggleCommand) Run(ctx context.Context, parsedLayers *glazed_layers
 	return nil
 }
 
-func InitToggleFileCmd() error {
+func NewToggleCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFileToggleCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
@@ -131,9 +129,8 @@ func InitToggleFileCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ToggleFileCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

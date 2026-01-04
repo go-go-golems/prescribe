@@ -46,9 +46,6 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().StringP("target", "t", "", "Target branch (default: main or master)")
 
 	// Explicit initialization of subcommand trees (no init() ordering reliance).
-	if err := file.Init(); err != nil {
-		return errors.Wrap(err, "failed to init file commands")
-	}
 	if err := tokens.Init(); err != nil {
 		return errors.Wrap(err, "failed to init tokens commands")
 	}
@@ -75,7 +72,12 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	}
 	rootCmd.AddCommand(sessionCmd)
 
-	rootCmd.AddCommand(file.FileCmd)
+	fileCmd, err := file.NewFileCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build file command")
+	}
+	rootCmd.AddCommand(fileCmd)
+
 	rootCmd.AddCommand(tokens.TokensCmd)
 
 	contextCmd, err := context.NewContextCmd()
