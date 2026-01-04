@@ -848,3 +848,21 @@ I also sanity-checked the project `README.md` for any references to old CLI wiri
 
 ### What warrants a second pair of eyes
 - Confirm the mapping table stays aligned with any future CLI additions (new verbs/subgroups should update the table as part of the change).
+
+## Step 27: Close the ticket
+
+This step closes out the ticket formally now that all tasks are complete. The close operation updates the ticket metadata and appends a final changelog entry so the documentation state reflects completion.
+
+This is intentionally a docs-only bookkeeping step; no code changes were made.
+
+**Commit (docs):** e0e2251 — "Ticket: close 001-ADD-GIT-HISTORY"
+
+### What I did
+- Closed the ticket via:
+  - `docmgr ticket close --ticket 001-ADD-GIT-HISTORY --changelog-entry "Ticket closed (all tasks complete)"`
+- Committed the resulting updates to:
+  - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/index.md`
+  - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/changelog.md`
+
+### What warrants a second pair of eyes
+- N/A (bookkeeping-only step)
