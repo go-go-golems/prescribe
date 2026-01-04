@@ -1,6 +1,7 @@
 package git
 
 import (
+	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/context/git/add"
 	"github.com/spf13/cobra"
 )
 
@@ -26,11 +27,16 @@ func NewGitCmd() (*cobra.Command, error) {
 	)
 
 	gitCmd.AddCommand(historyCmd)
+
+	addCmd, err := add.NewAddCmd()
+	if err != nil {
+		return nil, err
+	}
 	gitCmd.AddCommand(
 		newGitContextListCmd(),
 		newGitContextRemoveCmd(),
 		newGitContextClearCmd(),
-		newGitContextAddCmd(),
+		addCmd,
 	)
 	return gitCmd, nil
 }
