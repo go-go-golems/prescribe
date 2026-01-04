@@ -18,9 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TokenCountCmd is built by InitTokenCountCmd() and registered by session/session.go.
-var TokenCountCmd *cobra.Command
-
 type SessionTokenCountSettings struct {
 	All             bool `glazed.parameter:"all"`
 	IncludeFiltered bool `glazed.parameter:"include-filtered"`
@@ -278,10 +275,10 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 	return gp.AddRow(ctx, summary)
 }
 
-func InitTokenCountCmd() error {
+func NewTokenCountCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionTokenCountCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -291,9 +288,8 @@ func InitTokenCountCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	TokenCountCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var SaveCmd *cobra.Command
-
 type SessionSaveSettings struct {
 	Path string `glazed.parameter:"path"`
 }
@@ -95,10 +93,10 @@ func (c *SessionSaveCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 	return nil
 }
 
-func InitSaveCmd() error {
+func NewSaveCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionSaveCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -108,9 +106,8 @@ func InitSaveCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	SaveCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }
