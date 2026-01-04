@@ -26,6 +26,12 @@ RelatedFiles:
       Note: `context git history disable` verb
     - Path: cmd/prescribe/cmds/context/git/history/set.go
       Note: `context git history set` verb
+    - Path: cmd/prescribe/cmds/filter/root.go
+      Note: `filter` group migrated to root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/filter/preset/root.go
+      Note: `filter preset` subgroup root.go registration (no Init)
+    - Path: cmd/prescribe/cmds/root.go
+      Note: Root command wiring; attaches group constructors
     - Path: cmd/prescribe/cmds/context/git/list.go
       Note: `context git list` split into one-verb file during CLI refactor
     - Path: cmd/prescribe/cmds/context/git/remove.go
@@ -695,3 +701,32 @@ This step is a validation checkpoint after completing the `context git` file spl
 
 ### What warrants a second pair of eyes
 - N/A (validation-only step)
+
+## Step 20: Migrate `filter` group to root.go registration (no Init)
+
+This step continues the Glazed-first CLI refactor by migrating the `filter` command group away from `Init()`/global command variables to constructor-based registration. It also moves the `filter preset` subtree into its own package to match the directory-per-subgroup layout.
+
+Behavior is intended to remain identical; this is primarily mechanical wiring and file layout work.
+
+**Commit (code):** 63a59bb — "CLI: filter command without Init()"
+
+### What I did
+- Added `cmd/prescribe/cmds/filter/root.go` (`NewFilterCmd`) and `cmd/prescribe/cmds/filter/preset/root.go` (`NewPresetCmd`) to own registration.
+- Converted `filter` verbs to constructor-returning Cobra commands (removing `Init*` and `var *cobra.Command` globals).
+- Converted `filter preset apply` to a Glazed `BareCommand` and moved preset verbs under `cmd/prescribe/cmds/filter/preset/`.
+- Updated `cmd/prescribe/cmds/root.go` to attach the filter group via `filter.NewFilterCmd()` (removing the `filter.Init()` call path).
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### Why
+- Keep the CLI tree wiring local to `root.go` files and eliminate init ordering/global mutation patterns as prerequisites for the broader refactor.
+
+### What was tricky to build
+- Making sure table-output commands (`filter list/show/test`, `filter preset list`) continue to register as `GlazeCommand` while the group wiring becomes constructor-based.
+
+### What warrants a second pair of eyes
+- Verify `filter preset apply` argument parsing and help output didn’t regress during the Glazed conversion (it moved from plain Cobra to Glazed layers).
+
+### What should be done in the future
+- Repeat the same migration for `session`, `file`, and `tokens` groups.

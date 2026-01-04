@@ -242,3 +242,15 @@ Step 19: run full smoke suite after context git Glazed migration
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/test-scripts/test-all.sh — Executed to validate end-to-end smoke behavior
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/tasks.md — Mark validation tasks complete
 
+
+## 2026-01-04
+
+Step 20: migrate filter group to root.go registration (commit 63a59bb)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/filter/preset/apply.go — Convert preset apply to Glazed BareCommand
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/filter/preset/root.go — New preset subgroup root.go registration
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/filter/root.go — New filter group root.go registration
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/root.go — Wire filter group via constructor
+
