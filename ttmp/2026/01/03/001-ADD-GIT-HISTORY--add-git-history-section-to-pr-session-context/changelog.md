@@ -205,3 +205,16 @@ Step 16: convert context git list/remove/clear to Glazed BareCommands (commit f8
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/remove.go — Glazed BareCommand wrapper
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/root.go — Register Glazed-built cobra verbs
 
+
+## 2026-01-04
+
+Step 17: convert context git add subtree to Glazed BareCommands (commit 8dedd7a)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/commit.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/commit_patch.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/file_at.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/file_diff.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/root.go — Register Glazed-built cobra verbs
+

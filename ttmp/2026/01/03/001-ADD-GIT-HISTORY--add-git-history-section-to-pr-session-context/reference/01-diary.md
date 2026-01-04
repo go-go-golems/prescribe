@@ -631,3 +631,24 @@ This step converts the `context git list/remove/clear` verbs from plain Cobra ha
 
 ### What should be done in the future
 - Convert the remaining `context git` verbs (`add ...` and `history ...`) to Glazed commands and then check off the “all context verbs are Glazed” task.
+
+## Step 17: Convert `context git add ...` verbs to Glazed BareCommands
+
+This step converts all `context git add` verbs (commit/commit-patch/file-at/file-diff) to Glazed `BareCommand` implementations. The CLI surface stays the same (including `--path` repetition and required flags), but the implementation now follows the Glazed-first command pattern and uses parsed layers for repo/target wiring.
+
+**Commit (code):** 8dedd7a — "CLI: glaze context git add subtree"
+
+### What I did
+- Implemented Glazed commands for each `add` verb and wired `add/root.go` to register the Glazed-built Cobra commands.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+
+### What was tricky to build
+- Translating the mixed “args + repeatable flag” patterns into Glazed layers while keeping behavior unchanged.
+
+### What warrants a second pair of eyes
+- Confirm the Glazed parsing matches Cobra’s previous required-flag/arg errors for `file-diff` and that `--path` remains repeatable for `commit-patch`.
+
+### What should be done in the future
+- Convert the `context git history ...` verbs to Glazed and then check off the “all context verbs are Glazed” task.
