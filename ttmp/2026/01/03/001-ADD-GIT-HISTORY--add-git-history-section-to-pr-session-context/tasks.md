@@ -90,7 +90,7 @@
 - [x] `cmd/prescribe/cmds/context/git/history/enable.go`
 - [x] `cmd/prescribe/cmds/context/git/history/disable.go`
 - [x] `cmd/prescribe/cmds/context/git/history/set.go`
-- [ ] Ensure all `context` verbs are Glazed commands (BareCommand unless/where we deliberately return rows).
+- [x] Ensure all `context` verbs are Glazed commands (BareCommand unless/where we deliberately return rows).
 - [x] Remove old `cmd/prescribe/cmds/context/context.go` and monolithic `cmd/prescribe/cmds/context/git.go`.
 
 ### Phase 3: Other groups

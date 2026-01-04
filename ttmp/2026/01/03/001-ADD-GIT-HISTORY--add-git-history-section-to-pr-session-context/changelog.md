@@ -218,3 +218,17 @@ Step 17: convert context git add subtree to Glazed BareCommands (commit 8dedd7a)
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/file_diff.go — Glazed BareCommand wrapper
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/add/root.go — Register Glazed-built cobra verbs
 
+
+## 2026-01-04
+
+Step 18: convert context git history verbs to Glazed and complete context migration (commit 1e8fb89)
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/disable.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/enable.go — Glazed BareCommand wrapper
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/helpers.go — Helper for effective config and set detection
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/root.go — Register Glazed-built history verbs
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/set.go — Glazed BareCommand wrapper with set-only semantics
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/cmd/prescribe/cmds/context/git/history/show.go — Glazed BareCommand wrapper
+

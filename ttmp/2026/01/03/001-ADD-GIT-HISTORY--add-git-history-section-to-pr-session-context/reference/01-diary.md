@@ -652,3 +652,26 @@ This step converts all `context git add` verbs (commit/commit-patch/file-at/file
 
 ### What should be done in the future
 - Convert the `context git history ...` verbs to Glazed and then check off the “all context verbs are Glazed” task.
+
+## Step 18: Convert `context git history ...` verbs to Glazed and close the `context` Glazed migration task
+
+This step converts the remaining `context git history` verbs to Glazed `BareCommand` implementations, using the same repo/target parsed-layer wiring as the other verbs. With `context add` already migrated earlier, this completes the “all context verbs are Glazed” milestone for the `context` group.
+
+**Commit (code):** 1e8fb89 — "CLI: glaze context git history subtree"
+
+### What I did
+- Reimplemented `history show/enable/disable/set` as Glazed commands and updated `history/root.go` to register Glazed-built Cobra commands.
+- Added lightweight “flag was set” detection for `history set` so we still only apply flags the user provides.
+- Ran:
+  - `GOWORK=off go test ./...`
+  - `bash test-scripts/test-cli.sh`
+- Checked task: `docmgr task check --ticket 001-ADD-GIT-HISTORY --id 69`
+
+### What was tricky to build
+- Preserving the “only apply provided flags” semantics of `history set` under Glazed parsing.
+
+### What warrants a second pair of eyes
+- Validate `history set` semantics carefully, especially cases like `--include-merges=false` and ensuring unset flags do not overwrite existing session.yaml config.
+
+### What should be done in the future
+- Decide whether any `context git list` output should be promoted to a Glazed table output (GlazeCommand) once we want consistent `--output` support for listing commands.
