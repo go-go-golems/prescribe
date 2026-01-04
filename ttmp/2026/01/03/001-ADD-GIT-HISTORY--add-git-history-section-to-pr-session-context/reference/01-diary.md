@@ -38,12 +38,15 @@ RelatedFiles:
       Note: Architecture snapshot for plugin refactor
     - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md
       Note: Provider/registry design proposal
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md
+      Note: CLI Glazed-first refactor proposal
 ExternalSources: []
 Summary: ""
 LastUpdated: 2026-01-03T16:00:33.996872013-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 
@@ -393,3 +396,44 @@ The outcome is two ticket-scoped docs: an architecture snapshot and a design doc
 - Read these docs:
   - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md`
   - `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md`
+
+## Step 9: Design CLI refactor to Glazed-first + directory-per-subgroup layout
+
+This step proposes a structural refactor of the CLI command tree to make it consistent and scalable: all verbs should be implemented using the Glazed command pattern (even “print-only” verbs), and command source files should live in a directory structure that mirrors the CLI hierarchy (one file per verb, directory per subgroup).
+
+The immediate motivation is that nested subcommand trees (like `context git history ...`) currently bundle multiple verbs in a single Cobra-only file, which makes it harder to extend and harder to test. Standardizing on Glazed construction and a filesystem layout that mirrors the CLI makes future work (new commands, new context providers) more mechanical and less error-prone.
+
+**Commit (code):** N/A (docs only)
+
+### What I did
+- Read the Glazed tutorial guidance (`glaze help build-first-command`) and extracted the key patterns used by Glazed commands (command descriptions, layers, and Cobra integration).
+- Drafted a design doc that:
+  - defines the target directory layout `cmd/prescribe/cmds/<group>/<subgroup...>/<verb>.go`,
+  - standardizes on Glazed wrappers for all verbs (BareCommand or GlazeCommand),
+  - proposes top-down `Init()` registration per group/subgroup,
+  - includes an incremental migration plan starting with `context git ...`.
+
+### Why
+- Consistency: a single pattern for flags/layers/middlewares makes commands easier to add and review.
+- Maintainability: directory-per-subgroup avoids “mega command files” and makes the CLI tree discoverable via filesystem browsing.
+
+### What worked
+- The repo already uses Glazed for most commands; the remaining Cobra-only areas are localized and good first targets.
+
+### What didn't work
+- The `glazed` binary name was not available in PATH; the correct command is `glaze` for reading help/tutorial docs.
+
+### What I learned
+- Glazed commands can stay “Cobra-native” at the edges (still a Cobra tree) while centralizing parameter handling and output formats in a single command implementation.
+
+### What was tricky to build
+- Designing the filesystem layout in a way that matches Go packaging constraints (directories imply packages) while keeping the root `cmds/root.go` imports stable.
+
+### What warrants a second pair of eyes
+- Confirm the final naming convention for the “root subgroup” folder (`root/` vs `default/`) and whether we require structured output flags on action commands.
+
+### What should be done in the future
+- Create a dedicated refactor ticket to implement the migration mechanically and keep it reviewable.
+
+### Code review instructions
+- Read: `ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md`

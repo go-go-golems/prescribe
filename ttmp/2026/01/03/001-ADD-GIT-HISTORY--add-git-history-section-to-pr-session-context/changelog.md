@@ -106,3 +106,17 @@ Docs: architecture analysis + plugin-based context provider design
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/analysis/02-architecture-current-structure-and-modularization-opportunities.md — Document current architecture and modularization seams
 - /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md — Propose provider/registry architecture and migration plan
 
+
+## 2026-01-04
+
+Closed during ticket hygiene cleanup: all tasks complete; implementation + docs landed. See 002-CLEANUP-OLD-TICKETS.
+
+
+## 2026-01-04
+
+Docs: design CLI refactor to Glazed-first command layout
+
+### Related Files
+
+- /home/manuel/workspaces/2026-01-03/add-git-history-prescribe/prescribe/ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md — Plan to migrate remaining Cobra-only verbs and reorganize cmd layout
+

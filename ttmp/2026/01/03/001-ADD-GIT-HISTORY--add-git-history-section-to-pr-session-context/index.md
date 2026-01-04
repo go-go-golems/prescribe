@@ -1,7 +1,7 @@
 ---
 Title: Add Git history section to PR session context
 Ticket: 001-ADD-GIT-HISTORY
-Status: active
+Status: complete
 Topics:
     - git
     - pr
@@ -50,12 +50,16 @@ RelatedFiles:
       Note: Current architecture overview and modularization seams
     - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/02-plugin-based-context-providers-proposed-architecture-and-migration-plan.md
       Note: Design for provider/registry plugin architecture
+    - Path: ttmp/2026/01/03/001-ADD-GIT-HISTORY--add-git-history-section-to-pr-session-context/design-doc/03-refactor-cli-migrate-cobra-verbs-to-glazed-and-reorganize-command-packages.md
+      Note: Design doc for Glazed-first CLI refactor and new cmd layout
 ExternalSources: []
 Summary: ""
-LastUpdated: 2026-01-03T16:00:15.725599907-05:00
+LastUpdated: 2026-01-04T15:56:35.580182328-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
+
 
 
 
