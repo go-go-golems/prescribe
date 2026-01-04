@@ -1,95 +1,164 @@
 package history
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
+	"github.com/go-go-golems/glazed/pkg/cli"
+	"github.com/go-go-golems/glazed/pkg/cmds"
+	"github.com/go-go-golems/glazed/pkg/cmds/fields"
+	glazed_layers "github.com/go-go-golems/glazed/pkg/cmds/layers"
+	"github.com/go-go-golems/glazed/pkg/cmds/schema"
 	"github.com/go-go-golems/prescribe/cmd/prescribe/cmds/helpers"
+	prescribe_layers "github.com/go-go-golems/prescribe/pkg/layers"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func newSetCmd() *cobra.Command {
-	var (
-		enabledStr        string
-		maxCommits        int
-		includeMerges     bool
-		firstParent       bool
-		includeNumstat    bool
-		includeMergesSet  bool
-		firstParentSet    bool
-		includeNumstatSet bool
-		maxCommitsSet     bool
+const historySetSlug = "context-git-history-set"
+
+type SetSettings struct {
+	EnabledStr     string `glazed.parameter:"enabled"`
+	MaxCommits     int    `glazed.parameter:"max-commits"`
+	IncludeMerges  bool   `glazed.parameter:"include-merges"`
+	FirstParent    bool   `glazed.parameter:"first-parent"`
+	IncludeNumstat bool   `glazed.parameter:"include-numstat"`
+}
+
+type SetCommand struct {
+	*cmds.CommandDescription
+}
+
+var _ cmds.BareCommand = &SetCommand{}
+
+func NewSetCommand() (*SetCommand, error) {
+	repoLayer, err := prescribe_layers.NewRepositoryLayer()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create repository layer")
+	}
+	repoLayerExisting, err := prescribe_layers.WrapAsExistingCobraFlagsLayer(repoLayer)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wrap repository layer as existing flags layer")
+	}
+
+	setLayer, err := schema.NewSection(
+		historySetSlug,
+		"Git History Set",
+		schema.WithFields(
+			fields.New(
+				"enabled",
+				fields.TypeString,
+				fields.WithDefault(""),
+				fields.WithHelp("Set enabled (true/false)"),
+			),
+			fields.New(
+				"max-commits",
+				fields.TypeInteger,
+				fields.WithDefault(0),
+				fields.WithHelp("Set max_commits (positive integer)"),
+			),
+			fields.New(
+				"include-merges",
+				fields.TypeBool,
+				fields.WithDefault(false),
+				fields.WithHelp("Set include_merges (true/false)"),
+			),
+			fields.New(
+				"first-parent",
+				fields.TypeBool,
+				fields.WithDefault(false),
+				fields.WithHelp("Set first_parent (true/false)"),
+			),
+			fields.New(
+				"include-numstat",
+				fields.TypeBool,
+				fields.WithDefault(false),
+				fields.WithHelp("Set include_numstat (true/false)"),
+			),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	cmdDesc := cmds.NewCommandDescription(
+		"set",
+		cmds.WithShort("Update git history config"),
+		cmds.WithLong("Update git history config fields in session.yaml (only provided flags are applied)."),
+		cmds.WithLayersList(repoLayerExisting, setLayer),
 	)
 
-	cmd := &cobra.Command{
-		Use:   "set",
-		Short: "Update git history config",
-		Long:  "Update git history config fields in session.yaml (only provided flags are applied).",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			ctrl, err := helpers.NewInitializedController(cmd)
-			if err != nil {
-				return err
-			}
-			helpers.LoadDefaultSessionIfExists(ctrl)
+	return &SetCommand{CommandDescription: cmdDesc}, nil
+}
 
-			data := ctrl.GetData()
-			cfg, _ := effectiveGitHistoryConfig(data)
+func (c *SetCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
+	_ = ctx
 
-			if cmd.Flags().Changed("enabled") {
-				v, err := strconv.ParseBool(enabledStr)
-				if err != nil {
-					return fmt.Errorf("invalid --enabled value %q (expected true/false)", enabledStr)
-				}
-				cfg.Enabled = v
-			}
-			if maxCommitsSet {
-				if maxCommits <= 0 {
-					return fmt.Errorf("--max-commits must be > 0 (got %d)", maxCommits)
-				}
-				cfg.MaxCommits = maxCommits
-			}
-			if includeMergesSet {
-				cfg.IncludeMerges = includeMerges
-			}
-			if firstParentSet {
-				cfg.FirstParent = firstParent
-			}
-			if includeNumstatSet {
-				cfg.IncludeNumstat = includeNumstat
-			}
-
-			data.GitHistory = &cfg
-
-			savePath := ctrl.GetDefaultSessionPath()
-			if err := ctrl.SaveSession(savePath); err != nil {
-				return err
-			}
-
-			fmt.Printf("Git history config updated\n")
-			fmt.Printf("Session saved: %s\n", savePath)
-			return nil
-		},
+	settings := &SetSettings{}
+	if err := parsedLayers.InitializeStruct(historySetSlug, settings); err != nil {
+		return errors.Wrap(err, "failed to initialize history set settings")
 	}
 
-	cmd.Flags().StringVar(&enabledStr, "enabled", "", "Set enabled (true/false)")
-	cmd.Flags().IntVar(&maxCommits, "max-commits", 0, "Set max_commits (positive integer)")
-	cmd.Flags().BoolVar(&includeMerges, "include-merges", false, "Set include_merges (true/false)")
-	cmd.Flags().BoolVar(&firstParent, "first-parent", false, "Set first_parent (true/false)")
-	cmd.Flags().BoolVar(&includeNumstat, "include-numstat", false, "Set include_numstat (true/false)")
+	ctrl, err := helpers.NewInitializedControllerFromParsedLayers(parsedLayers)
+	if err != nil {
+		return err
+	}
+	helpers.LoadDefaultSessionIfExists(ctrl)
 
-	cmd.Flags().Lookup("include-merges").NoOptDefVal = "true"
-	cmd.Flags().Lookup("first-parent").NoOptDefVal = "true"
-	cmd.Flags().Lookup("include-numstat").NoOptDefVal = "true"
+	data := ctrl.GetData()
+	cfg, _ := effectiveGitHistoryConfig(data)
 
-	cmd.Flags().Lookup("max-commits").NoOptDefVal = "30"
-
-	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
-		includeMergesSet = cmd.Flags().Changed("include-merges")
-		firstParentSet = cmd.Flags().Changed("first-parent")
-		includeNumstatSet = cmd.Flags().Changed("include-numstat")
-		maxCommitsSet = cmd.Flags().Changed("max-commits")
-		return nil
+	if parameterWasSet(parsedLayers, historySetSlug, "enabled") {
+		v, err := strconv.ParseBool(settings.EnabledStr)
+		if err != nil {
+			return fmt.Errorf("invalid --enabled value %q (expected true/false)", settings.EnabledStr)
+		}
+		cfg.Enabled = v
+	}
+	if parameterWasSet(parsedLayers, historySetSlug, "max-commits") {
+		if settings.MaxCommits <= 0 {
+			return fmt.Errorf("--max-commits must be > 0 (got %d)", settings.MaxCommits)
+		}
+		cfg.MaxCommits = settings.MaxCommits
+	}
+	if parameterWasSet(parsedLayers, historySetSlug, "include-merges") {
+		cfg.IncludeMerges = settings.IncludeMerges
+	}
+	if parameterWasSet(parsedLayers, historySetSlug, "first-parent") {
+		cfg.FirstParent = settings.FirstParent
+	}
+	if parameterWasSet(parsedLayers, historySetSlug, "include-numstat") {
+		cfg.IncludeNumstat = settings.IncludeNumstat
 	}
 
-	return cmd
+	data.GitHistory = &cfg
+
+	savePath := ctrl.GetDefaultSessionPath()
+	if err := ctrl.SaveSession(savePath); err != nil {
+		return err
+	}
+
+	fmt.Printf("Git history config updated\n")
+	fmt.Printf("Session saved: %s\n", savePath)
+	return nil
+}
+
+func NewSetCobraCommand() (*cobra.Command, error) {
+	glazedCmd, err := NewSetCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	cobraCmd, err := cli.BuildCobraCommand(
+		glazedCmd,
+		cli.WithParserConfig(cli.CobraParserConfig{
+			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
+		}),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return cobraCmd, nil
 }

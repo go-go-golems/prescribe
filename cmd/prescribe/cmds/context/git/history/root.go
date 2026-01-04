@@ -10,12 +10,24 @@ func NewHistoryCmd() (*cobra.Command, error) {
 		Long:  "Show and configure derived git history inclusion for generation (stored in session.yaml).",
 	}
 
-	cmd.AddCommand(
-		newShowCmd(),
-		newEnableCmd(),
-		newDisableCmd(),
-		newSetCmd(),
-	)
+	showCmd, err := NewShowCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	enableCmd, err := NewEnableCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	disableCmd, err := NewDisableCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+	setCmd, err := NewSetCobraCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd.AddCommand(showCmd, enableCmd, disableCmd, setCmd)
 
 	return cmd, nil
 }
