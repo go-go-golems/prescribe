@@ -1,4 +1,4 @@
-package filter
+package preset
 
 import (
 	"context"
@@ -16,23 +16,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var FilterPresetListCmd *cobra.Command
+const listSlug = "filter-preset-list"
 
-const filterPresetListSlug = "filter-preset-list"
-
-type FilterPresetListSettings struct {
+type ListSettings struct {
 	Project bool `glazed.parameter:"project"`
 	Global  bool `glazed.parameter:"global"`
 	All     bool `glazed.parameter:"all"`
 }
 
-type FilterPresetListCommand struct {
+type ListCommand struct {
 	*cmds.CommandDescription
 }
 
-var _ cmds.GlazeCommand = &FilterPresetListCommand{}
+var _ cmds.GlazeCommand = &ListCommand{}
 
-func NewFilterPresetListCommand() (*FilterPresetListCommand, error) {
+func NewListCommand() (*ListCommand, error) {
 	repoLayer, err := prescribe_layers.NewRepositoryLayer()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create repository layer")
@@ -43,7 +41,7 @@ func NewFilterPresetListCommand() (*FilterPresetListCommand, error) {
 	}
 
 	listLayer, err := schema.NewSection(
-		filterPresetListSlug,
+		listSlug,
 		"Filter Preset List",
 		schema.WithFields(
 			fields.New(
@@ -80,16 +78,16 @@ func NewFilterPresetListCommand() (*FilterPresetListCommand, error) {
 		),
 	)
 
-	return &FilterPresetListCommand{CommandDescription: cmdDesc}, nil
+	return &ListCommand{CommandDescription: cmdDesc}, nil
 }
 
-func (c *FilterPresetListCommand) RunIntoGlazeProcessor(
+func (c *ListCommand) RunIntoGlazeProcessor(
 	ctx context.Context,
 	parsedLayers *glazed_layers.ParsedLayers,
 	gp middlewares.Processor,
 ) error {
-	settings := &FilterPresetListSettings{}
-	if err := parsedLayers.InitializeStruct(filterPresetListSlug, settings); err != nil {
+	settings := &ListSettings{}
+	if err := parsedLayers.InitializeStruct(listSlug, settings); err != nil {
 		return errors.Wrap(err, "failed to initialize preset list settings")
 	}
 
@@ -102,7 +100,6 @@ func (c *FilterPresetListCommand) RunIntoGlazeProcessor(
 	wantGlobal := settings.Global
 	wantAll := settings.All
 
-	// Default behavior: if no scope flags are set, list all.
 	if !wantProject && !wantGlobal && !wantAll {
 		wantAll = true
 	}
@@ -190,20 +187,15 @@ func (c *FilterPresetListCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func InitFilterPresetListCmd() error {
-	glazedCmd, err := NewFilterPresetListCommand()
+func NewListCobraCommand() (*cobra.Command, error) {
+	glazedCmd, err := NewListCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	cobraCmd, err := cli.BuildCobraCommand(
+	return cli.BuildCobraCommand(
 		glazedCmd,
 		cli.WithParserConfig(cli.CobraParserConfig{
 			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
 		}),
 	)
-	if err != nil {
-		return err
-	}
-	FilterPresetListCmd = cobraCmd
-	return nil
 }

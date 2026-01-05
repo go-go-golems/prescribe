@@ -26,9 +26,9 @@ bash test-scripts/test-session-cli.sh
 
 # PR creation integration (safe: local git remote + fake gh)
 #
-# NOTE: `generate` still requires your AI profile/API keys. If you only want to test
-# create flows, set SKIP_GENERATE=1.
+# NOTE: The smoke scripts use `generate --export-context` / `--export-rendered` so they
+# don't require AI profiles/API keys. The PR creation integration test still requires
+# real AI step settings unless you set SKIP_GENERATE=1.
 bash test-scripts/08-integration-test-pr-creation.sh
 ```
-
 

@@ -16,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var RemoveFilterCmd *cobra.Command
-
 type FilterRemoveSettings struct {
 	IndexOrName string `glazed.parameter:"index-or-name"`
 }
@@ -133,10 +131,10 @@ func (c *FilterRemoveCommand) Run(ctx context.Context, parsedLayers *glazed_laye
 	return nil
 }
 
-func InitRemoveFilterCmd() error {
+func NewRemoveCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterRemoveCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
@@ -145,9 +143,7 @@ func InitRemoveFilterCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	RemoveFilterCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

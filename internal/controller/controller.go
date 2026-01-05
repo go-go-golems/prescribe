@@ -267,6 +267,71 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		}
 	}
 
+	additionalContext := append([]domain.ContextItem{}, c.data.AdditionalContext...)
+	if c.gitService != nil {
+		cfg := domain.DefaultGitHistoryConfig()
+		if c.data.GitHistory != nil {
+			cfg = *c.data.GitHistory
+		}
+		if cfg.Enabled {
+			history, err := c.gitService.BuildCommitHistoryText(c.data.TargetBranch, c.data.SourceBranch, cfg)
+			if err != nil {
+				return api.GenerateDescriptionRequest{}, err
+			}
+			if strings.TrimSpace(history) != "" {
+				additionalContext = append(additionalContext, domain.ContextItem{
+					Type:    domain.ContextTypeGitHistory,
+					Path:    fmt.Sprintf("%s..%s", c.data.TargetBranch, c.data.SourceBranch),
+					Content: history,
+					Tokens:  tokens.Count(history),
+				})
+			}
+		}
+	}
+	if c.gitService != nil && len(c.data.GitContext) > 0 {
+		for _, item := range c.data.GitContext {
+			var (
+				ctxType domain.ContextType
+				path    string
+				content string
+				err     error
+			)
+
+			switch item.Kind {
+			case domain.GitContextItemKindCommit:
+				ctxType = domain.ContextTypeGitCommit
+				path = fmt.Sprintf("commit:%s", item.Ref)
+				content, err = c.gitService.BuildCommitMetadataContext(item.Ref, false)
+			case domain.GitContextItemKindCommitPatch:
+				ctxType = domain.ContextTypeGitCommitPatch
+				path = fmt.Sprintf("commit_patch:%s", item.Ref)
+				content, err = c.gitService.BuildCommitPatchContext(item.Ref, item.Paths)
+			case domain.GitContextItemKindFileAtRef:
+				ctxType = domain.ContextTypeGitFileAtRef
+				path = fmt.Sprintf("file_at_ref:%s:%s", item.Ref, item.Path)
+				content, err = c.gitService.BuildFileAtRefContext(item.Ref, item.Path)
+			case domain.GitContextItemKindFileDiff:
+				ctxType = domain.ContextTypeGitFileDiff
+				path = fmt.Sprintf("file_diff:%s..%s:%s", item.From, item.To, item.Path)
+				content, err = c.gitService.BuildFileDiffContext(item.From, item.To, item.Path)
+			default:
+				return api.GenerateDescriptionRequest{}, fmt.Errorf("unsupported git_context kind: %s", item.Kind)
+			}
+			if err != nil {
+				return api.GenerateDescriptionRequest{}, err
+			}
+			if strings.TrimSpace(content) == "" {
+				continue
+			}
+			additionalContext = append(additionalContext, domain.ContextItem{
+				Type:    ctxType,
+				Path:    path,
+				Content: content,
+				Tokens:  tokens.Count(content),
+			})
+		}
+	}
+
 	return api.GenerateDescriptionRequest{
 		SourceBranch:      c.data.SourceBranch,
 		TargetBranch:      c.data.TargetBranch,
@@ -275,7 +340,7 @@ func (c *Controller) BuildGenerateDescriptionRequest() (api.GenerateDescriptionR
 		Title:             c.data.Title,
 		Description:       c.data.Description,
 		Files:             includedFiles,
-		AdditionalContext: c.data.AdditionalContext,
+		AdditionalContext: additionalContext,
 		Prompt:            c.data.CurrentPrompt,
 	}, nil
 }

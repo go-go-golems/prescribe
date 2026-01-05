@@ -9,7 +9,7 @@ TARGET_BRANCH="${TARGET_BRANCH:-master}"
 
 prescribe() {
 	(
-		cd "$REPO_ROOT" && go run ./cmd/prescribe "$@"
+		cd "$REPO_ROOT" && GOWORK=off go run ./cmd/prescribe "$@"
 	)
 }
 

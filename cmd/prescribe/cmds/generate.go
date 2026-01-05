@@ -30,8 +30,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var generateCmd *cobra.Command
-
 type GenerateCommand struct {
 	*cmds.CommandDescription
 }
@@ -385,10 +383,10 @@ func resolveCreateBase(explicitBase, sessionTarget string) string {
 	return strings.TrimSpace(sessionTarget)
 }
 
-func InitGenerateCmd() error {
+func NewGenerateCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewGenerateCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Build a middleware chain that supports:
@@ -549,9 +547,8 @@ func InitGenerateCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	generateCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

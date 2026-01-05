@@ -1,4 +1,4 @@
-package filter
+package preset
 
 import (
 	"context"
@@ -16,11 +16,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var FilterPresetSaveCmd *cobra.Command
+const saveSlug = "filter-preset-save"
 
-const filterPresetSaveSlug = "filter-preset-save"
-
-type FilterPresetSaveSettings struct {
+type SaveSettings struct {
 	Name        string   `glazed.parameter:"name"`
 	Description string   `glazed.parameter:"description"`
 	Project     bool     `glazed.parameter:"project"`
@@ -30,13 +28,13 @@ type FilterPresetSaveSettings struct {
 	Include     []string `glazed.parameter:"include"`
 }
 
-type FilterPresetSaveCommand struct {
+type SaveCommand struct {
 	*cmds.CommandDescription
 }
 
-var _ cmds.BareCommand = &FilterPresetSaveCommand{}
+var _ cmds.BareCommand = &SaveCommand{}
 
-func NewFilterPresetSaveCommand() (*FilterPresetSaveCommand, error) {
+func NewSaveCommand() (*SaveCommand, error) {
 	repoLayer, err := prescribe_layers.NewRepositoryLayer()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create repository layer")
@@ -47,7 +45,7 @@ func NewFilterPresetSaveCommand() (*FilterPresetSaveCommand, error) {
 	}
 
 	saveLayer, err := schema.NewSection(
-		filterPresetSaveSlug,
+		saveSlug,
 		"Filter Preset Save",
 		schema.WithFields(
 			fields.New(
@@ -113,14 +111,14 @@ func NewFilterPresetSaveCommand() (*FilterPresetSaveCommand, error) {
 		),
 	)
 
-	return &FilterPresetSaveCommand{CommandDescription: cmdDesc}, nil
+	return &SaveCommand{CommandDescription: cmdDesc}, nil
 }
 
-func (c *FilterPresetSaveCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
+func (c *SaveCommand) Run(ctx context.Context, parsedLayers *glazed_layers.ParsedLayers) error {
 	_ = ctx
 
-	settings := &FilterPresetSaveSettings{}
-	if err := parsedLayers.InitializeStruct(filterPresetSaveSlug, settings); err != nil {
+	settings := &SaveSettings{}
+	if err := parsedLayers.InitializeStruct(saveSlug, settings); err != nil {
 		return errors.Wrap(err, "failed to initialize preset save settings")
 	}
 
@@ -177,20 +175,15 @@ func (c *FilterPresetSaveCommand) Run(ctx context.Context, parsedLayers *glazed_
 	return nil
 }
 
-func InitFilterPresetSaveCmd() error {
-	glazedCmd, err := NewFilterPresetSaveCommand()
+func NewSaveCobraCommand() (*cobra.Command, error) {
+	glazedCmd, err := NewSaveCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	cobraCmd, err := cli.BuildCobraCommand(glazedCmd,
+	return cli.BuildCobraCommand(
+		glazedCmd,
 		cli.WithParserConfig(cli.CobraParserConfig{
 			MiddlewaresFunc: cli.CobraCommandDefaultMiddlewares,
 		}),
 	)
-	if err != nil {
-		return err
-	}
-
-	FilterPresetSaveCmd = cobraCmd
-	return nil
 }

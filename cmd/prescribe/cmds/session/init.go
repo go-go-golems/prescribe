@@ -16,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var InitCmd *cobra.Command
-
 const sessionInitSlug = "session-init"
 
 type SessionInitSettings struct {
@@ -143,10 +141,10 @@ func (c *SessionInitCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 	return nil
 }
 
-func InitInitCmd() error {
+func NewInitCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionInitCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -156,9 +154,8 @@ func InitInitCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	InitCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

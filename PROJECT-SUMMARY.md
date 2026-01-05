@@ -198,7 +198,10 @@ prescribe file toggle "src/auth/login.ts"
 # Add context
 prescribe context add --note "Part of Q1 security improvements"
 
-# Generate
+# Inspect rendered payload (includes commit history) without inference
+prescribe generate --export-rendered --separator markdown > rendered-payload.md
+
+# Generate (requires AI config)
 prescribe generate -o pr-description.md
 
 # View session

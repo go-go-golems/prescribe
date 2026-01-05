@@ -15,9 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ShowCmd is built by InitShowCmd() and registered by session/session.go.
-var ShowCmd *cobra.Command
-
 type SessionShowSettings struct {
 	// No settings for now. Keep the slug in case we add flags later.
 }
@@ -116,10 +113,10 @@ func (c *SessionShowCommand) RunIntoGlazeProcessor(
 	return gp.AddRow(ctx, row)
 }
 
-func InitShowCmd() error {
+func NewShowCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionShowCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -129,9 +126,8 @@ func InitShowCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ShowCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

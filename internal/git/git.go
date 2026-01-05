@@ -213,3 +213,196 @@ func (s *Service) PushCurrentBranch(ctx context.Context) error {
 	}
 	return nil
 }
+
+type commitHistoryEntry struct {
+	Hash      string
+	ShortHash string
+	Author    string
+	Date      string
+	Subject   string
+
+	FilesChanged int
+	Additions    int
+	Deletions    int
+
+	FileStats []commitFileStat
+}
+
+type commitFileStat struct {
+	Path      string
+	Additions int
+	Deletions int
+}
+
+func parseCommitHistoryLogNumstat(out string) ([]commitHistoryEntry, error) {
+	// Output format:
+	//   <hash>\x1f<author>\x1f<date>\x1f<subject>\x1e\n
+	//   <add>\t<del>\t<path>\n
+	//   ...
+	records := strings.Split(out, string([]byte{0x1e}))
+	entries := make([]commitHistoryEntry, 0, len(records))
+
+	for _, rec := range records {
+		rec = strings.TrimSpace(rec)
+		if rec == "" {
+			continue
+		}
+		lines := strings.Split(rec, "\n")
+		header := strings.TrimSpace(lines[0])
+		fields := strings.Split(header, string([]byte{0x1f}))
+		if len(fields) < 4 {
+			return nil, fmt.Errorf("unexpected git log record header: %q", header)
+		}
+
+		e := commitHistoryEntry{
+			Hash:    strings.TrimSpace(fields[0]),
+			Author:  strings.TrimSpace(fields[1]),
+			Date:    strings.TrimSpace(fields[2]),
+			Subject: strings.TrimSpace(fields[3]),
+		}
+		if len(e.Hash) >= 7 {
+			e.ShortHash = e.Hash[:7]
+		} else {
+			e.ShortHash = e.Hash
+		}
+
+		filesSeen := map[string]bool{}
+		for _, line := range lines[1:] {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			parts := strings.Split(line, "\t")
+			if len(parts) < 3 {
+				continue
+			}
+			addStr := parts[0]
+			delStr := parts[1]
+			path := strings.Join(parts[2:], "\t")
+
+			if !filesSeen[path] {
+				filesSeen[path] = true
+				e.FilesChanged++
+			}
+
+			fs := commitFileStat{Path: path}
+			if addStr != "-" {
+				if v, err := strconv.Atoi(addStr); err == nil {
+					e.Additions += v
+					fs.Additions = v
+				}
+			}
+			if delStr != "-" {
+				if v, err := strconv.Atoi(delStr); err == nil {
+					e.Deletions += v
+					fs.Deletions = v
+				}
+			}
+			e.FileStats = append(e.FileStats, fs)
+		}
+
+		entries = append(entries, e)
+	}
+
+	return entries, nil
+}
+
+func xmlEscapeAttr(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	s = strings.ReplaceAll(s, "\"", "&quot;")
+	return s
+}
+
+func xmlEscapeText(s string) string {
+	s = strings.ReplaceAll(s, "&", "&amp;")
+	s = strings.ReplaceAll(s, "<", "&lt;")
+	s = strings.ReplaceAll(s, ">", "&gt;")
+	return s
+}
+
+// BuildCommitHistoryText returns a compact, parseable commit history snippet suitable for prompt context.
+//
+// The output is "XML-ish" but intended as plain text; it is not a full XML document.
+func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, cfg domain.GitHistoryConfig) (string, error) {
+	if strings.TrimSpace(targetRef) == "" || strings.TrimSpace(sourceRef) == "" {
+		return "", nil
+	}
+	if cfg.MaxCommits <= 0 {
+		return "", nil
+	}
+
+	rangeSpec := fmt.Sprintf("%s..%s", targetRef, sourceRef)
+
+	// Use an unambiguous record/field separator scheme to avoid parsing human-oriented output.
+	// Important: place the record separator at the *start* of each commit so the following
+	// numstat lines belong to that record when splitting.
+	//
+	format := "%x1e%H%x1f%an%x1f%ad%x1f%s"
+	args := []string{
+		"log",
+		"--date=iso-strict",
+		fmt.Sprintf("--max-count=%d", cfg.MaxCommits),
+		fmt.Sprintf("--pretty=format:%s", format),
+	}
+	if cfg.FirstParent {
+		args = append(args, "--first-parent")
+	}
+	if !cfg.IncludeMerges {
+		args = append(args, "--no-merges")
+	}
+	args = append(args, "--numstat", rangeSpec)
+
+	cmd := exec.Command("git", args...)
+	cmd.Dir = s.repoPath
+	out, err := cmd.Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get commit history")
+	}
+
+	entries, err := parseCommitHistoryLogNumstat(string(out))
+	if err != nil {
+		return "", err
+	}
+	if len(entries) == 0 {
+		return "", nil
+	}
+
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("<commits range=\"%s\" max=\"%d\">\n", xmlEscapeAttr(rangeSpec), cfg.MaxCommits))
+	for _, e := range entries {
+		sha := e.ShortHash
+		if sha == "" {
+			sha = e.Hash
+		}
+		b.WriteString(fmt.Sprintf(
+			"<commit sha=\"%s\" author=\"%s\" date=\"%s\">\n",
+			xmlEscapeAttr(sha),
+			xmlEscapeAttr(e.Author),
+			xmlEscapeAttr(e.Date),
+		))
+		b.WriteString(fmt.Sprintf("<subject>%s</subject>\n", xmlEscapeText(strings.TrimSpace(e.Subject))))
+		b.WriteString(fmt.Sprintf(
+			"<summary files=\"%d\" additions=\"%d\" deletions=\"%d\"/>\n",
+			e.FilesChanged,
+			e.Additions,
+			e.Deletions,
+		))
+		if cfg.IncludeNumstat && len(e.FileStats) > 0 {
+			b.WriteString("<numstat>\n")
+			for _, fs := range e.FileStats {
+				b.WriteString(fmt.Sprintf(
+					"<file path=\"%s\" additions=\"%d\" deletions=\"%d\"/>\n",
+					xmlEscapeAttr(fs.Path),
+					fs.Additions,
+					fs.Deletions,
+				))
+			}
+			b.WriteString("</numstat>\n")
+		}
+		b.WriteString("</commit>\n")
+	}
+	b.WriteString("</commits>\n")
+	return b.String(), nil
+}

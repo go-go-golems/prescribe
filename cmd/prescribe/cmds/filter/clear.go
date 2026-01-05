@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ClearFiltersCmd *cobra.Command
-
 type FilterClearCommand struct {
 	*cmds.CommandDescription
 }
@@ -75,10 +73,10 @@ func (c *FilterClearCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 	return nil
 }
 
-func InitClearFiltersCmd() error {
+func NewClearCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterClearCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cobraCmd, err := cli.BuildCobraCommand(
 		glazedCmd,
@@ -87,9 +85,7 @@ func InitClearFiltersCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	ClearFiltersCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

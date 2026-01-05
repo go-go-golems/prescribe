@@ -22,8 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var createCmd *cobra.Command
-
 type CreateCommand struct {
 	*cmds.CommandDescription
 }
@@ -218,10 +216,10 @@ func (c *CreateCommand) Run(ctx context.Context, parsedLayers *glazed_layers.Par
 	return nil
 }
 
-func InitCreateCmd() error {
+func NewCreateCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewCreateCommand()
 	if err != nil {
-		return errors.Wrap(err, "failed to create create command")
+		return nil, errors.Wrap(err, "failed to create create command")
 	}
 
 	createMiddlewares := func(parsedCommandLayers *glazed_layers.ParsedLayers, cmd *cobra.Command, args []string) ([]cmd_middlewares.Middleware, error) {
@@ -241,9 +239,8 @@ func InitCreateCmd() error {
 		}),
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to build cobra command")
+		return nil, errors.Wrap(err, "failed to build cobra command")
 	}
 
-	createCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

@@ -16,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var AddFilterCmd *cobra.Command
-
 const filterAddSlug = "filter-add"
 
 type FilterAddSettings struct {
@@ -151,10 +149,10 @@ func (c *FilterAddCommand) Run(ctx context.Context, parsedLayers *glazed_layers.
 	return nil
 }
 
-func InitAddFilterCmd() error {
+func NewAddCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterAddCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cobraCmd, err := cli.BuildCobraCommand(glazedCmd,
 		cli.WithParserConfig(cli.CobraParserConfig{
@@ -162,9 +160,8 @@ func InitAddFilterCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	AddFilterCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

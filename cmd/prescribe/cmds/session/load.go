@@ -15,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var LoadCmd *cobra.Command
-
 type SessionLoadSettings struct {
 	Path string `glazed.parameter:"path"`
 }
@@ -99,10 +97,10 @@ func (c *SessionLoadCommand) Run(ctx context.Context, parsedLayers *glazed_layer
 	return nil
 }
 
-func InitLoadCmd() error {
+func NewLoadCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionLoadCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -112,9 +110,8 @@ func InitLoadCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	LoadCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

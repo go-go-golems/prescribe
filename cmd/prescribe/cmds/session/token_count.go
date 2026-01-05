@@ -18,9 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TokenCountCmd is built by InitTokenCountCmd() and registered by session/session.go.
-var TokenCountCmd *cobra.Command
-
 type SessionTokenCountSettings struct {
 	All             bool `glazed.parameter:"all"`
 	IncludeFiltered bool `glazed.parameter:"include-filtered"`
@@ -231,6 +228,42 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 		}
 	}
 
+	// Git history is currently derived at generation time (not persisted in session.yaml).
+	// To keep token-count aligned with what `generate` will send, we compute it via the canonical request builder.
+	if req, err := ctrl.BuildGenerateDescriptionRequest(); err == nil {
+		for _, ac := range req.AdditionalContext {
+			isDerivedGit := ac.Type == domain.ContextTypeGitHistory ||
+				ac.Type == domain.ContextTypeGitCommit ||
+				ac.Type == domain.ContextTypeGitCommitPatch ||
+				ac.Type == domain.ContextTypeGitFileAtRef ||
+				ac.Type == domain.ContextTypeGitFileDiff
+			if !isDerivedGit {
+				continue
+			}
+			eff := effectiveContextContent(ac)
+			if strings.TrimSpace(eff) == "" {
+				continue
+			}
+			effTokens := tokens.Count(eff)
+			storedTotal += ac.Tokens
+			effectiveTotal += effTokens
+
+			row := types.NewRow(
+				types.MRP("kind", "git_derived"),
+				types.MRP("encoding", encoding),
+				types.MRP("context_type", string(ac.Type)),
+				types.MRP("path", ac.Path),
+				types.MRP("tokens_stored", ac.Tokens),
+				types.MRP("tokens_effective", effTokens),
+				types.MRP("tokens_delta", ac.Tokens-effTokens),
+				types.MRP("bytes_effective", len(eff)),
+			)
+			if err := gp.AddRow(ctx, row); err != nil {
+				return err
+			}
+		}
+	}
+
 	// Summary row (matches session show semantics for "stored_total": visible+included files + all additional context)
 	summary := types.NewRow(
 		types.MRP("kind", "total"),
@@ -242,10 +275,10 @@ func (c *SessionTokenCountCommand) RunIntoGlazeProcessor(
 	return gp.AddRow(ctx, summary)
 }
 
-func InitTokenCountCmd() error {
+func NewTokenCountCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewSessionTokenCountCommand()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cobraCmd, err := cli.BuildCobraCommand(
@@ -255,9 +288,8 @@ func InitTokenCountCmd() error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	TokenCountCmd = cobraCmd
-	return nil
+	return cobraCmd, nil
 }

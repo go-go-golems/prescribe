@@ -45,7 +45,7 @@ run_quiet() {
 }
 
 prescribe() {
-  ( cd "$PRESCRIBE_ROOT" && go run ./cmd/prescribe "$@" )
+  ( cd "$PRESCRIBE_ROOT" && GOWORK=off go run ./cmd/prescribe "$@" )
 }
 
 echo "prescribe PR creation integration test" >"$LOG"
@@ -156,5 +156,4 @@ else
 fi
 echo
 echo "done"
-
 

@@ -46,42 +46,52 @@ func InitRootCmd(rootCmd *cobra.Command) error {
 	rootCmd.PersistentFlags().StringP("target", "t", "", "Target branch (default: main or master)")
 
 	// Explicit initialization of subcommand trees (no init() ordering reliance).
-	if err := filter.Init(); err != nil {
-		return errors.Wrap(err, "failed to init filter commands")
+	generateCmd, err := NewGenerateCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build generate command")
 	}
-	if err := session.Init(); err != nil {
-		return errors.Wrap(err, "failed to init session commands")
+	createCmd, err := NewCreateCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build create command")
 	}
-	if err := file.Init(); err != nil {
-		return errors.Wrap(err, "failed to init file commands")
-	}
-	if err := context.Init(); err != nil {
-		return errors.Wrap(err, "failed to init context commands")
-	}
-	if err := tokens.Init(); err != nil {
-		return errors.Wrap(err, "failed to init tokens commands")
-	}
-	if err := InitGenerateCmd(); err != nil {
-		return errors.Wrap(err, "failed to init generate command")
-	}
-	if err := InitCreateCmd(); err != nil {
-		return errors.Wrap(err, "failed to init create command")
-	}
-	if err := InitTuiCmd(); err != nil {
-		return errors.Wrap(err, "failed to init tui command")
+	tuiCmd, err := NewTuiCobraCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to build tui command")
 	}
 
 	// Command groups
-	rootCmd.AddCommand(filter.FilterCmd)
-	rootCmd.AddCommand(session.SessionCmd)
-	rootCmd.AddCommand(file.FileCmd)
-	rootCmd.AddCommand(context.ContextCmd)
-	rootCmd.AddCommand(tokens.TokensCmd)
+	filterCmd, err := filter.NewFilterCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build filter command")
+	}
+	rootCmd.AddCommand(filterCmd)
+
+	sessionCmd, err := session.NewSessionCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build session command")
+	}
+	rootCmd.AddCommand(sessionCmd)
+
+	fileCmd, err := file.NewFileCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build file command")
+	}
+	rootCmd.AddCommand(fileCmd)
+
+	tokensCmd, err := tokens.NewTokensCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build tokens command")
+	}
+	rootCmd.AddCommand(tokensCmd)
+
+	contextCmd, err := context.NewContextCmd()
+	if err != nil {
+		return errors.Wrap(err, "failed to build context command")
+	}
+	rootCmd.AddCommand(contextCmd)
 
 	// Root-level commands (generate, create, tui)
-	rootCmd.AddCommand(generateCmd)
-	rootCmd.AddCommand(createCmd)
-	rootCmd.AddCommand(tuiCmd)
+	rootCmd.AddCommand(generateCmd, createCmd, tuiCmd)
 
 	return nil
 }

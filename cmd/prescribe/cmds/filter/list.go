@@ -14,11 +14,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// ListFiltersCmd is built by buildListFiltersCmd() and registered by filter/filter.go.
-//
-// NOTE: Do not rely on init() ordering across files in this package.
-var ListFiltersCmd *cobra.Command
-
 type FilterListCommand struct {
 	*cmds.CommandDescription
 }
@@ -96,7 +91,7 @@ func (c *FilterListCommand) RunIntoGlazeProcessor(
 	return nil
 }
 
-func buildListFiltersCmd() (*cobra.Command, error) {
+func NewListCobraCommand() (*cobra.Command, error) {
 	glazedCmd, err := NewFilterListCommand()
 	if err != nil {
 		return nil, err
@@ -113,13 +108,4 @@ func buildListFiltersCmd() (*cobra.Command, error) {
 	}
 
 	return cobraCmd, nil
-}
-
-func InitListFiltersCmd() error {
-	cmd, err := buildListFiltersCmd()
-	if err != nil {
-		return err
-	}
-	ListFiltersCmd = cmd
-	return nil
 }
