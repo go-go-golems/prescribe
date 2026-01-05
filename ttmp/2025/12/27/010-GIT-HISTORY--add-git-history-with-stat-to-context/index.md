@@ -1,7 +1,7 @@
 ---
 Title: Add git history (with stat) to context
 Ticket: 010-GIT-HISTORY
-Status: active
+Status: archived
 Topics:
     - prescribe
     - cli
@@ -19,10 +19,11 @@ RelatedFiles:
       Note: Git service for commit history operations
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T18:23:19.152928356-05:00
+LastUpdated: 2026-01-04T19:26:09.235593122-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Add git history (with stat) to context
