@@ -24,3 +24,8 @@ Added playbook doc for filters and doublestar glob syntax (CLI/TUI usage + seman
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/pkg/doc/topics/01-filters-and-glob-syntax.md — New filters/glob playbook
 
+
+## 2026-01-04
+
+Archived (ticket hygiene): umbrella QOL exploration; concrete token-counting work is in 004-PROPER-TOKEN-COUNTING.
+

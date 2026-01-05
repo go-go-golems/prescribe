@@ -1,7 +1,7 @@
 ---
 Title: Add branch selection for context file addition
 Ticket: 009-CONTEXT-BRANCH
-Status: active
+Status: archived
 Topics:
     - prescribe
     - cli
@@ -18,10 +18,11 @@ RelatedFiles:
       Note: GetFileContent method that supports any ref
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T18:20:41.017284571-05:00
+LastUpdated: 2026-01-04T22:40:24.528446932-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Add branch selection for context file addition

@@ -15,3 +15,8 @@ Fixed linting issues, preset loading, and full_both file handling
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/api/prompt.go — Full_both fix
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/internal/presets/resolver.go — Preset resolution
 
+
+## 2026-01-04
+
+Closed (ticket hygiene): work is recorded in changelog; remaining open task was placeholder.
+

@@ -1,7 +1,7 @@
 ---
 Title: Fix filter view
 Ticket: 002A-FIX-FILTER-VIEW
-Status: active
+Status: archived
 Topics:
     - tui
     - bubbletea
@@ -17,10 +17,11 @@ RelatedFiles:
       Note: Bug report for tmux border regression
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T12:26:35.171576257-05:00
+LastUpdated: 2026-01-04T22:40:26.06672108-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Fix filter view

@@ -1,7 +1,7 @@
 ---
 Title: Proper token counting
 Ticket: 004-PROPER-TOKEN-COUNTING
-Status: active
+Status: complete
 Topics:
     - prescribe
     - tokens
@@ -33,10 +33,11 @@ RelatedFiles:
       Note: Tokenizer-based token counter (replaces len/4 heuristic)
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T15:06:04.999686227-05:00
+LastUpdated: 2026-01-04T22:40:20.621365508-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # Proper token counting

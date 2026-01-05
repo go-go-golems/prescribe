@@ -1,7 +1,7 @@
 ---
 Title: 'TUI Update: reconcile initial screen design with implemented TUI wiring'
 Ticket: 011-TUI-UPDATE
-Status: active
+Status: archived
 Topics:
     - tui
     - bubbletea
@@ -26,10 +26,11 @@ RelatedFiles:
       Note: Original screen-by-screen TUI spec we are reconciling
 ExternalSources: []
 Summary: ""
-LastUpdated: 2025-12-27T19:40:39.763353269-05:00
+LastUpdated: 2026-01-04T22:40:23.250343005-05:00
 WhatFor: ""
 WhenToUse: ""
 ---
+
 
 
 # TUI Update: reconcile initial screen design with implemented TUI wiring

@@ -160,3 +160,8 @@ Docs: add analysis of Filters screen border/layout regression (tmux capture repr
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/26/002-MAKE-IT-WORK--make-it-work/analysis/03-tui-filters-page-border-layout-debugging-tmux-captures.md — New analysis doc
 
+
+## 2026-01-04
+
+Archived per request (ticket hygiene): leaving remaining open tasks as-is.
+

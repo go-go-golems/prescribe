@@ -1,7 +1,7 @@
 ---
 Title: QOL improvements
 Ticket: 003-QOL-IMPROVEMENTS
-Status: active
+Status: archived
 Topics:
     - prescribe
     - qol
@@ -19,10 +19,11 @@ RelatedFiles:
       Note: Implementation/research diary
 ExternalSources: []
 Summary: 'QOL improvements for prescribe (initial focus: clarify/fix token counting and related UX/consistency).'
-LastUpdated: 2025-12-27T14:24:24.002193975-05:00
+LastUpdated: 2026-01-04T22:40:22.065058351-05:00
 WhatFor: Home base for small-but-high-impact improvements to prescribe.
 WhenToUse: Start here to find the current analysis/diary and linked implementation files.
 ---
+
 
 
 

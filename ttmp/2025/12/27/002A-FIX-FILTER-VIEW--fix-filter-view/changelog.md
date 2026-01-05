@@ -13,3 +13,8 @@ Add bug report for Filters screen border/right-edge regression (tmux capture rep
 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/002A-FIX-FILTER-VIEW--fix-filter-view/reference/01-bug-report-filters-screen-border-right-edge-regression-tmux-capture.md — Bug report doc
 
+
+## 2026-01-04
+
+Archived (ticket hygiene): contains bug report reference; no implementation tasks captured.
+

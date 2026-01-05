@@ -25,3 +25,8 @@ Created three focused analysis documents grouping spec screens by functionality 
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/011-TUI-UPDATE--tui-update-reconcile-initial-screen-design-with-implemented-tui-wiring/analysis/03-filter-management-screens-spec-vs-implementation.md — Filter management screens analysis
 - /home/manuel/workspaces/2025-12-26/prescribe-import/prescribe/ttmp/2025/12/27/011-TUI-UPDATE--tui-update-reconcile-initial-screen-design-with-implemented-tui-wiring/analysis/04-prompt-management-screens-spec-vs-implementation.md — Prompt management screens analysis
 
+
+## 2026-01-04
+
+Archived (ticket hygiene): ticket now primarily reference/analysis with no concrete TODOs.
+
