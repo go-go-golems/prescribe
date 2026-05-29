@@ -59,3 +59,11 @@ prescribe_BINARY=$(shell which prescribe)
 install:
 	go build -o ./dist/prescribe ./cmd/prescribe && \
 		cp ./dist/prescribe $(prescribe_BINARY)
+
+.PHONY: logcopter-generate
+logcopter-generate:
+	GOWORK=off go tool logcopter-gen -include-main -var zlog -area-prefix go-go-golems.prescribe -strip-prefix github.com/go-go-golems/prescribe ./cmd/... ./pkg/...
+
+.PHONY: logcopter-check
+logcopter-check:
+	GOWORK=off go tool logcopter-gen -include-main -var zlog -area-prefix go-go-golems.prescribe -strip-prefix github.com/go-go-golems/prescribe -check ./cmd/... ./pkg/...
