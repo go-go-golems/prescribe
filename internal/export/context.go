@@ -72,16 +72,16 @@ func BuildRenderedLLMPayload(req api.GenerateDescriptionRequest, sep SeparatorTy
 		var b strings.Builder
 		b.WriteString("# Prescribe LLM payload (rendered)\n\n")
 		b.WriteString("## Branches\n\n")
-		b.WriteString(fmt.Sprintf("- Source: %s\n", req.SourceBranch))
-		b.WriteString(fmt.Sprintf("- Target: %s\n\n", req.TargetBranch))
+		fmt.Fprintf(&b, "- Source: %s\n", req.SourceBranch)
+		fmt.Fprintf(&b, "- Target: %s\n\n", req.TargetBranch)
 
 		if strings.TrimSpace(req.SourceCommit) != "" || strings.TrimSpace(req.TargetCommit) != "" {
 			b.WriteString("## Commit refs\n\n")
 			if strings.TrimSpace(req.SourceCommit) != "" {
-				b.WriteString(fmt.Sprintf("- Source commit: %s\n", req.SourceCommit))
+				fmt.Fprintf(&b, "- Source commit: %s\n", req.SourceCommit)
 			}
 			if strings.TrimSpace(req.TargetCommit) != "" {
-				b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
+				fmt.Fprintf(&b, "- Target commit: %s\n", req.TargetCommit)
 			}
 			b.WriteString("\n")
 		}
