@@ -160,20 +160,20 @@ func (s *Service) BuildCommitMetadataContext(ref string, includeNumstat bool) (s
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<git_commit ref=\"%s\" sha=\"%s\">\n", xmlEscapeAttr(ref), xmlEscapeAttr(shortSHA)))
-	b.WriteString(fmt.Sprintf("<subject>%s</subject>\n", xmlEscapeText(hdr.Subject)))
-	b.WriteString(fmt.Sprintf("<author>%s</author>\n", xmlEscapeText(hdr.Author)))
-	b.WriteString(fmt.Sprintf("<date>%s</date>\n", xmlEscapeText(hdr.Date)))
-	b.WriteString(fmt.Sprintf("<summary files=\"%d\" additions=\"%d\" deletions=\"%d\"/>\n", filesChanged, additions, deletions))
+	fmt.Fprintf(&b, "<git_commit ref=\"%s\" sha=\"%s\">\n", xmlEscapeAttr(ref), xmlEscapeAttr(shortSHA))
+	fmt.Fprintf(&b, "<subject>%s</subject>\n", xmlEscapeText(hdr.Subject))
+	fmt.Fprintf(&b, "<author>%s</author>\n", xmlEscapeText(hdr.Author))
+	fmt.Fprintf(&b, "<date>%s</date>\n", xmlEscapeText(hdr.Date))
+	fmt.Fprintf(&b, "<summary files=\"%d\" additions=\"%d\" deletions=\"%d\"/>\n", filesChanged, additions, deletions)
 	if includeNumstat && len(perFile) > 0 {
 		var nsb strings.Builder
 		for _, ns := range perFile {
-			nsb.WriteString(fmt.Sprintf(
+			fmt.Fprintf(&nsb,
 				"<file path=\"%s\" additions=\"%d\" deletions=\"%d\"/>\n",
 				xmlEscapeAttr(ns.Path),
 				ns.Additions,
 				ns.Deletions,
-			))
+			)
 		}
 		numstatBody, _ := truncateWithCaps(nsb.String(), gitContextDefaultMaxBytes, gitContextDefaultMaxTokens)
 		b.WriteString("<numstat>\n")
@@ -215,9 +215,9 @@ func (s *Service) BuildCommitPatchContext(ref string, paths []string) (string, e
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<git_commit_patch ref=\"%s\" sha=\"%s\"", xmlEscapeAttr(ref), xmlEscapeAttr(shortSHA)))
+	fmt.Fprintf(&b, "<git_commit_patch ref=\"%s\" sha=\"%s\"", xmlEscapeAttr(ref), xmlEscapeAttr(shortSHA))
 	if len(paths) > 0 {
-		b.WriteString(fmt.Sprintf(" paths=\"%s\"", xmlEscapeAttr(strings.Join(paths, ","))))
+		fmt.Fprintf(&b, " paths=\"%s\"", xmlEscapeAttr(strings.Join(paths, ",")))
 	}
 	b.WriteString(">\n")
 	b.WriteString("<patch>\n")
@@ -238,7 +238,7 @@ func (s *Service) BuildFileAtRefContext(ref, filePath string) (string, error) {
 	content, _ = truncateWithCaps(content, gitContextDefaultMaxBytes, gitContextDefaultMaxTokens)
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<git_file_at_ref ref=\"%s\" path=\"%s\">\n", xmlEscapeAttr(ref), xmlEscapeAttr(filePath)))
+	fmt.Fprintf(&b, "<git_file_at_ref ref=\"%s\" path=\"%s\">\n", xmlEscapeAttr(ref), xmlEscapeAttr(filePath))
 	b.WriteString("<content>\n")
 	b.WriteString(strings.TrimRight(content, "\n"))
 	b.WriteString("\n</content>\n</git_file_at_ref>\n")
@@ -259,12 +259,12 @@ func (s *Service) BuildFileDiffContext(fromRef, toRef, filePath string) (string,
 	diff, _ := truncateWithCaps(string(out), gitContextDefaultMaxBytes, gitContextDefaultMaxTokens)
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf(
+	fmt.Fprintf(&b,
 		"<git_file_diff from=\"%s\" to=\"%s\" path=\"%s\">\n",
 		xmlEscapeAttr(fromRef),
 		xmlEscapeAttr(toRef),
 		xmlEscapeAttr(filePath),
-	))
+	)
 	b.WriteString("<diff>\n")
 	b.WriteString(strings.TrimRight(diff, "\n"))
 	b.WriteString("\n</diff>\n</git_file_diff>\n")

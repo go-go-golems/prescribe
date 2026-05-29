@@ -1,3 +1,4 @@
+//glazedclilint:file-ignore legacy root command uses raw persistent Cobra flags; migrate to Glazed fields in a follow-up
 package cmds
 
 import (
