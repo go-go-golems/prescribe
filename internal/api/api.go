@@ -493,14 +493,14 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 			fmt.Fprintf(&b, "- Source commit: %s\n", req.SourceCommit)
 		}
 		if strings.TrimSpace(req.TargetCommit) != "" {
-			b.WriteString(fmt.Sprintf("- Target commit: %s\n", req.TargetCommit))
+			fmt.Fprintf(&b, "- Target commit: %s\n", req.TargetCommit)
 		}
 		b.WriteString("\n")
 	}
 
-	b.WriteString(fmt.Sprintf("## Included files (%d)\n\n", len(req.Files)))
+	fmt.Fprintf(&b, "## Included files (%d)\n\n", len(req.Files))
 	for _, f := range req.Files {
-		b.WriteString(fmt.Sprintf("### %s\n\n", f.Path))
+		fmt.Fprintf(&b, "### %s\n\n", f.Path)
 
 		switch f.Type {
 		case domain.FileTypeFull:
@@ -544,7 +544,7 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 	}
 
 	if len(nonHistoryContext) > 0 {
-		b.WriteString(fmt.Sprintf("## Additional context (%d)\n\n", len(nonHistoryContext)))
+		fmt.Fprintf(&b, "## Additional context (%d)\n\n", len(nonHistoryContext))
 		for _, ctx := range nonHistoryContext {
 			switch ctx.Type {
 			case domain.ContextTypeGitHistory:
@@ -559,7 +559,7 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 				if label == "" {
 					label = "file"
 				}
-				b.WriteString(fmt.Sprintf("### %s\n\n", label))
+				fmt.Fprintf(&b, "### %s\n\n", label)
 				b.WriteString("```text\n")
 				b.WriteString(strings.TrimRight(ctx.Content, "\n"))
 				b.WriteString("\n```\n\n")
@@ -568,7 +568,7 @@ func buildUserContext(req GenerateDescriptionRequest) string {
 				if strings.TrimSpace(label) == "" {
 					label = string(ctx.Type)
 				}
-				b.WriteString(fmt.Sprintf("### %s\n\n", label))
+				fmt.Fprintf(&b, "### %s\n\n", label)
 				b.WriteString("```text\n")
 				b.WriteString(strings.TrimRight(ctx.Content, "\n"))
 				b.WriteString("\n```\n\n")
