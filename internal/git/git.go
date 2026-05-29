@@ -370,34 +370,37 @@ func (s *Service) BuildCommitHistoryText(targetRef, sourceRef string, cfg domain
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<commits range=\"%s\" max=\"%d\">\n", xmlEscapeAttr(rangeSpec), cfg.MaxCommits))
+	fmt.Fprintf(&b, "<commits range=\"%s\" max=\"%d\">\n", xmlEscapeAttr(rangeSpec), cfg.MaxCommits)
 	for _, e := range entries {
 		sha := e.ShortHash
 		if sha == "" {
 			sha = e.Hash
 		}
-		b.WriteString(fmt.Sprintf(
+		fmt.Fprintf(
+			&b,
 			"<commit sha=\"%s\" author=\"%s\" date=\"%s\">\n",
 			xmlEscapeAttr(sha),
 			xmlEscapeAttr(e.Author),
 			xmlEscapeAttr(e.Date),
-		))
-		b.WriteString(fmt.Sprintf("<subject>%s</subject>\n", xmlEscapeText(strings.TrimSpace(e.Subject))))
-		b.WriteString(fmt.Sprintf(
+		)
+		fmt.Fprintf(&b, "<subject>%s</subject>\n", xmlEscapeText(strings.TrimSpace(e.Subject)))
+		fmt.Fprintf(
+			&b,
 			"<summary files=\"%d\" additions=\"%d\" deletions=\"%d\"/>\n",
 			e.FilesChanged,
 			e.Additions,
 			e.Deletions,
-		))
+		)
 		if cfg.IncludeNumstat && len(e.FileStats) > 0 {
 			b.WriteString("<numstat>\n")
 			for _, fs := range e.FileStats {
-				b.WriteString(fmt.Sprintf(
+				fmt.Fprintf(
+					&b,
 					"<file path=\"%s\" additions=\"%d\" deletions=\"%d\"/>\n",
 					xmlEscapeAttr(fs.Path),
 					fs.Additions,
 					fs.Deletions,
-				))
+				)
 			}
 			b.WriteString("</numstat>\n")
 		}
